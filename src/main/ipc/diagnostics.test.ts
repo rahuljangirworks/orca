@@ -92,7 +92,7 @@ describe('diagnostics IPC handlers', () => {
     uploadDiagnosticBundleMock.mockReset()
     delete (globalThis as { ORCA_BUILD_IDENTITY?: unknown }).ORCA_BUILD_IDENTITY
     delete (globalThis as { ORCA_DIAGNOSTICS_TOKEN_URL?: unknown }).ORCA_DIAGNOSTICS_TOKEN_URL
-    process.env.ORCA_DIAGNOSTICS_TOKEN_URL = 'https://diagnostics.example.com/diagnostics/token'
+    process.env.ORCA_DIAGNOSTICS_TOKEN_URL = 'http://localhost:4318/diagnostics/token'
     getDiagnosticsStatusMock.mockReturnValue({
       localFileEnabled: true,
       bundleEnabled: true,
@@ -129,7 +129,7 @@ describe('diagnostics IPC handlers', () => {
     await upload({}, bundle.bundleSubmissionId)
 
     expect(uploadDiagnosticBundleMock).toHaveBeenCalledWith({
-      tokenEndpoint: 'https://diagnostics.example.com/diagnostics/token',
+      tokenEndpoint: 'http://localhost:4318/diagnostics/token',
       payload: bundle.payload,
       bundleSubmissionId: bundle.bundleSubmissionId
     })
@@ -145,7 +145,7 @@ describe('diagnostics IPC handlers', () => {
       ORCA_DIAGNOSTICS_TOKEN_URL?: string
     }
     globalOverrides.ORCA_BUILD_IDENTITY = 'stable'
-    globalOverrides.ORCA_DIAGNOSTICS_TOKEN_URL = 'https://official.example.com/diagnostics/token'
+    globalOverrides.ORCA_DIAGNOSTICS_TOKEN_URL = 'http://localhost:4319/diagnostics/token'
     process.env.ORCA_DIAGNOSTICS_TOKEN_URL = 'https://attacker.example.com/diagnostics/token'
     collectDiagnosticBundleMock.mockReturnValue(bundle)
     readFileSyncMock.mockReturnValue(bundle.payload)
@@ -158,7 +158,7 @@ describe('diagnostics IPC handlers', () => {
     await upload({}, bundle.bundleSubmissionId)
 
     expect(uploadDiagnosticBundleMock).toHaveBeenCalledWith({
-      tokenEndpoint: 'https://official.example.com/diagnostics/token',
+      tokenEndpoint: 'http://localhost:4319/diagnostics/token',
       payload: bundle.payload,
       bundleSubmissionId: bundle.bundleSubmissionId
     })
@@ -333,7 +333,7 @@ describe('diagnostics IPC handlers', () => {
     const deleteBundle = handlers.get('diagnostics:deleteBundle')!
     await deleteBundle({}, 'ticketabcdefghijklmnop')
     expect(deleteDiagnosticBundleMock).toHaveBeenCalledWith({
-      tokenEndpoint: 'https://diagnostics.example.com/diagnostics/token',
+      tokenEndpoint: 'http://localhost:4318/diagnostics/token',
       ticketId: 'ticketabcdefghijklmnop'
     })
   })

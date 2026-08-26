@@ -1,4 +1,9 @@
 import { app } from 'electron'
+import {
+  PERSONAL_FORK_NETWORK_DISABLED_MESSAGE,
+  PERSONAL_FORK_POLICY,
+  isLoopbackServiceUrl
+} from '../../shared/personal-fork-policy'
 
 export type OrcaCloudAuthConfig = {
   apiBaseUrl: string
@@ -16,10 +21,6 @@ export type OrcaCloudAuthConfig = {
 }
 
 const DEFAULT_SCOPE = 'openid profile email offline_access'
-const PRODUCTION_API_BASE_URL = 'https://login.onorca.dev'
-const PRODUCTION_CLIENT_ID = 'orca-desktop'
-const PRODUCTION_RELAY_DIRECTOR_URL = 'https://relay.onorca.dev'
-
 // Why: packaged main bundles never define NODE_ENV, so packaged-ness is the
 // only reliable production signal for gating dev-only auth escape hatches.
 function isPackagedOrcaBuild(): boolean {
@@ -41,6 +42,9 @@ function cleanUrl(value: string | undefined, allowLoopbackHttp: boolean): string
       parsed.hostname === '127.0.0.1' ||
       parsed.hostname === 'localhost' ||
       parsed.hostname === '[::1]'
+    if (PERSONAL_FORK_POLICY.localServiceOverridesEnabled && !isLoopbackServiceUrl(trimmed)) {
+      return null
+    }
     if (parsed.protocol !== 'https:' && !(loopbackHost && allowLoopbackHttp)) {
       return null
     }
@@ -69,22 +73,18 @@ export function getOrcaCloudAuthConfig(
 ): { configured: true; config: OrcaCloudAuthConfig } | { configured: false; setupMessage: string } {
   // Why: loopback HTTP endpoints are a local-development convenience only;
   // packaged builds must not accept plain-HTTP token endpoints via env vars.
-  const allowLoopbackHttp = !packaged
+  const allowLoopbackHttp = PERSONAL_FORK_POLICY.localServiceOverridesEnabled || !packaged
   const cleanEndpointUrl = (value: string | undefined): string | null =>
     cleanUrl(value, allowLoopbackHttp)
   const configuredApiBaseUrl = env.ORCA_CLOUD_API_URL?.trim()
-  // Why: packaged releases cannot depend on launch-time environment injection;
-  // these first-party endpoints and the public OAuth client ID are not secrets.
-  const apiBaseUrl = configuredApiBaseUrl
-    ? cleanEndpointUrl(configuredApiBaseUrl)
-    : packaged
-      ? PRODUCTION_API_BASE_URL
-      : null
-  const clientId = env.ORCA_CLOUD_CLIENT_ID?.trim() || (packaged ? PRODUCTION_CLIENT_ID : undefined)
+  // Personal builds never fall back to Orca Cloud. A self-hosted service must
+  // be explicitly configured and must resolve to this machine.
+  const apiBaseUrl = configuredApiBaseUrl ? cleanEndpointUrl(configuredApiBaseUrl) : null
+  const clientId = env.ORCA_CLOUD_CLIENT_ID?.trim()
   if (!apiBaseUrl || !clientId) {
     return {
       configured: false,
-      setupMessage: 'Orca Cloud sign-in is not configured for this build.'
+      setupMessage: `${PERSONAL_FORK_NETWORK_DISABLED_MESSAGE} Configure a loopback cloud service to enable this feature.`
     }
   }
 
@@ -117,7 +117,7 @@ export function getOrcaCloudAuthConfig(
         cleanEndpointUrl(env.ORCA_CLOUD_RELAY_TOKEN_URL) ??
         endpoint(apiBaseUrl, '/v1/desktop/auth/relay-token'),
       relayDirectorUrl:
-        cleanOrigin(env.ORCA_RELAY_URL, allowLoopbackHttp) ?? PRODUCTION_RELAY_DIRECTOR_URL,
+        cleanOrigin(env.ORCA_RELAY_URL, allowLoopbackHttp) ?? new URL(apiBaseUrl).origin,
       clientId,
       scope: env.ORCA_CLOUD_AUTH_SCOPE?.trim() || DEFAULT_SCOPE
     }
