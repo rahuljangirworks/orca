@@ -16,6 +16,11 @@ vi.mock('electron', () => ({
   net: { fetch: (...args: unknown[]) => fetchMock(...args) }
 }))
 
+vi.mock('../../shared/personal-fork-policy', () => ({
+  PERSONAL_FORK_NETWORK_DISABLED_MESSAGE: 'disabled in personal fork',
+  PERSONAL_FORK_POLICY: { firstPartyNetworkEnabled: true }
+}))
+
 import { MAX_FEEDBACK_IMAGE_RESPONSE_BYTES } from './feedback-image-attachments'
 import { registerFeedbackHandlers, submitFeedback } from './feedback'
 

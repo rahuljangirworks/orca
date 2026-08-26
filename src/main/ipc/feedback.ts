@@ -1,5 +1,6 @@
 import os from 'node:os'
 import { app, ipcMain, net } from 'electron'
+import { validateFeedbackSubmission } from '../../shared/personal-fork-validation'
 import {
   appendFeedbackImagesToFormData,
   readFeedbackImagesDelivered,
@@ -7,7 +8,7 @@ import {
   type FeedbackImageAttachment
 } from './feedback-image-attachments'
 
-export type { FeedbackImageAttachment }
+export type { FeedbackImageAttachment } from './feedback-image-attachments'
 
 // Why: the production Mac build loads the renderer from a file:// origin, so a
 // cross-origin POST from fetch() triggers a CORS preflight that the feedback
@@ -284,11 +285,10 @@ export async function submitFeedback(
 ): Promise<FeedbackSubmitResult> {
   // Why: buildSubmitBody drops images on the crash lane, so validating them
   // there would abort a crash report over attachments it never meant to send.
-  if (args.submissionType !== 'crash' && args.images !== undefined) {
-    const imageError = validateFeedbackImages(args.images)
-    if (imageError) {
-      return { ok: false, status: null, error: imageError }
-    }
+  const imageValidator = args.submissionType === 'crash' ? undefined : validateFeedbackImages
+  const validationError = validateFeedbackSubmission(imageValidator, args.images)
+  if (validationError) {
+    return validationError
   }
   const body = buildSubmitBody(args)
   if (body.images?.length) {

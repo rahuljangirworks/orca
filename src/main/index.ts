@@ -140,6 +140,7 @@ import {
 } from './updater'
 import { configureRemoteServerUpdater } from './runtime/remote-server-updater'
 import type { UpdateCheckOptions } from '../shared/update-status-types'
+import { PERSONAL_FORK_POLICY } from '../shared/personal-fork-policy'
 import { recordUpdaterLifecycle } from './updater-lifecycle-diagnostics'
 import {
   installServeSupervisorDisconnectQuit,
@@ -693,12 +694,14 @@ installUncaughtPipeErrorGuard()
 installUnhandledRejectionLogging()
 // Why: expose the app version via process.env so main and the forked daemon can set TERM_PROGRAM_VERSION without importing electron.
 process.env.ORCA_APP_VERSION = app.getVersion()
-configureRemoteServerUpdater({
-  getSnapshot: getRemoteServerUpdaterSnapshot,
-  check: checkForRemoteServerUpdate,
-  download: downloadRemoteServerUpdate,
-  install: installRemoteServerUpdate
-})
+if (PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+  configureRemoteServerUpdater({
+    getSnapshot: getRemoteServerUpdaterSnapshot,
+    check: checkForRemoteServerUpdate,
+    download: downloadRemoteServerUpdate,
+    install: installRemoteServerUpdate
+  })
+}
 patchPackagedProcessPath()
 // Why: the sync seed above covers early IPC (homebrew/nix); the async login-shell probe below (packaged only) then adds the user's rc PATH.
 if (app.isPackaged && process.platform !== 'win32') {
@@ -1374,6 +1377,9 @@ function quitFromSystemTray(): void {
 
 // Why: menu/tray are clickable before anything else configures the updater.
 function runUserInitiatedUpdateCheck(options?: UpdateCheckOptions): void {
+  if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+    return
+  }
   ensureAutoUpdaterConfigured()
   checkForUpdatesFromMenu(options)
 }
@@ -2891,7 +2897,10 @@ void app.whenReady().then(async () => {
     getKillListEntry: (pluginKey) => pluginKillListService?.find(pluginKey) ?? null
   })
   const requestOfficialMarketplaceSeed = (): void => {
-    if (store?.getSettings().pluginSystemEnabled !== true) {
+    if (
+      !PERSONAL_FORK_POLICY.firstPartyNetworkEnabled ||
+      store?.getSettings().pluginSystemEnabled !== true
+    ) {
       return
     }
     void pluginMarketplaceService?.seedOfficialSource().catch((error) => {
@@ -2951,7 +2960,11 @@ void app.whenReady().then(async () => {
       requestBundledPluginBootstrap()
       requestOfficialMarketplaceSeed()
     }
-    if (app.isPackaged && updates.pluginSystemEnabled === true) {
+    if (
+      PERSONAL_FORK_POLICY.firstPartyNetworkEnabled &&
+      app.isPackaged &&
+      updates.pluginSystemEnabled === true
+    ) {
       void pluginKillListService?.refresh().catch((error) => {
         console.warn('[plugins] failed to refresh plugin safety list; using cached state:', error)
       })
@@ -2979,7 +2992,11 @@ void app.whenReady().then(async () => {
     .catch((error) => {
       console.warn('[plugins] failed to initialize plugin service:', error)
     })
-  if (app.isPackaged && store?.getSettings().pluginSystemEnabled === true) {
+  if (
+    PERSONAL_FORK_POLICY.firstPartyNetworkEnabled &&
+    app.isPackaged &&
+    store?.getSettings().pluginSystemEnabled === true
+  ) {
     void pluginKillListService.refresh().catch((error) => {
       console.warn('[plugins] failed to refresh plugin safety list; using cached state:', error)
     })
@@ -3016,9 +3033,11 @@ void app.whenReady().then(async () => {
   runtimeService.onWorktreeLifecycle((event) => {
     emitPluginWorktreeLifecycle(event)
   })
-  starNag = new StarNagService(store, stats)
-  starNag.start()
-  starNag.registerIpcHandlers()
+  if (PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+    starNag = new StarNagService(store, stats)
+    starNag.start()
+    starNag.registerIpcHandlers()
+  }
   const agentBrowserBridge = new AgentBrowserBridge(browserManager, {
     onTabsChanged: (worktreeId) => runtimeService.notifyMobileSessionTabsChanged(worktreeId)
   })
