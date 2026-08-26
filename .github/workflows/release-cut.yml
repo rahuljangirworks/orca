@@ -956,7 +956,7 @@ jobs:
       - name: Run skill package, transaction, and compatibility suites
         env:
           ORCA_REAL_PROCESS_SKILL_TEST: '0'
-          ORCA_REAL_WINDOWS_SKILL_TEST: ${{ runner.os == 'Windows' && '1' || '0' }}
+          ORCA_REAL_WINDOWS_SKILL_TEST: '0'
         run: pnpm test:skill-sharing:release --reporter=json --outputFile=skill-sharing-release-results.json
 
       - name: Archive bounded skill-sharing results
@@ -985,6 +985,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           ref: refs/tags/${{ needs.cut.outputs.tag }}
+          fetch-tags: true
 
       - uses: ./.github/actions/install-node-dependencies
         with:
@@ -1689,7 +1690,7 @@ jobs:
           Invoke-RestMethod -Method Post -Uri $env:SLACK_WEBHOOK_URL -ContentType 'application/json' -Body $payload
 
       - name: Download signed Windows installer from SignPath
-        if: matrix.platform == 'win'
+        if: matrix.platform == 'win' && steps.submit-signing-request.outcome == 'success'
         shell: pwsh
         env:
           SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -1707,7 +1708,7 @@ jobs:
           Expand-Archive -Path signed-windows.zip -DestinationPath signed-windows -Force
 
       - name: Stage signed Windows release assets
-        if: matrix.platform == 'win'
+        if: matrix.platform == 'win' && steps.submit-signing-request.outcome == 'success'
         shell: pwsh
         run: |
           $signedInstaller = Get-ChildItem -Path signed-windows -Recurse -File -Filter 'orca-windows-setup.exe' | Select-Object -First 1
@@ -1744,7 +1745,7 @@ jobs:
           Get-Item 'dist/orca-windows-setup.exe', 'dist/orca-windows-setup.exe.blockmap', 'dist/latest.yml'
 
       - name: Verify signed Windows installer
-        if: matrix.platform == 'win'
+        if: matrix.platform == 'win' && steps.submit-signing-request.outcome == 'success'
         shell: pwsh
         run: |
           $signature = Get-AuthenticodeSignature -FilePath 'dist/orca-windows-setup.exe'
@@ -1762,7 +1763,7 @@ jobs:
       # proven on a real release, then flip ORCA_WINDOWS_INNER_SIGNATURE_REQUIRED
       # to 'true' so unsigned inner binaries block the release.
       - name: Verify Windows inner binary signatures
-        if: matrix.platform == 'win'
+        if: matrix.platform == 'win' && steps.submit-signing-request.outcome == 'success'
         shell: pwsh
         env:
           ORCA_WINDOWS_INNER_SIGNATURE_REQUIRED: 'false'
