@@ -1,0 +1,214 @@
+name: Agent - Backend Health Monitor
+
+# Monitors Veer backend API health and alerts on issues
+# Runs hourly to ensure API is responsive
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check API health
+        id: health
+        run: |
+          API_URL="https://veer-api.rahuljangir-works.workers.dev"
+
+          echo "Checking $API_URL..."
+
+          # Config endpoint
+          START=$(date +%s%N)
+          CONFIG_STATUS=$(curl -s -o config.json -w "%{http_code}" "$API_URL/config" || echo "000")
+          END=$(date +%s%N)
+          CONFIG_TIME=$(( ($END - $START) / 1000000 ))
+
+          echo "config_status=$CONFIG_STATUS" >> $GITHUB_OUTPUT
+          echo "config_time=${CONFIG_TIME}ms" >> $GITHUB_OUTPUT
+
+          # Updates endpoint
+          START=$(date +%s%N)
+          UPDATES_STATUS=$(curl -s -o updates.json -w "%{http_code}" "$API_URL/updates/check?currentVersion=1.0.0" || echo "000")
+          END=$(date +%s%N)
+          UPDATES_TIME=$(( ($END - $START) / 1000000 ))
+
+          echo "updates_status=$UPDATES_STATUS" >> $GITHUB_OUTPUT
+          echo "updates_time=${UPDATES_TIME}ms" >> $GITHUB_OUTPUT
+
+          # Check if responses are valid JSON
+          if [ "$CONFIG_STATUS" = "200" ]; then
+            if jq empty config.json 2>/dev/null; then
+              echo "config_valid=true" >> $GITHUB_OUTPUT
+              API_URL_FROM_CONFIG=$(jq -r '.apiUrl' config.json)
+              LATEST_VERSION=$(jq -r '.latestVersion' config.json)
+              echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+            else
+              echo "config_valid=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "config_valid=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ "$UPDATES_STATUS" = "200" ]; then
+            if jq empty updates.json 2>/dev/null; then
+              echo "updates_valid=true" >> $GITHUB_OUTPUT
+            else
+              echo "updates_valid=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "updates_valid=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Evaluate health status
+        id: evaluate
+        run: |
+          HEALTHY=true
+          ISSUES=""
+
+          # Check config endpoint
+          if [ "${{ steps.health.outputs.config_status }}" != "200" ]; then
+            HEALTHY=false
+            ISSUES="${ISSUES}\n- ❌ Config endpoint returned ${{ steps.health.outputs.config_status }}"
+          elif [ "${{ steps.health.outputs.config_valid }}" != "true" ]; then
+            HEALTHY=false
+            ISSUES="${ISSUES}\n- ❌ Config endpoint returned invalid JSON"
+          else
+            ISSUES="${ISSUES}\n- ✅ Config endpoint healthy (${{ steps.health.outputs.config_time }})"
+          fi
+
+          # Check updates endpoint
+          if [ "${{ steps.health.outputs.updates_status }}" != "200" ]; then
+            HEALTHY=false
+            ISSUES="${ISSUES}\n- ❌ Updates endpoint returned ${{ steps.health.outputs.updates_status }}"
+          elif [ "${{ steps.health.outputs.updates_valid }}" != "true" ]; then
+            HEALTHY=false
+            ISSUES="${ISSUES}\n- ❌ Updates endpoint returned invalid JSON"
+          else
+            ISSUES="${ISSUES}\n- ✅ Updates endpoint healthy (${{ steps.health.outputs.updates_time }})"
+          fi
+
+          # Check response times
+          CONFIG_TIME="${{ steps.health.outputs.config_time }}"
+          CONFIG_TIME_MS="${CONFIG_TIME%ms}"
+          if [ "$CONFIG_TIME_MS" -gt 1000 ]; then
+            ISSUES="${ISSUES}\n- ⚠️ Config endpoint slow (${CONFIG_TIME})"
+          fi
+
+          UPDATES_TIME="${{ steps.health.outputs.updates_time }}"
+          UPDATES_TIME_MS="${UPDATES_TIME%ms}"
+          if [ "$UPDATES_TIME_MS" -gt 1000 ]; then
+            ISSUES="${ISSUES}\n- ⚠️ Updates endpoint slow (${UPDATES_TIME})"
+          fi
+
+          echo "healthy=$HEALTHY" >> $GITHUB_OUTPUT
+          echo "issues<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$ISSUES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate health report
+        id: report
+        run: |
+          REPORT="# Veer Backend Health Report\n\n"
+          REPORT="${REPORT}**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')\n"
+          REPORT="${REPORT}**API:** https://veer-api.rahuljangir-works.workers.dev\n\n"
+
+          REPORT="${REPORT}## Status\n\n"
+          REPORT="${REPORT}${{ steps.evaluate.outputs.issues }}\n\n"
+
+          if [ "${{ steps.evaluate.outputs.healthy }}" = "true" ]; then
+            REPORT="${REPORT}**Overall Status:** ✅ All systems operational\n"
+          else
+            REPORT="${REPORT}**Overall Status:** ❌ Issues detected\n"
+          fi
+
+          if [ -n "${{ steps.health.outputs.latest_version }}" ]; then
+            REPORT="${REPORT}\n**Latest Version:** ${{ steps.health.outputs.latest_version }}\n"
+          fi
+
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo -e "$REPORT" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for existing health issue
+        id: check-issue
+        if: steps.evaluate.outputs.healthy == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Look for open issue with label "backend-health"
+          ISSUE_NUMBER=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "backend-health" \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create health alert issue
+        if: steps.evaluate.outputs.healthy == 'false' && steps.check-issue.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ steps.report.outputs.report }}
+        run: |
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "🚨 Backend Health Alert - API Issues Detected" \
+            --label "backend-health,bug" \
+            --body "$REPORT
+
+          ---
+
+          This issue was automatically created by the Backend Health Monitor agent.
+          It will be closed automatically when the backend returns to healthy status."
+
+      - name: Update existing health issue
+        if: steps.evaluate.outputs.healthy == 'false' && steps.check-issue.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}
+          REPORT: ${{ steps.report.outputs.report }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "**Update:** Issues still detected
+
+          $REPORT"
+
+      - name: Close resolved health issue
+        if: steps.evaluate.outputs.healthy == 'true' && steps.check-issue.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}
+          REPORT: ${{ steps.report.outputs.report }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "✅ **Resolved:** Backend has returned to healthy status
+
+          $REPORT"
+
+          gh issue close "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --reason "completed"
+
+      - name: Fail if unhealthy
+        if: steps.evaluate.outputs.healthy == 'false'
+        run: |
+          echo "::error::Backend health check failed"
+          exit 1

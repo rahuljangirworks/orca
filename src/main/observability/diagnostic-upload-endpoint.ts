@@ -1,6 +1,8 @@
 // Build-time diagnostic upload routing. Kept outside ipc/diagnostics.ts so
 // crash reporting can attach logs through the same pinned endpoint rules.
 
+import { isLoopbackServiceUrl } from '../../shared/personal-fork-policy'
+
 export function resolveDiagnosticBuildTokenEndpoint(): string | null {
   const endpoint =
     typeof ORCA_DIAGNOSTICS_TOKEN_URL !== 'undefined'
@@ -24,13 +26,13 @@ export function resolveDiagnosticTokenEndpoint(): string | null {
   // Official builds must stay pinned to the CI-substituted endpoint; user env
   // cannot redirect uploads that the UI labels as going to Orca support.
   if (resolveDiagnosticBuildIdentity()) {
-    return buildEndpoint
+    return buildEndpoint && isLoopbackServiceUrl(buildEndpoint) ? buildEndpoint : null
   }
   const fromEnv = process.env.ORCA_DIAGNOSTICS_TOKEN_URL
-  if (fromEnv && fromEnv.length > 0) {
+  if (fromEnv && fromEnv.length > 0 && isLoopbackServiceUrl(fromEnv)) {
     return fromEnv
   }
-  return buildEndpoint
+  return buildEndpoint && isLoopbackServiceUrl(buildEndpoint) ? buildEndpoint : null
 }
 
 export function resolveDiagnosticOrcaChannel(): 'stable' | 'rc' | 'dev' {

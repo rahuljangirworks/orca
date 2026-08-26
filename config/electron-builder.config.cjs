@@ -61,7 +61,7 @@ const devChannelRepo = isHourlyChannel
     : isAdhocChannel
       ? 'orca-adhoc'
       : null
-const appId = 'com.stablyai.orca'
+const appId = 'com.rahuljangir.veer'
 const featureWallResources = {
   from: 'resources/onboarding/feature-wall',
   to: 'onboarding/feature-wall'
@@ -106,7 +106,7 @@ const winSpeechNativeResource = {
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId,
-  productName: 'Orca',
+  productName: 'Veer',
   protocols: [{ name: 'Orca', schemes: ['orca'] }],
   ...(devChannelBuildVersion
     ? { extraMetadata: { version: devChannelBuildVersion } }

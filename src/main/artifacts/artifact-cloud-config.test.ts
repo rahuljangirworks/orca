@@ -5,11 +5,11 @@ import {
 } from './artifact-cloud-config'
 
 describe('resolveArtifactCloudApiUrl', () => {
-  it('uses the first-party production origin by default', () => {
-    expect(resolveArtifactCloudApiUrl(undefined, {}, true)).toBe('https://share.onorca.dev')
+  it('has no first-party production fallback', () => {
+    expect(() => resolveArtifactCloudApiUrl(undefined, {}, true)).toThrow(/explicitly configured/)
   })
 
-  it('allows loopback HTTP only in development', () => {
+  it('allows loopback HTTP in development and packaged personal builds', () => {
     expect(
       resolveArtifactCloudApiUrl(
         undefined,
@@ -17,15 +17,15 @@ describe('resolveArtifactCloudApiUrl', () => {
         false
       )
     ).toBe('http://127.0.0.1:45961')
-    expect(() => resolveArtifactCloudApiUrl('http://127.0.0.1:45961', {}, true)).toThrow(/HTTPS/)
+    expect(resolveArtifactCloudApiUrl('http://127.0.0.1:45961', {}, true)).toBe(
+      'http://127.0.0.1:45961'
+    )
   })
 
   it('rejects origins that could receive an Orca access token', () => {
-    expect(() => resolveArtifactCloudApiUrl('https://example.com', {}, false)).toThrow(
-      /onorca\.dev/
-    )
+    expect(() => resolveArtifactCloudApiUrl('https://example.com', {}, false)).toThrow(/loopback/)
     expect(() => resolveArtifactCloudApiUrl('https://share.onorca.dev/path', {}, false)).toThrow(
-      /origin/
+      /loopback/
     )
   })
 

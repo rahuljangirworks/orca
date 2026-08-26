@@ -81,6 +81,20 @@ export const FEATURE_WALL_SETUP_STEPS: readonly FeatureWallSetupStep[] = [
 export const FEATURE_WALL_SETUP_STEP_IDS = FEATURE_WALL_SETUP_STEPS.map((step) => step.id)
 
 export function getFeatureWallSetupSteps(): readonly FeatureWallSetupStep[] {
+  // Why: personal fork policy - filter out steps that require Orca services
+  if (typeof window !== 'undefined') {
+    try {
+      const { PERSONAL_FORK_POLICY } = require('./personal-fork-policy')
+      if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+        // Filter out agent-capabilities (CLI install) and task-sources (integrations)
+        return FEATURE_WALL_SETUP_STEPS.filter(
+          (step) => step.id !== 'agent-capabilities' && step.id !== 'task-sources'
+        )
+      }
+    } catch {
+      // Module not available in this context
+    }
+  }
   return FEATURE_WALL_SETUP_STEPS
 }
 

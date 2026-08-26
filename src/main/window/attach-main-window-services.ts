@@ -8,6 +8,7 @@ import type { ReleaseBuildListResult, UpdateCheckOptions } from '../../shared/up
 import type { CreateWorktreeResult } from '../../shared/worktree/create-types'
 import type { WorktreeStartupLaunch } from '../../shared/worktree/launch-types'
 import { RELEASE_CHANNELS, type ReleaseChannel } from '../../shared/release-channel'
+import { PERSONAL_FORK_POLICY } from '../../shared/personal-fork-policy'
 import {
   acknowledgePendingTccPromptNotice,
   consumePendingTccPromptNotice,
@@ -166,7 +167,11 @@ export function attachMainWindowServices(
   // Why: setupAutoUpdater sync-require()s electron-updater (slow on cold Windows w/ Defender, #7225), so defer past first paint; timer fallback covers crash-looping renderers.
   let updaterSetupDone = false
   const setupAutoUpdaterDeferred = (): void => {
-    if (updaterSetupDone || mainWindow.isDestroyed()) {
+    if (
+      !PERSONAL_FORK_POLICY.firstPartyNetworkEnabled ||
+      updaterSetupDone ||
+      mainWindow.isDestroyed()
+    ) {
       return
     }
     updaterSetupDone = true
@@ -200,10 +205,14 @@ export function attachMainWindowServices(
     })
     logStartupMilestone('updater-setup-done')
   }
-  pendingAutoUpdaterSetup = setupAutoUpdaterDeferred
-  mainWindow.once('ready-to-show', () => setImmediate(setupAutoUpdaterDeferred))
-  const updaterSetupFallback = setTimeout(setupAutoUpdaterDeferred, UPDATER_SETUP_FALLBACK_MS)
-  updaterSetupFallback.unref?.()
+  if (PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+    pendingAutoUpdaterSetup = setupAutoUpdaterDeferred
+    mainWindow.once('ready-to-show', () => setImmediate(setupAutoUpdaterDeferred))
+    const updaterSetupFallback = setTimeout(setupAutoUpdaterDeferred, UPDATER_SETUP_FALLBACK_MS)
+    updaterSetupFallback.unref?.()
+  } else {
+    pendingAutoUpdaterSetup = null
+  }
   registerRuntimeWindowLifecycle(mainWindow, runtime)
 
   const allowedPermissions = new Set(['media', 'fullscreen', 'pointerLock'])
@@ -575,9 +584,16 @@ export function registerUpdaterHandlers(_store: Store): void {
   ipcMain.removeHandler('updater:showLinuxPackage')
   ipcMain.removeHandler('updater:listBuilds')
 
-  ipcMain.handle('updater:getStatus', () => getUpdateStatus())
+  ipcMain.handle('updater:getStatus', () =>
+    PERSONAL_FORK_POLICY.firstPartyNetworkEnabled
+      ? getUpdateStatus()
+      : { state: 'not-available' as const }
+  )
   ipcMain.handle('updater:getVersion', () => app.getVersion())
   ipcMain.handle('updater:check', (_event, options?: UpdateCheckOptions) => {
+    if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+      return
+    }
     ensureAutoUpdaterConfigured()
     return checkForUpdatesFromMenu(options)
   })
@@ -600,6 +616,13 @@ export function registerUpdaterHandlers(_store: Store): void {
     async (_event, channel: ReleaseChannel): Promise<ReleaseBuildListResult> => {
       if (!RELEASE_CHANNELS.includes(channel)) {
         return { ok: false, channel, message: `Unknown release channel "${channel}".` }
+      }
+      if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+        return {
+          ok: false,
+          channel,
+          message: 'Updates are managed through the personal fork Git workflow.'
+        }
       }
       try {
         return { ok: true, channel, builds: await listAvailableReleaseBuilds(channel) }
