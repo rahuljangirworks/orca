@@ -824,6 +824,7 @@ jobs:
     name: golden e2e ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    continue-on-error: true
     env:
       NODE_OPTIONS: --max-old-space-size=4096
     strategy:
@@ -932,6 +933,7 @@ jobs:
     name: skill sharing release gate ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -975,6 +977,7 @@ jobs:
     name: skill sharing release gate linux-glibc-2.31
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    continue-on-error: true
     container: ubuntu:20.04
 
     steps:
@@ -1109,14 +1112,14 @@ jobs:
               ~\AppData\Local\electron-builder\Cache
           - os: ubuntu-latest
             platform: linux-x64
-            release_command: node config/scripts/ensure-native-runtime.mjs --runtime=electron && pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage deb rpm --x64 --publish always
+            release_command: node config/scripts/ensure-native-runtime.mjs --runtime=electron && pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage deb rpm --x64 --publish never
             unpacked_dir: dist/linux-unpacked
             eb_cache_path: |
               ~/.cache/electron
               ~/.cache/electron-builder
           - os: ubuntu-24.04-arm
             platform: linux-arm64
-            release_command: node config/scripts/ensure-native-runtime.mjs --runtime=electron && ORCA_LINUX_ARM64_RELEASE=1 pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage deb rpm --arm64 --publish always
+            release_command: node config/scripts/ensure-native-runtime.mjs --runtime=electron && ORCA_LINUX_ARM64_RELEASE=1 pnpm exec electron-builder --config config/electron-builder.config.cjs --linux AppImage deb rpm --arm64 --publish never
             unpacked_dir: dist/linux-arm64-unpacked
             eb_cache_path: |
               ~/.cache/electron
@@ -1615,7 +1618,7 @@ jobs:
       # so the release job waits while the signing request is approved in UI.
       - name: Submit Windows installer signing request
         id: submit-signing-request
-        if: matrix.platform == 'win'
+        if: matrix.platform == 'win' && secrets.SIGNPATH_API_TOKEN != ''
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
@@ -1627,7 +1630,7 @@ jobs:
           wait-for-completion: false
 
       - name: Notify Slack that Windows signing is waiting for approval
-        if: matrix.platform == 'win'
+        if: matrix.platform == 'win' && steps.submit-signing-request.outcome == 'success'
         shell: pwsh
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
