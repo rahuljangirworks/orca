@@ -1,12 +1,14 @@
 {
-  "name": "orca",
+  "name": "veer",
   "version": "1.4.178-rc.2",
-  "description": "Next-gen IDE for parallel agentic development",
-  "homepage": "https://github.com/stablyai/orca",
-  "author": "stablyai",
+  "description": "Veer - Your Coding Warrior | AI-powered development assistant",
+  "homepage": "https://github.com/rahuljangirworks/orca",
+  "author": "Rahul Jangir",
   "bin": {
     "orca": "./out/cli/index.js",
-    "orca-dev": "./config/scripts/orca-dev.mjs"
+    "orca-dev": "./config/scripts/orca-dev.mjs",
+    "veer": "./out/cli/index.js",
+    "veer-dev": "./config/scripts/orca-dev.mjs"
   },
   "main": "./out/main/index.js",
   "scripts": {

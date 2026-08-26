@@ -5,7 +5,8 @@ import {
 
 export type ValidationResult<T = never> = ({ ok: true } & T) | { ok: false; error: string }
 
-type FeedbackSubmitResult = { ok: boolean; status: number | null; error?: string }
+type FeedbackSubmitFailure = { ok: false; status: number | null; error: string }
+type FeedbackSubmitResult = FeedbackSubmitFailure | { ok: true }
 
 // Check if first-party network requests are allowed in this personal fork.
 // Returns null if allowed, or an error result if disabled.
@@ -22,9 +23,8 @@ export function validateFeedbackSubmission(
   imageValidator?: (images: unknown[]) => string | null,
   images?: unknown[]
 ): FeedbackSubmitResult | null {
-  const networkCheck = checkFirstPartyNetworkAllowed<{ status: null }>()
-  if (networkCheck) {
-    return networkCheck
+  if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+    return { ok: false, status: null, error: PERSONAL_FORK_NETWORK_DISABLED_MESSAGE }
   }
   if (imageValidator && images !== undefined) {
     const imageError = imageValidator(images)
