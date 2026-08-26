@@ -10,6 +10,10 @@ inputs:
     description: Node.js version override; defaults to the version declared in package.json.
     required: false
     default: ''
+  skip-lockfile-diff:
+    description: Skip the post-install lockfile diff check (use when building from a tag).
+    required: false
+    default: 'false'
 
 runs:
   using: composite
@@ -71,6 +75,8 @@ runs:
     # guard stays so a stale lockfile still fails by name rather than by resolver error.
     - name: Install dependencies
       shell: bash
+      env:
+        SKIP_LOCKFILE_DIFF: ${{ inputs.skip-lockfile-diff }}
       run: |
         pnpm install --frozen-lockfile --ignore-scripts
         # Job containers can run composite steps from a source mirror without .git.
@@ -79,7 +85,9 @@ runs:
         # version bumps and the diff would fail incorrectly comparing package.json
         # against the lockfile snapshot.
         _skip_diff=false
-        if [[ "${GITHUB_REF:-}" =~ ^refs/tags/ ]]; then
+        if [[ "$SKIP_LOCKFILE_DIFF" == "true" ]]; then
+          _skip_diff=true
+        elif [[ "${GITHUB_REF:-}" =~ ^refs/tags/ ]]; then
           _skip_diff=true
         elif git -C "$GITHUB_WORKSPACE" describe --exact-match --tags HEAD >/dev/null 2>&1; then
           _skip_diff=true

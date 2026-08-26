@@ -990,6 +990,7 @@ jobs:
       - uses: ./.github/actions/install-node-dependencies
         with:
           native-runtime: none
+          skip-lockfile-diff: 'true'
 
       - name: Run skill package, transaction, and compatibility suites
         env:
