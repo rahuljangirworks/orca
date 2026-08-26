@@ -1376,8 +1376,48 @@ function quitFromSystemTray(): void {
 }
 
 // Why: menu/tray are clickable before anything else configures the updater.
-function runUserInitiatedUpdateCheck(options?: UpdateCheckOptions): void {
+async function runUserInitiatedUpdateCheck(options?: UpdateCheckOptions): Promise<void> {
+  // Veer Personal Fork: Use our own backend instead of Orca servers
   if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+    // Use Veer Platform API for updates
+    const { checkForUpdates } = await import('./updates/check-updates')
+    const { shell, dialog } = await import('electron')
+
+    const result = await checkForUpdates()
+
+    if (result.error) {
+      dialog.showMessageBox({
+        type: 'error',
+        title: 'Update Check Failed',
+        message: 'Could not check for updates',
+        detail: result.error
+      })
+      return
+    }
+
+    if (result.updateAvailable) {
+      const response = await dialog.showMessageBox({
+        type: 'info',
+        title: 'Update Available',
+        message: `Veer ${result.latestVersion} is available!`,
+        detail: `Current version: ${result.currentVersion}\n\n${result.releaseNotes || 'See release notes on GitHub'}`,
+        buttons: ['Download', 'Later'],
+        defaultId: 0,
+        cancelId: 1
+      })
+
+      if (response.response === 0 && result.downloadUrl) {
+        // Open download URL in browser
+        await shell.openExternal(result.downloadUrl)
+      }
+    } else {
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Up to Date',
+        message: 'Veer is up to date!',
+        detail: `You have the latest version: ${result.currentVersion}`
+      })
+    }
     return
   }
   ensureAutoUpdaterConfigured()
@@ -3122,6 +3162,16 @@ void app.whenReady().then(async () => {
   })
 
   logStartupMilestone('services-initialized')
+
+  // Veer: Start periodic update checker (uses Veer Platform API)
+  if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+    void import('./updates/check-updates').then(({ startPeriodicUpdateChecker }) => {
+      void startPeriodicUpdateChecker().catch((error) => {
+        console.warn('[Veer Updates] Failed to start periodic update checker:', error)
+      })
+    })
+  }
+
   await ensureMainI18n()
   await setMainUiLanguage(store.getSettings().uiLanguage)
   logStartupMilestone('i18n-ready')
