@@ -1,0 +1,271 @@
+name: Agent - Upstream Sync Monitor
+
+# Monitors stablyai/orca for new releases and changes
+# Helps keep Veer fork in sync with upstream
+
+on:
+  schedule:
+    # Run daily at 00:00 UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/stablyai/orca.git || true
+          git fetch upstream --tags
+
+      - name: Check for new upstream releases
+        id: releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get latest upstream release
+          LATEST_UPSTREAM=$(gh release list --repo stablyai/orca --limit 1 --json tagName --jq '.[0].tagName')
+          echo "latest_upstream=$LATEST_UPSTREAM" >> $GITHUB_OUTPUT
+
+          # Get latest fork release
+          LATEST_FORK=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName --jq '.[0].tagName')
+          echo "latest_fork=$LATEST_FORK" >> $GITHUB_OUTPUT
+
+          # Check if there are new releases
+          UPSTREAM_RELEASES=$(gh release list --repo stablyai/orca --limit 10 --json tagName,publishedAt,name > upstream_releases.json)
+          NEW_COUNT=0
+
+          # Find releases newer than our last sync
+          if [ -n "$LATEST_FORK" ]; then
+            FORK_DATE=$(gh release view "$LATEST_FORK" --repo "$GITHUB_REPOSITORY" --json publishedAt --jq '.publishedAt')
+            NEW_COUNT=$(jq "[.[] | select(.publishedAt > \"$FORK_DATE\")] | length" upstream_releases.json)
+          else
+            NEW_COUNT=$(jq "length" upstream_releases.json)
+          fi
+
+          echo "new_count=$NEW_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$NEW_COUNT" -gt 0 ]; then
+            echo "has_new=true" >> $GITHUB_OUTPUT
+
+            # List new releases
+            NEW_RELEASES=$(jq -r '.[] | "\(.tagName) - \(.name) (\(.publishedAt | split("T")[0]))"' upstream_releases.json | head -$NEW_COUNT)
+            echo "new_releases<<EOF" >> $GITHUB_OUTPUT
+            echo "$NEW_RELEASES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_new=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for new commits
+        id: commits
+        run: |
+          # Get commits on upstream/main since last sync
+          # Check if we have a sync tracking file
+          if [ -f ".veer/last-upstream-sync" ]; then
+            LAST_SYNC=$(cat .veer/last-upstream-sync)
+          else
+            # If no sync file, use last 7 days
+            LAST_SYNC=$(git log upstream/main --since="7 days ago" --format="%H" | tail -1)
+          fi
+
+          if [ -n "$LAST_SYNC" ]; then
+            UPSTREAM_HEAD=$(git rev-parse upstream/main)
+            COMMIT_COUNT=$(git rev-list --count ${LAST_SYNC}..upstream/main 2>/dev/null || echo "0")
+
+            echo "last_sync=$LAST_SYNC" >> $GITHUB_OUTPUT
+            echo "upstream_head=$UPSTREAM_HEAD" >> $GITHUB_OUTPUT
+            echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+            if [ "$COMMIT_COUNT" -gt 0 ]; then
+              echo "has_new_commits=true" >> $GITHUB_OUTPUT
+
+              # Get commit summaries
+              COMMITS=$(git log --oneline ${LAST_SYNC}..upstream/main --format="%h %s" | head -20)
+              echo "commits<<EOF" >> $GITHUB_OUTPUT
+              echo "$COMMITS" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+
+              # Get commit stats
+              STATS=$(git diff --stat ${LAST_SYNC}..upstream/main)
+              echo "stats<<EOF" >> $GITHUB_OUTPUT
+              echo "$STATS" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            else
+              echo "has_new_commits=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "has_new_commits=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Analyze changes
+        if: steps.commits.outputs.has_new_commits == 'true'
+        id: analyze
+        run: |
+          LAST_SYNC="${{ steps.commits.outputs.last_sync }}"
+
+          # Check for significant changes
+          CATEGORIES=""
+
+          # Check for feature additions
+          if git log ${LAST_SYNC}..upstream/main --oneline | grep -iE "feat:|feature:" > /dev/null; then
+            CATEGORIES="${CATEGORIES}features,"
+          fi
+
+          # Check for bug fixes
+          if git log ${LAST_SYNC}..upstream/main --oneline | grep -iE "fix:|bug:" > /dev/null; then
+            CATEGORIES="${CATEGORIES}fixes,"
+          fi
+
+          # Check for breaking changes
+          if git log ${LAST_SYNC}..upstream/main --oneline | grep -iE "break|BREAKING" > /dev/null; then
+            CATEGORIES="${CATEGORIES}breaking,"
+          fi
+
+          # Check for security fixes
+          if git log ${LAST_SYNC}..upstream/main --oneline | grep -iE "security|cve|vuln" > /dev/null; then
+            CATEGORIES="${CATEGORIES}security,"
+          fi
+
+          # Check for dependency updates
+          if git diff ${LAST_SYNC}..upstream/main --name-only | grep -E "package.json|pnpm-lock.yaml" > /dev/null; then
+            CATEGORIES="${CATEGORIES}dependencies,"
+          fi
+
+          CATEGORIES="${CATEGORIES%,}"
+          echo "categories=$CATEGORIES" >> $GITHUB_OUTPUT
+
+      - name: Generate sync report
+        id: report
+        if: steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true'
+        run: |
+          REPORT="# Upstream Sync Report\n\n"
+          REPORT="${REPORT}**Upstream:** stablyai/orca\n"
+          REPORT="${REPORT}**Fork:** $GITHUB_REPOSITORY\n"
+          REPORT="${REPORT}**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')\n\n"
+
+          if [ "${{ steps.releases.outputs.has_new }}" = "true" ]; then
+            REPORT="${REPORT}## 🎉 New Releases (${{ steps.releases.outputs.new_count }})\n\n"
+            REPORT="${REPORT}\`\`\`\n"
+            REPORT="${REPORT}${{ steps.releases.outputs.new_releases }}\n"
+            REPORT="${REPORT}\`\`\`\n\n"
+          fi
+
+          if [ "${{ steps.commits.outputs.has_new_commits }}" = "true" ]; then
+            REPORT="${REPORT}## 📝 New Commits (${{ steps.commits.outputs.commit_count }})\n\n"
+
+            if [ -n "${{ steps.analyze.outputs.categories }}" ]; then
+              REPORT="${REPORT}**Categories:**\n"
+              IFS=',' read -ra CATS <<< "${{ steps.analyze.outputs.categories }}"
+              for cat in "${CATS[@]}"; do
+                REPORT="${REPORT}- \`${cat}\`\n"
+              done
+              REPORT="${REPORT}\n"
+            fi
+
+            REPORT="${REPORT}**Recent commits:**\n"
+            REPORT="${REPORT}\`\`\`\n"
+            REPORT="${REPORT}${{ steps.commits.outputs.commits }}\n"
+            REPORT="${REPORT}\`\`\`\n\n"
+
+            REPORT="${REPORT}<details>\n"
+            REPORT="${REPORT}<summary>Full Diff Stats</summary>\n\n"
+            REPORT="${REPORT}\`\`\`\n"
+            REPORT="${REPORT}${{ steps.commits.outputs.stats }}\n"
+            REPORT="${REPORT}\`\`\`\n"
+            REPORT="${REPORT}</details>\n\n"
+          fi
+
+          REPORT="${REPORT}## 🔄 Sync Recommendations\n\n"
+
+          if [ "${{ steps.releases.outputs.has_new }}" = "true" ]; then
+            REPORT="${REPORT}1. **Review upstream releases** - Check changelog for valuable features\n"
+            REPORT="${REPORT}2. **Cherry-pick commits** - Select relevant changes for Veer\n"
+          fi
+
+          if [ "${{ steps.commits.outputs.has_new_commits }}" = "true" ]; then
+            REPORT="${REPORT}3. **Merge strategy** - Consider rebasing or merging upstream/main\n"
+            REPORT="${REPORT}4. **Update UPSTREAM-DELTA.md** - Document changes ported to Veer\n"
+          fi
+
+          REPORT="${REPORT}5. **Test thoroughly** - Ensure Veer-specific features still work\n\n"
+
+          REPORT="${REPORT}---\n"
+          REPORT="${REPORT}_Auto-generated by Upstream Sync Monitor agent_"
+
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo -e "$REPORT" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for existing sync tracking issue
+        if: steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true'
+        id: check-issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Look for open upstream-sync issue
+          ISSUE_NUMBER=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "upstream-sync" \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create sync tracking issue
+        if: (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true') && steps.check-issue.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ steps.report.outputs.report }}
+          CATEGORIES: ${{ steps.analyze.outputs.categories }}
+        run: |
+          LABELS="upstream-sync"
+          if [ -n "$CATEGORIES" ]; then
+            LABELS="$LABELS,$CATEGORIES"
+          fi
+
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "🔄 Upstream Sync Available - stablyai/orca" \
+            --label "$LABELS" \
+            --body "$REPORT"
+
+      - name: Update existing sync issue
+        if: (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true') && steps.check-issue.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}
+          REPORT: ${{ steps.report.outputs.report }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "## Update - New Changes Detected
+
+          $REPORT"
+
+      - name: No changes summary
+        if: steps.releases.outputs.has_new != 'true' && steps.commits.outputs.has_new_commits != 'true'
+        run: |
+          echo "✅ Fork is up to date with upstream" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Upstream Latest:** ${{ steps.releases.outputs.latest_upstream }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Fork Latest:** ${{ steps.releases.outputs.latest_fork }}" >> $GITHUB_STEP_SUMMARY

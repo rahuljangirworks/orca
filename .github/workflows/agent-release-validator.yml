@@ -1,0 +1,248 @@
+name: Agent - Release Validator
+
+# Validates releases before publication to catch issues early
+# Triggered automatically by release-cut workflow or manually
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag to validate (e.g., v1.4.178-rc.3)'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      release_tag:
+        description: 'Release tag to validate'
+        required: true
+        type: string
+    outputs:
+      validation_passed:
+        description: 'Whether validation passed'
+        value: ${{ jobs.validate.outputs.passed }}
+      summary:
+        description: 'Validation summary'
+        value: ${{ jobs.validate.outputs.summary }}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      passed: ${{ steps.check.outputs.passed }}
+      summary: ${{ steps.check.outputs.summary }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_tag }}
+
+      - name: Get release info
+        id: release-info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          echo "Fetching release info for $TAG"
+
+          # Check if release exists
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release_exists=true" >> $GITHUB_OUTPUT
+
+            # Get release details
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets,isDraft,isPrerelease > release.json
+            echo "is_draft=$(jq -r '.isDraft' release.json)" >> $GITHUB_OUTPUT
+            echo "is_prerelease=$(jq -r '.isPrerelease' release.json)" >> $GITHUB_OUTPUT
+            echo "asset_count=$(jq '.assets | length' release.json)" >> $GITHUB_OUTPUT
+          else
+            echo "release_exists=false" >> $GITHUB_OUTPUT
+            echo "::warning::Release $TAG does not exist yet"
+          fi
+
+      - name: Validate version number
+        id: version
+        run: |
+          TAG="${{ inputs.release_tag }}"
+          # Remove 'v' prefix
+          VERSION="${TAG#v}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Check version format
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "valid=false" >> $GITHUB_OUTPUT
+            echo "error=Invalid version format: $VERSION" >> $GITHUB_OUTPUT
+            echo "::error::Invalid version format: $VERSION"
+          else
+            echo "valid=true" >> $GITHUB_OUTPUT
+            echo "✓ Version format valid: $VERSION"
+          fi
+
+      - name: Check package.json version
+        id: package-version
+        run: |
+          PACKAGE_VERSION=$(cat package.json | grep '"version"' | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+
+          if [ "$PACKAGE_VERSION" = "$TAG_VERSION" ]; then
+            echo "matches=true" >> $GITHUB_OUTPUT
+            echo "✓ package.json version matches tag: $PACKAGE_VERSION"
+          else
+            echo "matches=false" >> $GITHUB_OUTPUT
+            echo "::error::Version mismatch - Tag: $TAG_VERSION, package.json: $PACKAGE_VERSION"
+          fi
+
+      - name: Validate expected assets
+        id: assets
+        if: steps.release-info.outputs.release_exists == 'true'
+        run: |
+          EXPECTED_ASSETS=(
+            "AppImage.*x64"
+            "AppImage.*arm64"
+            "\\.deb"
+            "\\.rpm"
+            "windows-setup\\.exe"
+            "mac.*\\.dmg"
+          )
+
+          MISSING=""
+          for pattern in "${EXPECTED_ASSETS[@]}"; do
+            if ! gh release view "${{ inputs.release_tag }}" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -E "$pattern" > /dev/null; then
+              MISSING="$MISSING\n- $pattern"
+            fi
+          done
+
+          if [ -n "$MISSING" ]; then
+            echo "complete=false" >> $GITHUB_OUTPUT
+            echo "missing<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$MISSING" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            echo "::warning::Missing expected assets:$MISSING"
+          else
+            echo "complete=true" >> $GITHUB_OUTPUT
+            echo "✓ All expected asset types present"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check workflow run status
+        id: workflow-status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.release_tag }}
+        run: |
+          # Find the release-cut workflow run for this tag
+          WORKFLOW_RUN=$(gh api "/repos/$GITHUB_REPOSITORY/actions/workflows/release-cut.yml/runs" \
+            --jq ".workflow_runs[] | select(.head_branch == \"$TAG\") | .id" | head -1)
+
+          if [ -n "$WORKFLOW_RUN" ]; then
+            STATUS=$(gh run view "$WORKFLOW_RUN" --repo "$GITHUB_REPOSITORY" --json conclusion --jq '.conclusion')
+            echo "workflow_run=$WORKFLOW_RUN" >> $GITHUB_OUTPUT
+            echo "workflow_status=$STATUS" >> $GITHUB_OUTPUT
+
+            if [ "$STATUS" = "success" ]; then
+              echo "workflow_passed=true" >> $GITHUB_OUTPUT
+              echo "✓ Release workflow passed"
+            else
+              echo "workflow_passed=false" >> $GITHUB_OUTPUT
+              echo "::warning::Release workflow status: $STATUS"
+            fi
+          else
+            echo "workflow_passed=unknown" >> $GITHUB_OUTPUT
+            echo "::warning::Could not find release workflow run"
+          fi
+
+      - name: Generate validation report
+        id: check
+        run: |
+          PASSED=true
+          SUMMARY="# Release Validation Report\n\n"
+          SUMMARY="${SUMMARY}**Release:** ${{ inputs.release_tag }}\n"
+          SUMMARY="${SUMMARY}**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')\n\n"
+
+          SUMMARY="${SUMMARY}## Checks\n\n"
+
+          # Version format
+          if [ "${{ steps.version.outputs.valid }}" = "true" ]; then
+            SUMMARY="${SUMMARY}✅ Version format valid\n"
+          else
+            SUMMARY="${SUMMARY}❌ Version format invalid: ${{ steps.version.outputs.error }}\n"
+            PASSED=false
+          fi
+
+          # Package.json match
+          if [ "${{ steps.package-version.outputs.matches }}" = "true" ]; then
+            SUMMARY="${SUMMARY}✅ package.json version matches tag\n"
+          else
+            SUMMARY="${SUMMARY}❌ Version mismatch - Tag: ${{ steps.version.outputs.version }}, package.json: ${{ steps.package-version.outputs.package_version }}\n"
+            PASSED=false
+          fi
+
+          # Release existence
+          if [ "${{ steps.release-info.outputs.release_exists }}" = "true" ]; then
+            SUMMARY="${SUMMARY}✅ Release exists on GitHub\n"
+
+            # Assets
+            if [ "${{ steps.assets.outputs.complete }}" = "true" ]; then
+              SUMMARY="${SUMMARY}✅ All expected assets present (${{ steps.release-info.outputs.asset_count }} total)\n"
+            else
+              SUMMARY="${SUMMARY}⚠️ Missing some expected assets:\n${{ steps.assets.outputs.missing }}\n"
+            fi
+
+            # Draft status
+            if [ "${{ steps.release-info.outputs.is_draft }}" = "true" ]; then
+              SUMMARY="${SUMMARY}ℹ️ Release is draft (not yet published)\n"
+            else
+              SUMMARY="${SUMMARY}✅ Release is published\n"
+            fi
+          else
+            SUMMARY="${SUMMARY}⚠️ Release does not exist yet\n"
+          fi
+
+          # Workflow status
+          if [ "${{ steps.workflow-status.outputs.workflow_passed }}" = "true" ]; then
+            SUMMARY="${SUMMARY}✅ Release workflow passed\n"
+          elif [ "${{ steps.workflow-status.outputs.workflow_passed }}" = "false" ]; then
+            SUMMARY="${SUMMARY}❌ Release workflow failed or incomplete\n"
+            PASSED=false
+          fi
+
+          SUMMARY="${SUMMARY}\n---\n\n"
+
+          if [ "$PASSED" = "true" ]; then
+            SUMMARY="${SUMMARY}**Result:** ✅ Validation passed - release is ready\n"
+          else
+            SUMMARY="${SUMMARY}**Result:** ❌ Validation failed - fix issues before publishing\n"
+          fi
+
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          # Also output to job summary
+          echo -e "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+
+      - name: Post validation to release
+        if: steps.release-info.outputs.release_exists == 'true' && steps.check.outputs.passed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.release_tag }}
+          SUMMARY: ${{ steps.check.outputs.summary }}
+        run: |
+          # Add comment to release discussion if validation failed
+          echo -e "$SUMMARY" | gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --comments || true
+
+      - name: Fail if validation failed
+        if: steps.check.outputs.passed == 'false'
+        run: |
+          echo "::error::Release validation failed"
+          exit 1

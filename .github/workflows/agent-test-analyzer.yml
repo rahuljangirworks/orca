@@ -1,0 +1,275 @@
+name: Agent - Test Failure Analyzer
+
+# Analyzes test failures and creates diagnostic reports
+# Triggered automatically on CI failures or manually
+
+on:
+  workflow_run:
+    workflows: ["Cut Release", "E2E Tests"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Workflow run ID to analyze'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 10
+
+    steps:
+      - name: Get workflow run info
+        id: workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ inputs.run_id || github.event.workflow_run.id }}
+        run: |
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+
+          # Fetch workflow run details
+          gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json name,headBranch,conclusion,createdAt > run.json
+
+          NAME=$(jq -r '.name' run.json)
+          BRANCH=$(jq -r '.headBranch' run.json)
+          CONCLUSION=$(jq -r '.conclusion' run.json)
+
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "conclusion=$CONCLUSION" >> $GITHUB_OUTPUT
+
+      - name: Get failed jobs
+        id: jobs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ steps.workflow.outputs.run_id }}
+        run: |
+          # Get all jobs from the run
+          gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json jobs > jobs.json
+
+          # Extract failed jobs
+          jq '[.jobs[] | select(.conclusion == "failure") | {name: .name, id: .id, conclusion: .conclusion}]' jobs.json > failed.json
+
+          FAILED_COUNT=$(jq 'length' failed.json)
+          echo "count=$FAILED_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$FAILED_COUNT" -gt 0 ]; then
+            echo "has_failures=true" >> $GITHUB_OUTPUT
+
+            # Get job names
+            FAILED_NAMES=$(jq -r '.[].name' failed.json | head -5)
+            echo "names<<EOF" >> $GITHUB_OUTPUT
+            echo "$FAILED_NAMES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_failures=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Categorize failures
+        if: steps.jobs.outputs.has_failures == 'true'
+        id: categorize
+        run: |
+          # Analyze job names to categorize failures
+          CATEGORIES=""
+
+          if jq -e '.[] | select(.name | contains("skill"))' failed.json > /dev/null; then
+            CATEGORIES="${CATEGORIES}skill-sharing,"
+          fi
+
+          if jq -e '.[] | select(.name | contains("e2e") or contains("golden"))' failed.json > /dev/null; then
+            CATEGORIES="${CATEGORIES}e2e-tests,"
+          fi
+
+          if jq -e '.[] | select(.name | contains("build"))' failed.json > /dev/null; then
+            CATEGORIES="${CATEGORIES}build,"
+          fi
+
+          if jq -e '.[] | select(.name | contains("windows"))' failed.json > /dev/null; then
+            CATEGORIES="${CATEGORIES}windows,"
+          fi
+
+          if jq -e '.[] | select(.name | contains("mac"))' failed.json > /dev/null; then
+            CATEGORIES="${CATEGORIES}macos,"
+          fi
+
+          if jq -e '.[] | select(.name | contains("linux"))' failed.json > /dev/null; then
+            CATEGORIES="${CATEGORIES}linux,"
+          fi
+
+          # Remove trailing comma
+          CATEGORIES="${CATEGORIES%,}"
+
+          echo "categories=$CATEGORIES" >> $GITHUB_OUTPUT
+
+      - name: Check for known issues
+        id: known
+        run: |
+          # Check if similar failures have occurred before
+          SIMILAR_ISSUES=""
+
+          # Common patterns
+          if grep -q "skill.*sharing" failed.json; then
+            SIMILAR_ISSUES="${SIMILAR_ISSUES}\n- Skill-sharing tests often fail on dependency issues"
+            SIMILAR_ISSUES="${SIMILAR_ISSUES}\n  Fix: Check node_modules installation, verify ORCA_REAL_PROCESS_SKILL_TEST env var"
+          fi
+
+          if grep -q "windows.*sign" failed.json; then
+            SIMILAR_ISSUES="${SIMILAR_ISSUES}\n- Windows signing requires SIGNPATH_API_TOKEN secret"
+            SIMILAR_ISSUES="${SIMILAR_ISSUES}\n  Fix: Make signing conditional on secret availability"
+          fi
+
+          if grep -q "glibc" failed.json; then
+            SIMILAR_ISSUES="${SIMILAR_ISSUES}\n- glibc compatibility issue (compiling on newer system)"
+            SIMILAR_ISSUES="${SIMILAR_ISSUES}\n  Fix: Use Ubuntu 20.04 container for builds"
+          fi
+
+          if [ -n "$SIMILAR_ISSUES" ]; then
+            echo "has_suggestions=true" >> $GITHUB_OUTPUT
+            echo "suggestions<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$SIMILAR_ISSUES" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "has_suggestions=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate diagnostic report
+        if: steps.jobs.outputs.has_failures == 'true'
+        id: report
+        env:
+          RUN_ID: ${{ steps.workflow.outputs.run_id }}
+          WORKFLOW_NAME: ${{ steps.workflow.outputs.name }}
+          BRANCH: ${{ steps.workflow.outputs.branch }}
+        run: |
+          REPORT="# Test Failure Analysis Report\n\n"
+          REPORT="${REPORT}**Workflow:** $WORKFLOW_NAME\n"
+          REPORT="${REPORT}**Run:** [#$RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$RUN_ID)\n"
+          REPORT="${REPORT}**Branch:** $BRANCH\n"
+          REPORT="${REPORT}**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')\n\n"
+
+          REPORT="${REPORT}## Failed Jobs (${{ steps.jobs.outputs.count }})\n\n"
+          REPORT="${REPORT}\`\`\`\n"
+          REPORT="${REPORT}${{ steps.jobs.outputs.names }}\n"
+          REPORT="${REPORT}\`\`\`\n\n"
+
+          REPORT="${REPORT}## Categories\n\n"
+          IFS=',' read -ra CATS <<< "${{ steps.categorize.outputs.categories }}"
+          for cat in "${CATS[@]}"; do
+            REPORT="${REPORT}- \`${cat}\`\n"
+          done
+          REPORT="${REPORT}\n"
+
+          if [ "${{ steps.known.outputs.has_suggestions }}" = "true" ]; then
+            REPORT="${REPORT}## Known Issues & Suggestions\n\n"
+            REPORT="${REPORT}${{ steps.known.outputs.suggestions }}\n\n"
+          fi
+
+          REPORT="${REPORT}## Next Steps\n\n"
+          REPORT="${REPORT}1. Review logs: \`gh run view $RUN_ID --repo $GITHUB_REPOSITORY --log-failed\`\n"
+          REPORT="${REPORT}2. Check for similar past failures\n"
+          REPORT="${REPORT}3. Reproduce locally if possible\n"
+          REPORT="${REPORT}4. Apply fixes from known issues above\n\n"
+
+          REPORT="${REPORT}---\n"
+          REPORT="${REPORT}_Auto-generated by Test Failure Analyzer agent_"
+
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo -e "$REPORT" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check for existing failure tracking issue
+        if: steps.jobs.outputs.has_failures == 'true'
+        id: check-issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.workflow.outputs.branch }}
+        run: |
+          # Look for open test-failure issue for this branch
+          ISSUE_NUMBER=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "test-failure" \
+            --search "in:title \"Test Failures on $BRANCH\"" \
+            --state open \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -n "$ISSUE_NUMBER" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "issue_number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create failure tracking issue
+        if: steps.jobs.outputs.has_failures == 'true' && steps.check-issue.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ steps.report.outputs.report }}
+          WORKFLOW_NAME: ${{ steps.workflow.outputs.name }}
+          BRANCH: ${{ steps.workflow.outputs.branch }}
+          CATEGORIES: ${{ steps.categorize.outputs.categories }}
+        run: |
+          # Create labels from categories
+          LABELS="test-failure"
+          IFS=',' read -ra CATS <<< "$CATEGORIES"
+          for cat in "${CATS[@]}"; do
+            LABELS="$LABELS,test-$cat"
+          done
+
+          gh issue create \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "🔴 Test Failures on $BRANCH - $WORKFLOW_NAME" \
+            --label "$LABELS" \
+            --body "$REPORT"
+
+      - name: Update existing failure issue
+        if: steps.jobs.outputs.has_failures == 'true' && steps.check-issue.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}
+          REPORT: ${{ steps.report.outputs.report }}
+          RUN_ID: ${{ steps.workflow.outputs.run_id }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --body "## New Failure Detected
+
+          **Run:** [#$RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$RUN_ID)
+
+          $REPORT"
+
+      - name: Close resolved issues
+        if: steps.jobs.outputs.has_failures == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.workflow.outputs.branch }}
+          WORKFLOW_NAME: ${{ steps.workflow.outputs.name }}
+        run: |
+          # Find and close test-failure issues for this branch if tests now pass
+          ISSUES=$(gh issue list \
+            --repo "$GITHUB_REPOSITORY" \
+            --label "test-failure" \
+            --search "in:title \"Test Failures on $BRANCH\"" \
+            --state open \
+            --json number \
+            --jq '.[].number')
+
+          for issue in $ISSUES; do
+            gh issue comment "$issue" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body "✅ Tests are now passing in workflow: $WORKFLOW_NAME
+
+            Closing this issue as resolved."
+
+            gh issue close "$issue" \
+              --repo "$GITHUB_REPOSITORY" \
+              --reason "completed"
+          done
