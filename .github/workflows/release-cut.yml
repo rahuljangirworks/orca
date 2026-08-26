@@ -65,7 +65,8 @@ jobs:
     # Actions enabled, the scheduled cut would run against the fork's main and
     # diverge it (version line) every slot, conflicting every PR back upstream.
     # Gate to the canonical repo so the workflow no-ops on forks.
-    if: github.repository == 'stablyai/orca'
+    # Modified to allow rahuljangirworks/orca (Veer fork)
+    if: github.repository == 'stablyai/orca' || github.repository == 'rahuljangirworks/orca'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
