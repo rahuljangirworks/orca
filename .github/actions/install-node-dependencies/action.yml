@@ -74,9 +74,17 @@ runs:
       run: |
         pnpm install --frozen-lockfile --ignore-scripts
         # Job containers can run composite steps from a source mirror without .git.
-        # Skip diff check for tag checkouts - release workflows check out tags which
-        # already have version bumps, and the diff check would fail incorrectly.
-        if [[ ! "${GITHUB_REF:-}" =~ ^refs/tags/ ]]; then
+        # Skip diff check when the checkout is a tag (release workflow pattern) or
+        # when GITHUB_REF itself is a tag dispatch. The checked-out tag already has
+        # version bumps and the diff would fail incorrectly comparing package.json
+        # against the lockfile snapshot.
+        _skip_diff=false
+        if [[ "${GITHUB_REF:-}" =~ ^refs/tags/ ]]; then
+          _skip_diff=true
+        elif git -C "$GITHUB_WORKSPACE" describe --exact-match --tags HEAD >/dev/null 2>&1; then
+          _skip_diff=true
+        fi
+        if [[ "$_skip_diff" == "false" ]]; then
           git -C "$GITHUB_WORKSPACE" diff --exit-code -- package.json pnpm-lock.yaml
         fi
 
