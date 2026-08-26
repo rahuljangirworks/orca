@@ -1618,7 +1618,8 @@ jobs:
       # so the release job waits while the signing request is approved in UI.
       - name: Submit Windows installer signing request
         id: submit-signing-request
-        if: matrix.platform == 'win' && secrets.SIGNPATH_API_TOKEN != ''
+        if: matrix.platform == 'win'
+        continue-on-error: true
         uses: signpath/github-action-submit-signing-request@v2
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
