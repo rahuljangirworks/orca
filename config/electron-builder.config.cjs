@@ -460,7 +460,8 @@ module.exports = {
   },
   // Why: release builds should fail if signing is unavailable instead of
   // silently downgrading to ad-hoc artifacts that look shippable in CI logs.
-  forceCodeSigning: isMacRelease,
+  // Fork builds (no CSC_LINK) use ad-hoc signing.
+  forceCodeSigning: isMacRelease && !!process.env.CSC_LINK,
   dmg: {
     artifactName: 'orca-macos-${arch}.${ext}'
   },
@@ -605,7 +606,7 @@ async function signMacComputerUseHelper(helperAppPath, packager) {
     process.env.ORCA_COMPUTER_MACOS_SIGN_IDENTITY ??
     process.env.CSC_NAME ??
     findInstalledMacSigningIdentity(codeSigningInfo?.keychainFile) ??
-    (isMacRelease ? null : '-')
+    (isMacRelease && process.env.CSC_LINK ? null : '-')
   if (!identity) {
     throw new Error('Missing signing identity for Orca Computer Use helper app')
   }
@@ -631,7 +632,7 @@ async function signMacStandaloneHelper(helperPath, helperName, packager) {
   const identity =
     process.env.CSC_NAME ??
     findInstalledMacSigningIdentity(codeSigningInfo?.keychainFile) ??
-    (isMacRelease ? null : '-')
+    (isMacRelease && process.env.CSC_LINK ? null : '-')
   if (!identity) {
     throw new Error(`Missing signing identity for ${helperName} helper`)
   }
