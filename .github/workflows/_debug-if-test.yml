@@ -21,7 +21,17 @@ jobs:
     steps:
       - run: echo ok
 
-  publish-mock:
+  publish-mock-singleline:
+    needs:
+      - cut
+      - build-mac
+      - golden-mock
+    if: needs.cut.result == 'success' && needs['build-mac'].result == 'success' && (needs['golden-mock'].result == 'success' || needs['golden-mock'].result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "PUBLISH RAN (singleline)"
+
+  publish-mock-multiline:
     needs:
       - cut
       - build-mac
@@ -32,17 +42,18 @@ jobs:
       (needs['golden-mock'].result == 'success' || needs['golden-mock'].result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - run: echo "PUBLISH RAN"
+      - run: echo "PUBLISH RAN (multiline)"
 
-  publish-mock-debug:
+  publish-mock-alwaysgate:
     needs:
       - cut
       - build-mac
       - golden-mock
-    if: always()
+    if: >-
+      always() &&
+      needs.cut.result == 'success' &&
+      needs['build-mac'].result == 'success' &&
+      (needs['golden-mock'].result == 'success' || needs['golden-mock'].result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          echo "cut.result=${{ needs.cut.result }}"
-          echo "build-mac.result=${{ needs['build-mac'].result }}"
-          echo "golden-mock.result=${{ needs['golden-mock'].result }}"
+      - run: echo "PUBLISH RAN (alwaysgate)"
