@@ -134,7 +134,7 @@ jobs:
           # Kill only its child and require both PTY and watch recovery before packaging.
           node config/scripts/relay-watcher-fault-harness.mjs
 
-      - name: Publish release artifacts (macOS)
+      - name: Build release artifacts (macOS)
         uses: nick-fields/retry@v4
         with:
           timeout_minutes: 45
@@ -148,7 +148,15 @@ jobs:
               export APPLE_APP_SPECIFIC_PASSWORD="${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}"
               export APPLE_TEAM_ID="${{ secrets.APPLE_TEAM_ID }}"
             fi
-            node config/scripts/ensure-native-runtime.mjs --runtime=electron && ORCA_MAC_RELEASE=1 pnpm exec electron-builder --config config/electron-builder.config.cjs --mac --publish always
+            node config/scripts/ensure-native-runtime.mjs --runtime=electron && ORCA_MAC_RELEASE=1 pnpm exec electron-builder --config config/electron-builder.config.cjs --mac --publish never
+
+      - name: Upload macOS release artifacts
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: gh release upload "${{ inputs.tag }}" dist/*.dmg dist/*.dmg.blockmap dist/*.zip dist/*.zip.blockmap dist/latest-mac.yml --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
