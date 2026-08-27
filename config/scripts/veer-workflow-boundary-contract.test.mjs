@@ -30,6 +30,12 @@ describe('Veer workflow boundaries', () => {
     expect(community.jobs['track-community-pr'].if).toBe(upstreamRepositoryGate)
   })
 
+  it('skips codex-dependent golden E2E tests on forks', () => {
+    const release = workflow('release-cut.yml')
+
+    expect(release.jobs['terminal-rendering-golden'].if).toContain(upstreamRepositoryGate)
+  })
+
   it('keeps noisy upstream schedules manual on Veer', () => {
     const e2e = workflow('e2e.yml')
     const terminalPerf = workflow('terminal-perf.yml')

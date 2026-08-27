@@ -846,7 +846,9 @@ jobs:
 
   terminal-rendering-golden:
     needs: cut
-    if: needs.cut.outputs.should_release == 'true'
+    # Why: golden E2E tests require codex binary (upstream proprietary tool).
+    # Skip on forks where codex is unavailable.
+    if: needs.cut.outputs.should_release == 'true' && github.repository == 'stablyai/orca'
     name: golden e2e ${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
