@@ -1283,7 +1283,7 @@ jobs:
           # Kill only its child and require both PTY and watch recovery before packaging.
           node config/scripts/relay-watcher-fault-harness.mjs
 
-      - name: Publish release artifacts (Linux)
+      - name: Build Linux release artifacts
         if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64'
         uses: nick-fields/retry@v4
         with:
@@ -1304,6 +1304,17 @@ jobs:
           command: >-
             node config/scripts/run-linux-packaged-node-pty-floor-smoke.mjs
             --app-dir ${{ matrix.unpacked_dir }}
+
+      - name: Upload Linux release artifacts
+        if: matrix.platform == 'linux-x64' || matrix.platform == 'linux-arm64'
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: gh release upload "${{ needs.cut.outputs.tag }}" dist/*.AppImage dist/*.deb dist/*.rpm dist/latest-linux*.yml --clobber --repo "${{ github.repository }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Why: SignPath signs GitHub workflow artifacts, so Windows builds must
       # upload only after the production-signed installer has been returned.
@@ -1941,14 +1952,6 @@ jobs:
             exit 1
           fi
 
-      # Why post-publish for Linux: electron-builder packs and uploads in a
-      # single `--publish always` invocation, so there is no cheap insertion
-      # point between pack and upload without splitting those steps. Running
-      # verify last still blocks the bad release: the binary is uploaded to the
-      # draft, but a failed matrix job blocks `publish-release` from flipping
-      # the release from draft → published, so users never see it. A human then
-      # deletes the draft and re-cuts.
-      #
       # Why this guards against: a misconfigured CI run where
       # `ORCA_POSTHOG_WRITE_KEY` is unset or the tag fails to classify
       # would otherwise produce a binary with `BUILD_IDENTITY = null` and

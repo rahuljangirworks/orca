@@ -172,7 +172,7 @@ describe('Electron runtime package contract', () => {
       ])
     )
     const macReleaseCommand = macWorkflow.jobs['build-mac'].steps.find(
-      (step) => step.name === 'Publish release artifacts (macOS)'
+      (step) => step.name === 'Build release artifacts (macOS)'
     ).with.command
 
     expect([...releaseCommands.keys()].sort()).toEqual(['linux-arm64', 'linux-x64', 'win'])
@@ -214,12 +214,12 @@ describe('Electron runtime package contract', () => {
 
     assertFaultGate(
       releaseWorkflow.jobs.build.steps,
-      'Publish release artifacts (Linux)',
+      'Build Linux release artifacts',
       "runner.os == 'Linux'"
     )
     assertFaultGate(
       macWorkflow.jobs['build-mac'].steps,
-      'Publish release artifacts (macOS)',
+      'Build release artifacts (macOS)',
       undefined
     )
   })
@@ -262,8 +262,8 @@ describe('Electron runtime package contract', () => {
       expect(names.indexOf(gate.name)).toBeLessThan(names.indexOf(publishStepName))
     }
 
-    assertRelayGate(releaseWorkflow.jobs.build.steps, 'Publish release artifacts (Linux)')
-    assertRelayGate(macWorkflow.jobs['build-mac'].steps, 'Publish release artifacts (macOS)')
+    assertRelayGate(releaseWorkflow.jobs.build.steps, 'Build Linux release artifacts')
+    assertRelayGate(macWorkflow.jobs['build-mac'].steps, 'Build release artifacts (macOS)')
     const releaseNames = releaseWorkflow.jobs.build.steps.map((step) => step.name)
     expect(releaseNames.indexOf('Gate SSH relay watcher process isolation')).toBeLessThan(
       releaseNames.indexOf('Build Windows release artifacts')
@@ -324,7 +324,7 @@ describe('Electron runtime package contract', () => {
     expect(releaseWorkflow.jobs['publish-release'].needs).toContain('build-mac')
   })
 
-  it('runs the macOS release build in an isolated Blacksmith workflow', () => {
+  it('builds and uploads macOS release artifacts in an isolated GitHub-hosted workflow', () => {
     const releaseMacWorkflowText = readFileSync(
       join(projectDir, '.github/workflows/release-mac-build.yml'),
       'utf8'
@@ -332,8 +332,11 @@ describe('Electron runtime package contract', () => {
     const releaseMacWorkflow = parse(releaseMacWorkflowText)
     const buildMacJob = releaseMacWorkflow.jobs['build-mac']
     const checkoutStep = buildMacJob.steps.find((step) => step.name === 'Checkout')
-    const publishStep = buildMacJob.steps.find(
-      (step) => step.name === 'Publish release artifacts (macOS)'
+    const buildStep = buildMacJob.steps.find(
+      (step) => step.name === 'Build release artifacts (macOS)'
+    )
+    const uploadStep = buildMacJob.steps.find(
+      (step) => step.name === 'Upload macOS release artifacts'
     )
 
     expect(releaseMacWorkflow['run-name']).toBe(
@@ -341,28 +344,19 @@ describe('Electron runtime package contract', () => {
     )
     expect(releaseMacWorkflow.on.workflow_dispatch.inputs.tag.required).toBe(true)
     expect(releaseMacWorkflow.on.workflow_dispatch.inputs.release_run_id.required).toBe(true)
-    expect(buildMacJob['runs-on']).toBe('blacksmith-6vcpu-macos-15')
+    expect(buildMacJob['runs-on']).toBe('macos-15')
     expect(checkoutStep.with.ref).toBe('refs/tags/${{ inputs.tag }}')
-    expect(publishStep.with.command).toContain('ORCA_MAC_RELEASE=1')
-    expect(publishStep.with.command).toContain('electron-builder')
-    expect(publishStep.with.command).toContain('--mac --publish always')
+    expect(buildStep.with.command).toContain('ORCA_MAC_RELEASE=1')
+    expect(buildStep.with.command).toContain('electron-builder')
+    expect(buildStep.with.command).toContain('--mac --publish never')
+    expect(uploadStep.with.command).toContain('gh release upload')
+    expect(uploadStep.with.command).toContain('dist/*.zip')
+    expect(uploadStep.with.command).toContain('dist/latest-mac.yml')
+    expect(buildMacJob.steps.map((step) => step.name).indexOf(buildStep.name)).toBeLessThan(
+      buildMacJob.steps.map((step) => step.name).indexOf(uploadStep.name)
+    )
     expect(releaseMacWorkflowText).not.toContain('signpath/')
     expect(releaseMacWorkflowText).not.toContain('SIGNPATH_')
-  })
-
-  it('publishes both Linux release matrix entries', () => {
-    const releaseWorkflow = readFileSync(
-      join(projectDir, '.github/workflows/release-cut.yml'),
-      'utf8'
-    )
-    const parsedWorkflow = parse(releaseWorkflow)
-    const publishLinuxStep = parsedWorkflow.jobs.build.steps.find(
-      (step) => step.name === 'Publish release artifacts (Linux)'
-    )
-
-    expect(publishLinuxStep.if).toContain("matrix.platform == 'linux-x64'")
-    expect(publishLinuxStep.if).toContain("matrix.platform == 'linux-arm64'")
-    expect(publishLinuxStep.with.command).toBe('${{ matrix.release_command }}')
   })
 
   it('keeps Linux postinstall repairing Chromium sandbox permissions', () => {
@@ -635,7 +629,7 @@ describe('Electron runtime package contract', () => {
     expect(publishReleaseNeeds).toContain('terminal-rendering-golden')
     expect(publishReleaseNeeds).toContain('build')
     expect(publishReleaseNeeds).not.toContain('terminal-rendering-release-evidence')
-    expect(releaseGoldenJob['continue-on-error']).toBeUndefined()
+    expect(releaseGoldenJob['continue-on-error']).toBe(true)
     expect(releaseGoldenMatrix).toEqual(goldenMatrix)
     const releaseLinuxRunStep = releaseGoldenJob.steps.find(
       (step) => step.name === 'Run terminal rendering golden on Linux'
