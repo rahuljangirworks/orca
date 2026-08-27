@@ -38,7 +38,9 @@ afterEach(async () => {
   vi.useRealTimers()
   openGate.release = null
   openGate.started = null
-  await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
+  await Promise.all(
+    roots.splice(0).map((root) => rm(root, { recursive: true, force: true, maxRetries: 3 }))
+  )
 })
 
 function identity(bytes: Buffer) {
