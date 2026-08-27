@@ -54,8 +54,8 @@ fi
 
 ARCH="$(uname -m)"
 case "$ARCH" in
-  arm64) ASSET="orca-macos-arm64.dmg" ;;
-  x86_64) ASSET="orca-macos-x64.dmg" ;;
+  arm64) ASSET="veer-macos-arm64.dmg" ;;
+  x86_64) ASSET="veer-macos-x64.dmg" ;;
   *)
     echo "Unsupported macOS architecture: $ARCH" >&2
     exit 2

@@ -150,7 +150,7 @@ describe('dev-channel Windows build workflow', () => {
     const verify = stepNamed(winSteps(), 'Verify Windows update manifest published')
 
     expect(verify.run).toContain('latest.yml')
-    expect(verify.run).toContain('orca-windows-setup.exe')
+    expect(verify.run).toContain('veer-windows-setup.exe')
   })
 
   // Why: this is callable and separately dispatchable, and workflow_call takes

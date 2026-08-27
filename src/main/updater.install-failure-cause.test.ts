@@ -103,7 +103,7 @@ vi.mock('./updater-lifecycle-diagnostics', () => ({
 
 // The real electron-updater DebUpdater failure text when elevation is impossible.
 const DEB_ELEVATION_ERROR =
-  'Error: Command failed: /usr/bin/pkexec --disable-internal-agent "/bin/bash" "-c" "dpkg -i \'/home/u/.cache/orca-updater/pending/orca-ide_1.4.163_amd64.deb\'"\npkexec must be setuid root'
+  'Error: Command failed: /usr/bin/pkexec --disable-internal-agent "/bin/bash" "-c" "dpkg -i \'/home/u/.cache/orca-updater/pending/veer_1.4.163_amd64.deb\'"\npkexec must be setuid root'
 
 // electron-updater's ERR_UPDATER_INVALID_SIGNATURE text, which drives its own card in UpdateCard.
 const WINDOWS_SIGNATURE_MISMATCH_ERROR =

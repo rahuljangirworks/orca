@@ -17,8 +17,8 @@ Usage:
   node tests/tools/win-update-e2e/run.mjs --from-release <tag> --to-release <tag> --expect <profile>
 
 Installer source (version N, then N+1) — path or release tag on each side:
-  --from <path>            Local orca-windows-setup.exe for the base version (N)
-  --to <path>              Local orca-windows-setup.exe for the update (N+1)
+  --from <path>            Local veer-windows-setup.exe for the base version (N)
+  --to <path>              Local veer-windows-setup.exe for the update (N+1)
   --from-release <tag>     Download N's setup asset via gh (e.g. v1.4.124-rc.9)
   --to-release <tag>       Download N+1's setup asset via gh
 

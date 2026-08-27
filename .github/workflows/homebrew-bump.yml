@@ -7,7 +7,7 @@ name: Homebrew Cask Bump
 #   - workflow_call → release-cut.yml finished publishing a stable tag
 #   - workflow_dispatch → manual backfill for a specific tag
 #
-# The job computes the sha256 of orca-macos-arm64.dmg + orca-macos-x64.dmg
+# The job computes the sha256 of veer-macos-arm64.dmg + veer-macos-x64.dmg
 # from the release, templates the channel-specific cask in this repo with the
 # new version and hashes, then PRs the result into stablyai/homebrew-orca.
 # Stable tags update Casks/orca.rb; RC tags update Casks/orca@rc.rb.

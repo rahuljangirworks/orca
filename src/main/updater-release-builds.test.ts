@@ -17,11 +17,11 @@ function jsonResponse(body: unknown, init: { ok?: boolean; status?: number } = {
  *  filtering stays readable and stays green whatever platform is passed. */
 const allPlatformAssets = [
   { name: 'latest-mac.yml' },
-  { name: 'orca-macos-arm64.dmg' },
+  { name: 'veer-macos-arm64.dmg' },
   { name: 'latest.yml' },
-  { name: 'orca-windows-setup.exe' },
+  { name: 'veer-windows-setup.exe' },
   { name: 'latest-linux.yml' },
-  { name: 'orca-linux.AppImage' }
+  { name: 'veer-linux.AppImage' }
 ]
 
 const release = (tag: string, extra: Record<string, unknown> = {}) => ({
@@ -142,7 +142,7 @@ describe('listReleaseBuilds', () => {
       jsonResponse([
         release('v1.4.163-hourly.202607312054'),
         release('v1.4.163-hourly.202607311933', {
-          assets: [{ name: 'latest-mac.yml' }, { name: 'orca-macos-arm64.dmg' }]
+          assets: [{ name: 'latest-mac.yml' }, { name: 'veer-macos-arm64.dmg' }]
         })
       ])
     )
@@ -184,7 +184,7 @@ describe('listReleaseBuilds', () => {
     const [build] = await listReleaseBuilds('hourly', 'win32')
 
     expect(build.installerUrl).toBe(
-      'https://github.com/stablyai/orca-hourly/releases/download/v1.4.163-hourly.202607312054/orca-windows-setup.exe'
+      'https://github.com/stablyai/orca-hourly/releases/download/v1.4.163-hourly.202607312054/veer-windows-setup.exe'
     )
   })
 

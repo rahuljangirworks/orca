@@ -308,7 +308,7 @@ jobs:
           assets="$(gh release view "$TAG" --repo "stablyai/orca-$CHANNEL" --json assets --jq '.assets[].name')"
           echo "Assets on $TAG:"
           echo "$assets"
-          for required in latest.yml orca-windows-setup.exe; do
+          for required in latest.yml veer-windows-setup.exe; do
             if ! grep -qx "$required" <<<"$assets"; then
               echo "::error::$TAG is missing $required; Windows could not install this build."
               exit 1

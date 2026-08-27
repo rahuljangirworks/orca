@@ -66,7 +66,7 @@ jobs:
         id: cache-installer
         uses: actions/cache@v4
         with:
-          path: dist/orca-windows-setup.exe
+          path: dist/veer-windows-setup.exe
           key: >-
             crash-survival-installer-${{ hashFiles(
               'src/**',
@@ -114,7 +114,7 @@ jobs:
       - name: Silent-install branch build
         shell: pwsh
         run: |
-          $exe = "dist/orca-windows-setup.exe"
+          $exe = "dist/veer-windows-setup.exe"
           if (-not (Test-Path $exe)) { throw "Installer not found at $exe" }
           Start-Process -FilePath $exe -ArgumentList '/S' -Wait
           $installed = Join-Path $env:LOCALAPPDATA 'Programs/Orca/Orca.exe'

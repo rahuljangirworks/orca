@@ -1,7 +1,7 @@
 // Silent NSIS install / update / uninstall and installed-app discovery.
 //
 // Orca ships a per-user oneClick NSIS installer (electron-builder defaults:
-// oneClick=true, perMachine=false) named orca-windows-setup.exe. One-click
+// oneClick=true, perMachine=false) named veer-windows-setup.exe. One-click
 // silent mode is `<setup.exe> /S`; the app installs under
 // %LOCALAPPDATA%\Programs\<dir> and the exe is Orca.exe. The install dir casing
 // is not guaranteed (observed lowercase "orca" on a dev box), so the exe is

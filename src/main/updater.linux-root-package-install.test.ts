@@ -66,8 +66,8 @@ function stageLinuxUpdateCache(): StagedLinuxPackages {
     writeFileSync(packagePath, bytes)
     return { path: packagePath, sha512: createHash('sha512').update(bytes).digest('base64') }
   }
-  const deb = stagePackage('orca-ide_1.0.61_amd64.deb')
-  const rpm = stagePackage('orca-ide-1.0.61.x86_64.rpm')
+  const deb = stagePackage('veer_1.0.61_amd64.deb')
+  const rpm = stagePackage('veer-1.0.61.x86_64.rpm')
   return {
     cacheRoot,
     debPath: deb.path,
@@ -217,14 +217,14 @@ describe('updater', () => {
     const downloadedEvent = (overrides?: Record<string, unknown>): Record<string, unknown> => ({
       version: '1.0.61',
       downloadedFile: staged.debPath,
-      files: [{ url: 'orca-ide_1.0.61_amd64.deb', sha512: staged.debSha512 }],
+      files: [{ url: 'veer_1.0.61_amd64.deb', sha512: staged.debSha512 }],
       ...overrides
     })
 
     const rpmDownloadedEvent = (): Record<string, unknown> =>
       downloadedEvent({
         downloadedFile: staged.rpmPath,
-        files: [{ url: 'orca-ide-1.0.61.x86_64.rpm', sha512: staged.rpmSha512 }]
+        files: [{ url: 'veer-1.0.61.x86_64.rpm', sha512: staged.rpmSha512 }]
       })
 
     const startUpdater = async (
@@ -363,10 +363,7 @@ describe('updater', () => {
     it('keeps the generic install-failure copy when no artifact was retained', async () => {
       const { send, updater } = await startUpdater('deb')
       // Release metadata without a digest must not enable cached-package recovery.
-      await reachDownloaded(
-        updater,
-        downloadedEvent({ files: [{ url: 'orca-ide_1.0.61_amd64.deb' }] })
-      )
+      await reachDownloaded(updater, downloadedEvent({ files: [{ url: 'veer_1.0.61_amd64.deb' }] }))
       autoUpdaterMock.quitAndInstall.mockImplementation(() => {
         autoUpdaterMock.emit('error', new Error(EXIT_127))
       })

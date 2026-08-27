@@ -205,8 +205,8 @@ jobs:
         run: |
           pnpm exec electron-builder --config config/electron-builder.config.cjs --win --publish never --prepackaged "$env:GITHUB_WORKSPACE\dist\win-unpacked"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if (-not (Test-Path 'dist/orca-windows-setup.exe')) {
-            throw 'electron-builder --prepackaged did not produce dist/orca-windows-setup.exe'
+          if (-not (Test-Path 'dist/veer-windows-setup.exe')) {
+            throw 'electron-builder --prepackaged did not produce dist/veer-windows-setup.exe'
           }
 
       - name: Upload unsigned Windows installer for SignPath
@@ -214,7 +214,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: orca-windows-installer-unsigned-${{ github.run_id }}
-          path: dist/orca-windows-setup.exe
+          path: dist/veer-windows-setup.exe
           if-no-files-found: error
 
       - name: Submit Windows installer signing request
@@ -250,16 +250,16 @@ jobs:
       - name: Stage signed Windows installer and regenerate updater metadata
         shell: pwsh
         run: |
-          $signedInstaller = Get-ChildItem -Path signed-windows -Recurse -File -Filter 'orca-windows-setup.exe' | Select-Object -First 1
+          $signedInstaller = Get-ChildItem -Path signed-windows -Recurse -File -Filter 'veer-windows-setup.exe' | Select-Object -First 1
           if ($null -eq $signedInstaller) {
             throw 'Signed Windows installer was not returned by SignPath.'
           }
-          Copy-Item -Path $signedInstaller.FullName -Destination 'dist/orca-windows-setup.exe' -Force
-          node config/scripts/generate-windows-blockmap.mjs 'dist/orca-windows-setup.exe' 'dist/orca-windows-setup.exe.blockmap'
+          Copy-Item -Path $signedInstaller.FullName -Destination 'dist/veer-windows-setup.exe' -Force
+          node config/scripts/generate-windows-blockmap.mjs 'dist/veer-windows-setup.exe' 'dist/veer-windows-setup.exe.blockmap'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-          $installer = Get-Item 'dist/orca-windows-setup.exe'
-          $blockmap = Get-Item 'dist/orca-windows-setup.exe.blockmap'
+          $installer = Get-Item 'dist/veer-windows-setup.exe'
+          $blockmap = Get-Item 'dist/veer-windows-setup.exe.blockmap'
           $stream = [System.IO.File]::OpenRead($installer.FullName)
           try {
             $sha512 = [System.Security.Cryptography.SHA512]::Create()
@@ -305,7 +305,7 @@ jobs:
             }
           }
 
-          Test-Signature 'installer: orca-windows-setup.exe' 'dist/orca-windows-setup.exe'
+          Test-Signature 'installer: veer-windows-setup.exe' 'dist/veer-windows-setup.exe'
 
           # Extract the signed installer and verify the files a user actually
           # gets on disk — including the exact file from issue #7785.
@@ -320,7 +320,7 @@ jobs:
             throw "The 7za resolver returned an invalid path for the signing rehearsal: $7za"
           }
           New-Item -ItemType Directory -Path extracted-app -Force | Out-Null
-          & $7za x 'dist/orca-windows-setup.exe' '-oextracted-app' -y | Out-Null
+          & $7za x 'dist/veer-windows-setup.exe' '-oextracted-app' -y | Out-Null
 
           $root = Resolve-Path 'extracted-app'
           foreach ($relative in Get-Content 'inner-signing-list.txt') {
@@ -347,7 +347,7 @@ jobs:
           path: |
             signing-evidence.txt
             inner-signing-list.txt
-            dist/orca-windows-setup.exe
-            dist/orca-windows-setup.exe.blockmap
+            dist/veer-windows-setup.exe
+            dist/veer-windows-setup.exe.blockmap
             dist/latest.yml
           retention-days: 7

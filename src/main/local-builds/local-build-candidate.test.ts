@@ -32,7 +32,7 @@ function compatibility(): LocalBuildCompatibility {
 async function fixture(options: { sha512?: string; url?: string } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'orca-local-build-'))
   tempDirectories.push(directory)
-  const artifactName = 'orca-macos-arm64.zip'
+  const artifactName = 'veer-macos-arm64.zip'
   const artifactPath = join(directory, artifactName)
   const content = Buffer.from('signed-zip-placeholder')
   await writeFile(artifactPath, content)
@@ -48,7 +48,7 @@ async function fixture(options: { sha512?: string; url?: string } = {}) {
           size: content.length
         },
         {
-          url: 'orca-macos-arm64.dmg',
+          url: 'veer-macos-arm64.dmg',
           sha512: Buffer.alloc(64).toString('base64'),
           size: 1
         }
@@ -72,8 +72,8 @@ describe('loadLocalBuildCandidate', () => {
     })
 
     expect(candidate.version).toBe('1.2.3-local.1')
-    expect([...candidate.artifacts.keys()]).toEqual(['orca-macos-arm64.zip'])
-    expect(candidate.manifestContent).toContain('orca-macos-arm64.zip')
+    expect([...candidate.artifacts.keys()]).toEqual(['veer-macos-arm64.zip'])
+    expect(candidate.manifestContent).toContain('veer-macos-arm64.zip')
     await candidate.close()
   })
 
@@ -85,7 +85,7 @@ describe('loadLocalBuildCandidate', () => {
       })
     ).rejects.toThrow('SHA-512 verification failed')
 
-    const traversal = await fixture({ url: '../orca-macos-arm64.zip' })
+    const traversal = await fixture({ url: '../veer-macos-arm64.zip' })
     await expect(
       loadLocalBuildCandidate(traversal.manifestPath, 'arm64', {
         readCompatibility: async () => compatibility()
@@ -120,7 +120,7 @@ describe('loadLocalBuildCandidate', () => {
     const feed = await startLocalBuildFeed(candidate)
     try {
       await expect(
-        fetch(`${feed.url}orca-macos-arm64.zip`).then((response) => response.text())
+        fetch(`${feed.url}veer-macos-arm64.zip`).then((response) => response.text())
       ).resolves.toBe('signed-zip-placeholder')
     } finally {
       await feed.close()
@@ -136,7 +136,7 @@ describe('loadLocalBuildCandidate', () => {
       const resources = join(zipRoot, 'Orca.app', 'Contents', 'Resources')
       await mkdir(resources, { recursive: true })
       await writeFile(join(resources, 'orca-local-build.json'), JSON.stringify(compatibility()))
-      const artifactName = 'orca-macos-arm64.zip'
+      const artifactName = 'veer-macos-arm64.zip'
       const artifactPath = join(directory, artifactName)
       await execFileAsync('/usr/bin/zip', ['-qry', artifactPath, 'Orca.app'], { cwd: zipRoot })
       const artifact = await readFile(artifactPath)

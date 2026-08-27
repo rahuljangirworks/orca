@@ -10,7 +10,7 @@ describe('AppImage CLI redirect', () => {
   it('detects direct AppImage CLI commands', () => {
     expect(
       getAppImageCliArgs(
-        ['orca-linux.AppImage', 'status', '--json'],
+        ['veer-linux.AppImage', 'status', '--json'],
         { APPIMAGE: '/opt/orca' },
         {
           platform: 'linux',
@@ -24,7 +24,7 @@ describe('AppImage CLI redirect', () => {
   it('allows CLI global flags before the command', () => {
     expect(
       getAppImageCliArgs(
-        ['orca-linux.AppImage', '--pairing-code', 'abc123', '--json', 'terminal', 'list'],
+        ['veer-linux.AppImage', '--pairing-code', 'abc123', '--json', 'terminal', 'list'],
         {
           APPIMAGE: '/opt/orca'
         },
@@ -89,9 +89,9 @@ describe('AppImage CLI redirect', () => {
     const spawn = vi.fn((..._args: unknown[]) => ({ status: 0 }))
 
     const result = maybeRedirectAppImageCliLaunch({
-      argv: ['orca-linux.AppImage', 'status', '--json'],
+      argv: ['veer-linux.AppImage', 'status', '--json'],
       env: {
-        APPIMAGE: '/opt/orca/orca-linux.AppImage',
+        APPIMAGE: '/opt/orca/veer-linux.AppImage',
         NODE_OPTIONS: '--inspect',
         NODE_REPL_EXTERNAL_MODULE: '/tmp/repl.js'
       },
@@ -106,7 +106,7 @@ describe('AppImage CLI redirect', () => {
     expect(result).toEqual({ redirected: true, status: 0 })
     expect(spawn).toHaveBeenCalledWith('/opt/orca/orca-ide', [cliEntryPath, 'status', '--json'], {
       env: expect.objectContaining({
-        APPIMAGE: '/opt/orca/orca-linux.AppImage',
+        APPIMAGE: '/opt/orca/veer-linux.AppImage',
         ELECTRON_RUN_AS_NODE: '1',
         ORCA_NODE_OPTIONS: '--inspect',
         ORCA_NODE_REPL_EXTERNAL_MODULE: '/tmp/repl.js'
@@ -126,8 +126,8 @@ describe('AppImage CLI redirect', () => {
     const spawn = vi.fn((..._args: unknown[]) => ({ status: 0 }))
 
     maybeRedirectAppImageCliLaunch({
-      argv: ['orca-linux.AppImage', '--no-sandbox', 'serve'],
-      env: { APPIMAGE: '/opt/orca/orca-linux.AppImage' },
+      argv: ['veer-linux.AppImage', '--no-sandbox', 'serve'],
+      env: { APPIMAGE: '/opt/orca/veer-linux.AppImage' },
       platform: 'linux',
       isPackaged: true,
       resourcesPath: root,

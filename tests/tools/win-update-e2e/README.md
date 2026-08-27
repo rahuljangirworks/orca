@@ -48,7 +48,7 @@ Or directly: `node tests/tools/win-update-e2e/run.mjs --from ... --to ... --expe
 
 | Flag                                          | Meaning                                                     |
 | --------------------------------------------- | ----------------------------------------------------------- |
-| `--from <path>` / `--to <path>`               | Local `orca-windows-setup.exe` for base (N) / update (N+1)  |
+| `--from <path>` / `--to <path>`               | Local `veer-windows-setup.exe` for base (N) / update (N+1)  |
 | `--from-release <tag>` / `--to-release <tag>` | Download the setup asset from a GitHub release tag via `gh` |
 | `--expect cold-restore \| survival`           | Assertion profile (required)                                |
 | `--install-dir <path>`                        | Isolated-install mode (see below) — install into `<path>`   |
