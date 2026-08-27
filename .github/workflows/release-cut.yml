@@ -2026,6 +2026,20 @@ jobs:
       - skill-sharing-linux-floor-release-gate
       - skill-sharing-release-gate
       - terminal-rendering-golden
+    # Why an explicit if: terminal-rendering-golden only runs on
+    # github.repository == 'stablyai/orca' (needs codex, an upstream-only
+    # tool) and reports `skipped` everywhere else, including this fork.
+    # The default `needs` gate treats any non-'success' result as failing
+    # the dependency, so without this override publish-release (and
+    # everything chained off it: D1 upsert, post-release-e2e, homebrew-bump)
+    # silently skipped on every single fork release cut.
+    if: |
+      needs.cut.result == 'success' &&
+      needs.build.result == 'success' &&
+      needs.build-mac.result == 'success' &&
+      needs.skill-sharing-linux-floor-release-gate.result == 'success' &&
+      needs.skill-sharing-release-gate.result == 'success' &&
+      (needs.terminal-rendering-golden.result == 'success' || needs.terminal-rendering-golden.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
