@@ -36,7 +36,11 @@ export class SkillUploadStagingOwnership {
   }
 
   async remove(): Promise<void> {
-    await rm(this.directory, { recursive: true, force: true })
+    // Why maxRetries: on Windows, rmdir can race a just-closed file handle
+    // still being released by the OS (antivirus scan, delayed unlock),
+    // throwing EPERM even though the handle was already closed. `fs.rm`
+    // only backs off and retries EPERM/EBUSY when maxRetries is set.
+    await rm(this.directory, { recursive: true, force: true, maxRetries: 3 })
   }
 
   private async cleanupAbandonedOwners(): Promise<void> {
@@ -55,7 +59,7 @@ export class SkillUploadStagingOwnership {
         const candidate = join(this.root, entry.name)
         const stats = await lstat(candidate).catch(() => null)
         if (stats?.isDirectory() && !stats.isSymbolicLink()) {
-          await rm(candidate, { recursive: true, force: true })
+          await rm(candidate, { recursive: true, force: true, maxRetries: 3 })
         }
       }
     } finally {
