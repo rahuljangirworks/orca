@@ -1,0 +1,48 @@
+name: Debug If Test
+on:
+  workflow_dispatch: {}
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+
+  build-mac:
+    needs: cut
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+
+  golden-mock:
+    needs: cut
+    if: github.repository == 'stablyai/orca'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ok
+
+  publish-mock:
+    needs:
+      - cut
+      - build-mac
+      - golden-mock
+    if: |
+      needs.cut.result == 'success' &&
+      needs['build-mac'].result == 'success' &&
+      (needs['golden-mock'].result == 'success' || needs['golden-mock'].result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "PUBLISH RAN"
+
+  publish-mock-debug:
+    needs:
+      - cut
+      - build-mac
+      - golden-mock
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "cut.result=${{ needs.cut.result }}"
+          echo "build-mac.result=${{ needs['build-mac'].result }}"
+          echo "golden-mock.result=${{ needs['golden-mock'].result }}"
