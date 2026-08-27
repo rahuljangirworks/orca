@@ -737,13 +737,18 @@ describe('GitHandler', () => {
     })
 
     it('rethrows upstreamStatus failures that are not "no upstream configured"', async () => {
-      // Why: the catch only swallows "no upstream"; other errors must surface so auth/corruption failures aren't masked.
+      // Why: the catch only swallows "no upstream"; other errors must surface so auth/corruption
+      // failures aren't masked. The exact tail line git prints for a non-repo path varies by
+      // filesystem layout: when the temp dir sits on a different filesystem than its parent (e.g.
+      // tmpfs /tmp vs ext4 /), git 2.55+ appends a second "Stopping at filesystem boundary" line,
+      // and normalizeGitErrorMessage's extractTailLine surfaces the LAST non-empty line for
+      // security reasons (no local paths leaked). Match either wording rather than coupling to one.
       const nonRepoDir = path.join(tmpDir, 'not-a-repo')
       await fs.mkdir(nonRepoDir, { recursive: true })
 
       await expect(
         dispatcher.callRequest('git.upstreamStatus', { worktreePath: nonRepoDir })
-      ).rejects.toThrow(/not a git repository/i)
+      ).rejects.toThrow(/not a git repository|filesystem boundary/i)
     })
   })
 })

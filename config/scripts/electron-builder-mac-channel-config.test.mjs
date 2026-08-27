@@ -46,14 +46,14 @@ const withAdhocEnv = (assert) => withEnv({ ORCA_MAC_ADHOC: '1' }, assert)
 describe('electron-builder mac channel config', () => {
   // Why: Squirrel.Mac swaps the .app in place only when the replacement carries the
   // same bundle id and a valid Developer ID signature. A hourly built on the local
-  // (com.stablyai.orca.local, ad-hoc) identity would be un-installable over a real
-  // Orca — the whole point of the channel.
+  // (com.rahuljangir.veer.local, ad-hoc) identity would be un-installable over a real
+  // Veer — the whole point of the channel.
   it('builds hourly artifacts with the release signing identity', () => {
     withHourlyEnv((config) => {
       expect(config.mac.appId).toBeUndefined()
-      expect(config.appId).toBe('com.stablyai.orca')
+      expect(config.appId).toBe('com.rahuljangir.veer')
       expect(config.mac.hardenedRuntime).toBe(true)
-      expect(config.forceCodeSigning).toBe(true)
+      expect(config.forceCodeSigning).toBe(!!process.env.CSC_LINK)
     })
   })
 
@@ -94,14 +94,14 @@ describe('electron-builder mac channel config', () => {
   })
 
   // Why adhoc carries the identical mac identity to hourly: it installs over a
-  // real Orca through the same updater path, so the same signing and the same TCC
+  // real Veer through the same updater path, so the same signing and the same TCC
   // argument apply. Only the destination repo differs.
   it('builds adhoc artifacts with the release identity and its own repo', () => {
     withAdhocEnv((config) => {
-      expect(config.appId).toBe('com.stablyai.orca')
+      expect(config.appId).toBe('com.rahuljangir.veer')
       expect(config.mac.hardenedRuntime).toBe(true)
       expect(config.mac.notarize).toBe(true)
-      expect(config.forceCodeSigning).toBe(true)
+      expect(config.forceCodeSigning).toBe(!!process.env.CSC_LINK)
       expect(config.publish).toMatchObject({ repo: 'orca-adhoc', releaseType: 'prerelease' })
     })
   })
@@ -117,10 +117,10 @@ describe('electron-builder mac channel config', () => {
 
   it('builds daily artifacts with the release identity and its own repo', () => {
     withDailyEnv((config) => {
-      expect(config.appId).toBe('com.stablyai.orca')
+      expect(config.appId).toBe('com.rahuljangir.veer')
       expect(config.mac.hardenedRuntime).toBe(true)
       expect(config.mac.notarize).toBe(true)
-      expect(config.forceCodeSigning).toBe(true)
+      expect(config.forceCodeSigning).toBe(!!process.env.CSC_LINK)
       expect(config.publish).toMatchObject({ repo: 'orca-daily', releaseType: 'prerelease' })
     })
   })

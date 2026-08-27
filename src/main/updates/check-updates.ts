@@ -6,6 +6,7 @@
 
 import { app } from 'electron'
 import { fetchPlatformConfig } from '../platform/fetch-config'
+import { cancelUnreadResponseBody } from '../lib/unread-response-body'
 
 export type UpdateCheckResult = {
   updateAvailable: boolean
@@ -49,6 +50,7 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
     })
 
     if (!response.ok) {
+      await cancelUnreadResponseBody(response)
       throw new Error(`Update check failed: ${response.status} ${response.statusText}`)
     }
 

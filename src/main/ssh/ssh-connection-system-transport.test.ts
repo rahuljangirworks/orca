@@ -301,48 +301,64 @@ describe('SshConnection', () => {
     }
   })
 
+  // Why an empty HOME: resolveWithSshG mocks to null here, so SshConnection falls back to the
+  // default known_hosts paths under the real homedir. Without this, host-key verification would
+  // read whatever the developer's actual ~/.ssh/known_hosts contains for 192.168.0.210 and could
+  // reject the handshake before the mocked ssh2 EHOSTUNREACH error is ever reached.
   it('falls back to system SSH when ssh2 hits a local network policy reachability error', async () => {
-    ssh2Mock.connectBehavior = 'error'
-    ssh2Mock.connectErrorMessage =
-      'connect EHOSTUNREACH 192.168.0.210:22 - Local (192.168.0.2:52112)'
-    ssh2Mock.connectErrorCode = 'EHOSTUNREACH'
-    const conn = new SshConnection(
-      createTarget({ host: '192.168.0.210', label: 'LAN Linux', username: 'hydra' }),
-      createCallbacks()
-    )
+    const emptyHome = mkdtempSync(join(tmpdir(), 'orca-ssh-home-'))
+    vi.stubEnv('HOME', emptyHome)
+    try {
+      ssh2Mock.connectBehavior = 'error'
+      ssh2Mock.connectErrorMessage =
+        'connect EHOSTUNREACH 192.168.0.210:22 - Local (192.168.0.2:52112)'
+      ssh2Mock.connectErrorCode = 'EHOSTUNREACH'
+      const conn = new SshConnection(
+        createTarget({ host: '192.168.0.210', label: 'LAN Linux', username: 'hydra' }),
+        createCallbacks()
+      )
 
-    await conn.connect()
+      await conn.connect()
 
-    expect(conn.getState().status).toBe('connected')
-    expect(conn.usesSystemSshTransport()).toBe(true)
-    expect(clientInstances).toHaveLength(1)
-    expect(spawnSystemSshCommandMock).toHaveBeenCalledWith(
-      expect.objectContaining({ host: '192.168.0.210' }),
-      'echo ORCA-SYSTEM-SSH-OK',
-      { wrapCommand: false }
-    )
+      expect(conn.getState().status).toBe('connected')
+      expect(conn.usesSystemSshTransport()).toBe(true)
+      expect(clientInstances).toHaveLength(1)
+      expect(spawnSystemSshCommandMock).toHaveBeenCalledWith(
+        expect.objectContaining({ host: '192.168.0.210' }),
+        'echo ORCA-SYSTEM-SSH-OK',
+        { wrapCommand: false }
+      )
+    } finally {
+      rmSync(emptyHome, { recursive: true, force: true })
+    }
   })
 
   it('keeps the original ssh2 reachability error when the system SSH probe fails', async () => {
-    ssh2Mock.connectBehavior = 'error'
-    ssh2Mock.connectErrorMessage =
-      'connect EHOSTUNREACH 192.168.0.210:22 - Local (192.168.0.2:52112)'
-    ssh2Mock.connectErrorCode = 'EHOSTUNREACH'
-    spawnSystemSshCommandMock.mockImplementation(() => {
-      throw new Error('No system ssh binary found. Install OpenSSH to use system SSH transport.')
-    })
-    const conn = new SshConnection(
-      createTarget({ host: '192.168.0.210', label: 'LAN Linux', username: 'hydra' }),
-      createCallbacks()
-    )
-    const privateConn = conn as unknown as {
-      attemptConnect: () => Promise<void>
-    }
+    const emptyHome = mkdtempSync(join(tmpdir(), 'orca-ssh-home-'))
+    vi.stubEnv('HOME', emptyHome)
+    try {
+      ssh2Mock.connectBehavior = 'error'
+      ssh2Mock.connectErrorMessage =
+        'connect EHOSTUNREACH 192.168.0.210:22 - Local (192.168.0.2:52112)'
+      ssh2Mock.connectErrorCode = 'EHOSTUNREACH'
+      spawnSystemSshCommandMock.mockImplementation(() => {
+        throw new Error('No system ssh binary found. Install OpenSSH to use system SSH transport.')
+      })
+      const conn = new SshConnection(
+        createTarget({ host: '192.168.0.210', label: 'LAN Linux', username: 'hydra' }),
+        createCallbacks()
+      )
+      const privateConn = conn as unknown as {
+        attemptConnect: () => Promise<void>
+      }
 
-    await expect(privateConn.attemptConnect()).rejects.toThrow(
-      'connect EHOSTUNREACH 192.168.0.210:22'
-    )
-    expect(conn.usesSystemSshTransport()).toBe(false)
+      await expect(privateConn.attemptConnect()).rejects.toThrow(
+        'connect EHOSTUNREACH 192.168.0.210:22'
+      )
+      expect(conn.usesSystemSshTransport()).toBe(false)
+    } finally {
+      rmSync(emptyHome, { recursive: true, force: true })
+    }
   })
 })
 

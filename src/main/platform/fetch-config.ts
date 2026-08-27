@@ -5,6 +5,8 @@
  * This allows changing backend URLs without rebuilding Veer!
  */
 
+import { cancelUnreadResponseBody } from '../lib/unread-response-body'
+
 const PLATFORM_API = 'https://veer-api.rahuljangir-works.workers.dev'
 
 export type PlatformConfig = {
@@ -65,6 +67,7 @@ export async function fetchPlatformConfig(): Promise<PlatformConfig> {
     })
 
     if (!response.ok) {
+      await cancelUnreadResponseBody(response)
       throw new Error(`Config fetch failed: ${response.status} ${response.statusText}`)
     }
 

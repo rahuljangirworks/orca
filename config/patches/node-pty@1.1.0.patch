@@ -1,5 +1,5 @@
 diff --git a/binding.gyp b/binding.gyp
-index 5f63978b07ab50aaf7523219a2170ec737a6b5db..bbd9e06136e8922f40b5779e35d4fc835f1479ab 100644
+index 5f63978b07ab50aaf7523219a2170ec737a6b5db..c13586d1556aeb56f670622731e8ce0b7650ed3d 100644
 --- a/binding.gyp
 +++ b/binding.gyp
 @@ -1,13 +1,10 @@
@@ -50,7 +50,7 @@ index 5f63978b07ab50aaf7523219a2170ec737a6b5db..bbd9e06136e8922f40b5779e35d4fc83
        ]
      }, { # OS!="win"
        'targets': [
-@@ -88,6 +85,16 @@
+@@ -88,6 +59,16 @@
                'libraries!': [
                  '-lutil'
                ]
@@ -168,7 +168,7 @@ index 181ccabbbe9c4948a9725fb1db907a68e9de01fc..67f31facf85562b67adbfbd04ce28ddd
  process.send!({ consoleProcessList });
  process.exit(0);
 diff --git a/src/unix/pty.cc b/src/unix/pty.cc
-index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..383df0c9c48355547c65e6c9bbba593d15c4dd44 100644
+index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..72c99018a78900bc9187e36d70a8436b8cee7809 100644
 --- a/src/unix/pty.cc
 +++ b/src/unix/pty.cc
 @@ -23,7 +23,9 @@
@@ -181,7 +181,7 @@ index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..383df0c9c48355547c65e6c9bbba593d
  #include <thread>
  
  #include <sys/types.h>
-@@ -47,6 +49,25 @@
+@@ -47,6 +49,32 @@
  #include <termios.h>
  #endif
  
@@ -201,13 +201,20 @@ index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..383df0c9c48355547c65e6c9bbba593d
 +__asm__(".symver openpty,openpty@" ORCA_GLIBC_COMPAT_VERSION);
 +__asm__(".symver forkpty,forkpty@" ORCA_GLIBC_COMPAT_VERSION);
 +__asm__(".symver pthread_sigmask,pthread_sigmask@" ORCA_GLIBC_COMPAT_VERSION);
++/* Orca: glibc 2.42 relocated cfsetispeed/cfsetospeed into libc under new
++ * symbol versions (same libpthread/libutil merge family as above), so
++ * building on glibc >= 2.42 (e.g. Fedora 44) produces a GLIBC_2.42 reference
++ * absent on Ubuntu 20.04 (glibc 2.31). Pin to the same pre-merge compat
++ * alias glibc still ships. */
++__asm__(".symver cfsetispeed,cfsetispeed@" ORCA_GLIBC_COMPAT_VERSION);
++__asm__(".symver cfsetospeed,cfsetospeed@" ORCA_GLIBC_COMPAT_VERSION);
 +#  endif
 +#endif
 +
  /* Some platforms name VWERASE and VDISCARD differently */
  #if !defined(VWERASE) && defined(VWERSE)
  #define VWERASE	VWERSE
-@@ -237,13 +258,23 @@ pty_getproc(int, char *);
+@@ -237,13 +265,23 @@ pty_getproc(int, char *);
  #endif
  
  #if defined(__APPLE__) || defined(__OpenBSD__)
@@ -232,7 +239,7 @@ index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..383df0c9c48355547c65e6c9bbba593d
  #endif
  
  struct DelBuf {
-@@ -367,10 +398,11 @@ Napi::Value PtyFork(const Napi::CallbackInfo& info) {
+@@ -367,10 +405,11 @@ Napi::Value PtyFork(const Napi::CallbackInfo& info) {
      argv[i + 3] = strdup(arg.c_str());
    }
  
@@ -248,7 +255,7 @@ index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..383df0c9c48355547c65e6c9bbba593d
    }
    if (pty_nonblock(master) == -1) {
      throw Napi::Error::New(napiEnv, "Could not set master fd to nonblocking.");
-@@ -684,15 +716,73 @@ pty_getproc(int fd, char *tty) {
+@@ -684,15 +723,73 @@ pty_getproc(int fd, char *tty) {
  #endif
  
  #if defined(__APPLE__)
@@ -324,7 +331,7 @@ index 7b4b9e1f990fbf95b51528bb56dc9717f5b87532..383df0c9c48355547c65e6c9bbba593d
  
    for (; count < 3; count++) {
      low_fds[count] = posix_openpt(O_RDWR);
-@@ -706,80 +796,118 @@ pty_posix_spawn(char** argv, char** env,
+@@ -706,80 +803,118 @@ pty_posix_spawn(char** argv, char** env,
                POSIX_SPAWN_SETSID;
    *master = posix_openpt(O_RDWR);
    if (*master == -1) {

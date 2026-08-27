@@ -22,6 +22,8 @@ const AUDITED_GLOBAL_FETCH_LINES = new Map<string, number>([
   ['main/gitea/client.ts', 1],
   ['main/orca-profiles/profile-cloud-client.ts', 1],
   ['main/orca-profiles/profile-cloud-org-members-client.ts', 1],
+  ['main/platform/fetch-config.ts', 1],
+  ['main/updates/check-updates.ts', 1],
   ['main/rate-limits/codex-fetcher.ts', 3],
   ['main/runtime/relay/relay-http-client.ts', 2],
   ['main/runtime/relay/relay-region-preference.ts', 3],

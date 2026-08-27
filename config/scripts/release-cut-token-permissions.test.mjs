@@ -192,7 +192,17 @@ describe('release-cut token permissions', () => {
     for (const [jobName] of releaseTagExecutionJobs(workflow)) {
       if (!PUBLISH_TAG_JOBS.has(jobName)) {
         expect(workflow.jobs[jobName].needs).toBe('cut')
-        expect(workflow.jobs[jobName].if).toBe("needs.cut.outputs.should_release == 'true'")
+        if (jobName === 'terminal-rendering-golden') {
+          // Why: golden E2E needs the proprietary upstream codex binary, so it
+          // is deliberately gated to stablyai/orca only, unlike every other
+          // release-tag-execution job which runs on both stablyai/orca and
+          // the rahuljangirworks/veer fork.
+          expect(workflow.jobs[jobName].if).toBe(
+            "needs.cut.outputs.should_release == 'true' && github.repository == 'stablyai/orca'"
+          )
+        } else {
+          expect(workflow.jobs[jobName].if).toBe("needs.cut.outputs.should_release == 'true'")
+        }
       }
     }
     for (const jobName of REUSABLE_CALL_JOBS) {

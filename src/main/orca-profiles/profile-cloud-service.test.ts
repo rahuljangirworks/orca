@@ -76,7 +76,7 @@ const organizations: OrcaCloudOrgSummary[] = [
 ]
 
 function configureCloudEnv(): void {
-  vi.stubEnv('ORCA_CLOUD_API_URL', 'https://orca-cloud.example')
+  vi.stubEnv('ORCA_CLOUD_API_URL', 'http://127.0.0.1:4100')
   vi.stubEnv('ORCA_CLOUD_CLIENT_ID', 'desktop-client')
 }
 
@@ -190,7 +190,8 @@ describe('Orca cloud profile service', () => {
       state: 'unconfigured',
       persistence: 'encrypted',
       cloud: cloudSummary,
-      setupMessage: 'Orca Cloud sign-in is not configured for this build.'
+      setupMessage:
+        'This personal Orca build does not connect to Orca-operated services. Configure a loopback cloud service to enable this feature.'
     })
     expect(getCurrentOrcaProfileAuthStatus(userDataPath).organizations).toBeUndefined()
     expect(getCurrentOrcaProfileAuthStatus(userDataPath).capabilities).toBeUndefined()

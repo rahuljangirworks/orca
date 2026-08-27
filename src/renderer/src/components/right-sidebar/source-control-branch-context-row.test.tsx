@@ -321,7 +321,12 @@ describe('SourceControlBranchContextRow branch line total', () => {
   it('keeps full precision instead of a compact 8.3k form', () => {
     const markup = renderWithLineTotal({ added: 123456, removed: 0, mergeBase: 'base' })
 
-    expect(markup).toContain(`+${(123456).toLocaleString()}`)
+    // Why 'en' explicitly: the component pins its locale via getIntlLocale()
+    // (DEFAULT_LOCALE = 'en'), so it always renders Western digit grouping
+    // regardless of the host OS locale. A bare toLocaleString() picks up the
+    // test runner's ambient locale (e.g. en-IN groups as 1,23,456), which
+    // drifts from what the component actually renders on non-Western hosts.
+    expect(markup).toContain(`+${(123456).toLocaleString('en')}`)
     expect(markup).not.toContain('123k')
     expect(markup).not.toContain('123.5')
   })
