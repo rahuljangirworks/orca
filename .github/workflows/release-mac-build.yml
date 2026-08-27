@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   build-mac:
-    if: github.repository == 'stablyai/orca' || github.repository == 'rahuljangirworks/orca'
+    if: github.repository == 'stablyai/orca' || github.repository == 'rahuljangirworks/veer'
     # Why: upstream uses Blacksmith for faster macOS builds; fork falls back to
     # GitHub-hosted macos-15 since Blacksmith is not configured.
     runs-on: macos-15

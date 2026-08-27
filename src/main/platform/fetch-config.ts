@@ -96,7 +96,7 @@ export async function fetchPlatformConfig(): Promise<PlatformConfig> {
         }
       },
       releases: {
-        baseUrl: 'https://github.com/rahuljangirworks/orca/releases/download',
+        baseUrl: 'https://github.com/rahuljangirworks/veer/releases/download',
         linux: 'Veer-{version}.AppImage',
         macos: 'Veer-{version}.dmg',
         windows: 'Veer-Setup-{version}.exe'
