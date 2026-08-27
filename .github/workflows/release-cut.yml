@@ -2036,10 +2036,10 @@ jobs:
     if: |
       needs.cut.result == 'success' &&
       needs.build.result == 'success' &&
-      needs.build-mac.result == 'success' &&
-      needs.skill-sharing-linux-floor-release-gate.result == 'success' &&
-      needs.skill-sharing-release-gate.result == 'success' &&
-      (needs.terminal-rendering-golden.result == 'success' || needs.terminal-rendering-golden.result == 'skipped')
+      needs['build-mac'].result == 'success' &&
+      needs['skill-sharing-linux-floor-release-gate'].result == 'success' &&
+      needs['skill-sharing-release-gate'].result == 'success' &&
+      (needs['terminal-rendering-golden'].result == 'success' || needs['terminal-rendering-golden'].result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
