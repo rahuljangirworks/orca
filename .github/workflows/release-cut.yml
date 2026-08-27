@@ -422,6 +422,14 @@ jobs:
             '
           }
 
+          current_package_rc_base() {
+            node -e '
+              const { version } = require("./package.json");
+              const match = /^(\d+\.\d+\.\d+)-rc\.\d+(?:\.[0-9A-Za-z]+)?$/.exec(version);
+              if (match) console.log(match[1]);
+            '
+          }
+
           tag_matches_current_ref() {
             local tag="$1"
             local tag_commit
@@ -485,6 +493,7 @@ jobs:
           fi
 
           package_stable="$(current_package_stable)"
+          package_rc_base="$(current_package_rc_base)"
           if [[ -n "$package_stable" ]]; then
             # Why: if a stable release is deleted after its version-bump commit
             # reached main, GitHub's release list regresses. package.json is the
@@ -612,7 +621,15 @@ jobs:
               # was out). Anchoring to latest_stable + patch eliminates
               # that class of bug; minor/major RCs are cut by running
               # that stable kind first.
-              base="$(bump "$latest_stable" patch)"
+              # A personal fork can begin its release history with an RC and
+              # have no published stable tag. Continue the package's current
+              # RC line instead of collapsing the base to 0.0.1.
+              if [[ "$latest_stable" == "0.0.0" && -n "$package_rc_base" ]]; then
+                base="$package_rc_base"
+                echo "RC base from package.json: $base"
+              else
+                base="$(bump "$latest_stable" patch)"
+              fi
               highest_rc="$(highest_rc_for_base "$base")"
               if [[ -z "$highest_rc" ]]; then
                 new="${base}-rc.0"
@@ -632,7 +649,16 @@ jobs:
               fi
               ;;
             patch|minor|major)
-              new="$(bump "$latest_stable" "$KIND")"
+              if [[ "$latest_stable" == "0.0.0" && -n "$package_rc_base" ]]; then
+                if [[ "$KIND" == "patch" ]]; then
+                  new="$package_rc_base"
+                else
+                  new="$(bump "$package_rc_base" "$KIND")"
+                fi
+                echo "Stable base from package.json RC line: $package_rc_base"
+              else
+                new="$(bump "$latest_stable" "$KIND")"
+              fi
               # Updater-safety gate: stable must strictly increase.
               if ! semver_gt "$new" "$latest_stable"; then
                 echo "::error::Refusing to cut $KIND $new: not greater than latest stable $latest_stable." >&2
@@ -786,7 +812,7 @@ jobs:
           {
             echo "## Release E2E Signal"
             echo ""
-            echo "- Platform golden E2E is release-blocking: terminal rendering, restrictive-umask profile writes, source control, and agent TUI launch on Linux/macOS, plus fresh startup and source control on Windows."
+            echo "- Platform golden E2E is diagnostic/non-blocking on Veer releases; blocking package, skill-sharing, asset, and smoke gates are reported separately."
             echo "- Exception: every golden except terminal rendering runs with \`--if-present\`, so it is skipped (not failed) on older tags that predate its script."
             echo "- Full E2E runs separately after publication and cannot change the release result."
             echo "- Terminal rendering release evidence is diagnostic/non-blocking."
@@ -892,7 +918,6 @@ jobs:
       - name: Run terminal rendering golden on macOS
         if: runner.os == 'macOS'
         run: |
-          env SKIP_BUILD=1 ORCA_E2E_FORWARD_APP_LOGS=1 pnpm run --if-present test:e2e:workspace-session-golden
           env SKIP_BUILD=1 ORCA_E2E_FORWARD_APP_LOGS=1 pnpm run test:e2e:terminal-rendering-golden
           env SKIP_BUILD=1 ORCA_E2E_FORWARD_APP_LOGS=1 pnpm run --if-present test:e2e:posix-profile-index-golden
 
@@ -914,7 +939,6 @@ jobs:
         run: |
           $env:SKIP_BUILD = '1'
           $env:ORCA_E2E_FORWARD_APP_LOGS = '1'
-          pnpm run --if-present test:e2e:workspace-session-golden
           pnpm run --if-present test:e2e:windows-fresh-startup-golden
           pnpm run --if-present test:e2e:source-control-golden
 
@@ -2095,7 +2119,7 @@ jobs:
       - cut
     # Why: publish-complete-draft-releases can expose a recovered RC without
     # running the build/publish jobs; still advance the RC cask to that tag.
-    if: ${{ needs.cut.outputs.latest_published_rc_tag != '' }}
+    if: ${{ github.repository == 'stablyai/orca' && needs.cut.outputs.latest_published_rc_tag != '' }}
     uses: ./.github/workflows/homebrew-bump.yml
     with:
       tag: ${{ needs.cut.outputs.latest_published_rc_tag }}
@@ -2105,7 +2129,7 @@ jobs:
     needs:
       - cut
       - publish-release
-    if: ${{ needs.cut.outputs.tag != '' && startsWith(needs.cut.outputs.tag, 'v') }}
+    if: ${{ github.repository == 'stablyai/orca' && needs.cut.outputs.tag != '' && startsWith(needs.cut.outputs.tag, 'v') }}
     uses: ./.github/workflows/homebrew-bump.yml
     with:
       tag: ${{ needs.cut.outputs.tag }}

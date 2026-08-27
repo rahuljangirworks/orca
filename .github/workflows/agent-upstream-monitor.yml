@@ -211,7 +211,7 @@ jobs:
           echo -e "$REPORT" >> $GITHUB_STEP_SUMMARY
 
       - name: Check for existing sync tracking issue
-        if: steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true')
         id: check-issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -232,7 +232,7 @@ jobs:
           fi
 
       - name: Create sync tracking issue
-        if: (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true') && steps.check-issue.outputs.exists == 'false'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true') && steps.check-issue.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPORT: ${{ steps.report.outputs.report }}
@@ -250,7 +250,7 @@ jobs:
             --body "$REPORT"
 
       - name: Update existing sync issue
-        if: (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true') && steps.check-issue.outputs.exists == 'true'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && (steps.releases.outputs.has_new == 'true' || steps.commits.outputs.has_new_commits == 'true') && steps.check-issue.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}

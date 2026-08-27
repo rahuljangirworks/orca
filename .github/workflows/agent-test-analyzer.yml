@@ -5,7 +5,7 @@ name: Agent - Test Failure Analyzer
 
 on:
   workflow_run:
-    workflows: ["Cut Release", "E2E Tests"]
+    workflows: ["Cut Release", "E2E"]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -186,7 +186,7 @@ jobs:
           echo -e "$REPORT" >> $GITHUB_STEP_SUMMARY
 
       - name: Check for existing failure tracking issue
-        if: steps.jobs.outputs.has_failures == 'true'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.jobs.outputs.has_failures == 'true'
         id: check-issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -209,7 +209,7 @@ jobs:
           fi
 
       - name: Create failure tracking issue
-        if: steps.jobs.outputs.has_failures == 'true' && steps.check-issue.outputs.exists == 'false'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.jobs.outputs.has_failures == 'true' && steps.check-issue.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPORT: ${{ steps.report.outputs.report }}
@@ -231,7 +231,7 @@ jobs:
             --body "$REPORT"
 
       - name: Update existing failure issue
-        if: steps.jobs.outputs.has_failures == 'true' && steps.check-issue.outputs.exists == 'true'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.jobs.outputs.has_failures == 'true' && steps.check-issue.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}
@@ -247,7 +247,7 @@ jobs:
           $REPORT"
 
       - name: Close resolved issues
-        if: steps.jobs.outputs.has_failures == 'false'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.jobs.outputs.has_failures == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: ${{ steps.workflow.outputs.branch }}
