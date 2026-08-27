@@ -27,7 +27,7 @@ jobs:
 
           # Config endpoint
           START=$(date +%s%N)
-          CONFIG_STATUS=$(curl -s -o config.json -w "%{http_code}" "$API_URL/config" || echo "000")
+          CONFIG_STATUS=$(curl -s -o config.json -w "%{http_code}" "$API_URL/config.json" || echo "000")
           END=$(date +%s%N)
           CONFIG_TIME=$(( ($END - $START) / 1000000 ))
 
@@ -36,7 +36,7 @@ jobs:
 
           # Updates endpoint
           START=$(date +%s%N)
-          UPDATES_STATUS=$(curl -s -o updates.json -w "%{http_code}" "$API_URL/updates/check?currentVersion=1.0.0" || echo "000")
+          UPDATES_STATUS=$(curl -s -o updates.json -w "%{http_code}" "$API_URL/api/updates/check?version=1.4.178&platform=linux" || echo "000")
           END=$(date +%s%N)
           UPDATES_TIME=$(( ($END - $START) / 1000000 ))
 
@@ -141,7 +141,7 @@ jobs:
 
       - name: Check for existing health issue
         id: check-issue
-        if: steps.evaluate.outputs.healthy == 'false'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -161,7 +161,7 @@ jobs:
           fi
 
       - name: Create health alert issue
-        if: steps.evaluate.outputs.healthy == 'false' && steps.check-issue.outputs.exists == 'false'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.evaluate.outputs.healthy == 'false' && steps.check-issue.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPORT: ${{ steps.report.outputs.report }}
@@ -178,7 +178,7 @@ jobs:
           It will be closed automatically when the backend returns to healthy status."
 
       - name: Update existing health issue
-        if: steps.evaluate.outputs.healthy == 'false' && steps.check-issue.outputs.exists == 'true'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.evaluate.outputs.healthy == 'false' && steps.check-issue.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}
@@ -191,7 +191,7 @@ jobs:
           $REPORT"
 
       - name: Close resolved health issue
-        if: steps.evaluate.outputs.healthy == 'true' && steps.check-issue.outputs.exists == 'true'
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true' && steps.evaluate.outputs.healthy == 'true' && steps.check-issue.outputs.exists == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.check-issue.outputs.issue_number }}

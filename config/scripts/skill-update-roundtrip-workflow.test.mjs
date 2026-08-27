@@ -7,6 +7,10 @@ const projectDir = resolve(import.meta.dirname, '../..')
 const workflow = parse(
   readFileSync(join(projectDir, '.github/workflows/skill-update-roundtrip.yml'), 'utf8')
 )
+const verifier = readFileSync(
+  join(projectDir, 'config/scripts/verify-skill-update-roundtrip.mjs'),
+  'utf8'
+)
 
 const expectedPaths = [
   'skills/**',
@@ -31,5 +35,10 @@ describe('skill-update-roundtrip workflow triggers', () => {
   it('does not claim a path filter on merge_group that GitHub would ignore', () => {
     expect(workflow.on.merge_group).toBeDefined()
     expect(workflow.on.merge_group?.paths).toBeUndefined()
+  })
+
+  it('seeds historical skills from content-addressed trees instead of removable release tags', () => {
+    expect(verifier).toContain("['ls-tree', '-r', '-z', snapshot.gitTreeSha]")
+    expect(verifier).not.toContain('tag: `v${release.appVersion}`')
   })
 })

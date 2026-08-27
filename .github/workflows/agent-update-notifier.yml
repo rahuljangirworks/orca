@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   notify:
@@ -111,6 +112,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create announcement issue
+        if: vars.VEER_AUTOMATION_ISSUES_ENABLED == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: ${{ steps.message.outputs.message }}
@@ -193,7 +195,7 @@ jobs:
         run: |
           # Note: This requires a backend endpoint that accepts version updates
           # For now, just verify the backend is accessible
-          curl -f "https://veer-api.rahuljangir-works.workers.dev/config" || echo "Backend update skipped"
+          curl -f "https://veer-api.rahuljangir-works.workers.dev/config.json" || echo "Backend update skipped"
 
       - name: Generate shareable social posts
         id: social

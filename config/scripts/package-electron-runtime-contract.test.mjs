@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- comprehensive release workflow test suite */
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
@@ -439,6 +440,9 @@ describe('Electron runtime package contract', () => {
     expect(releaseWorkflow.jobs['homebrew-bump'].if).toContain(
       "startsWith(needs.cut.outputs.tag, 'v')"
     )
+    expect(releaseWorkflow.jobs['homebrew-bump'].if).toContain(
+      "github.repository == 'stablyai/orca'"
+    )
     expect(releaseWorkflow.jobs['homebrew-bump'].if).not.toContain('-rc.')
     expect(releaseWorkflow.jobs['homebrew-bump-published-rc-draft'].with.tag).toBe(
       '${{ needs.cut.outputs.latest_published_rc_tag }}'
@@ -447,6 +451,7 @@ describe('Electron runtime package contract', () => {
     const resolveCaskStep = homebrewWorkflow.jobs['bump-cask'].steps.find(
       (step) => step.name === 'Resolve cask target'
     )
+    expect(homebrewWorkflow.jobs['bump-cask'].if).toContain("github.repository == 'stablyai/orca'")
     const renderStep = homebrewWorkflow.jobs['bump-cask'].steps.find(
       (step) => step.name === 'Render updated cask file'
     )
@@ -641,6 +646,7 @@ describe('Electron runtime package contract', () => {
     const releaseMacRunStep = releaseGoldenJob.steps.find(
       (step) => step.name === 'Run terminal rendering golden on macOS'
     )
+    expect(releaseMacRunStep.run).not.toContain('test:e2e:workspace-session-golden')
     expect(releaseMacRunStep.run).toContain('pnpm run test:e2e:terminal-rendering-golden')
     expect(releaseMacRunStep.run).toContain(
       'pnpm run --if-present test:e2e:posix-profile-index-golden'
@@ -655,6 +661,7 @@ describe('Electron runtime package contract', () => {
     expect(releaseWindowsRunStep.run).toContain(
       'pnpm run --if-present test:e2e:windows-fresh-startup-golden'
     )
+    expect(releaseWindowsRunStep.run).not.toContain('test:e2e:workspace-session-golden')
     expect(releaseEvidenceJob['continue-on-error']).toBe(true)
     expect(
       releaseEvidenceJob.strategy.matrix.include.map(({ platform }) => platform).sort()
