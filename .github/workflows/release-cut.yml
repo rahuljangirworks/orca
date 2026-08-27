@@ -2034,6 +2034,7 @@ jobs:
     # everything chained off it: D1 upsert, post-release-e2e, homebrew-bump)
     # silently skipped on every single fork release cut.
     if: |
+      always() &&
       needs.cut.result == 'success' &&
       needs.build.result == 'success' &&
       needs['build-mac'].result == 'success' &&
