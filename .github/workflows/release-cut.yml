@@ -2090,6 +2090,57 @@ jobs:
             --prerelease="$prerelease" \
             --repo "$GITHUB_REPOSITORY"
 
+      - name: Upsert release metadata into Veer D1
+        # Why: keeps the Veer Worker /api/updates/check endpoint current without
+        # any manual step. Runs after gh release edit --draft=false so the release
+        # and all assets are guaranteed public before we record them in D1.
+        # Non-zero exit fails the job so a broken upsert is visible in CI rather
+        # than silently leaving D1 stale.
+        # Only runs on rahuljangirworks/veer (the Veer release fork).
+        if: github.repository == 'rahuljangirworks/veer'
+        env:
+          TAG: ${{ needs.cut.outputs.tag }}
+          VEER_RELEASE_PUBLISH_TOKEN: ${{ secrets.VEER_RELEASE_PUBLISH_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          version="${TAG#v}"   # strip leading 'v'
+
+          base_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          linux_url="${base_url}/orca-linux.AppImage"
+          macos_url="${base_url}/orca-macos-x64.dmg"
+          windows_url="${base_url}/orca-windows-setup.exe"
+
+          published_at="$(date -u +%s)"
+
+          payload="$(printf '{"version":"%s","assets_linux":"%s","assets_macos":"%s","assets_windows":"%s","release_notes":"%s","published_at":%s}' \
+            "$version" \
+            "$linux_url" \
+            "$macos_url" \
+            "$windows_url" \
+            "Continuous RC release ${TAG}" \
+            "$published_at")"
+
+          echo "Upserting release ${TAG} into Veer D1..."
+
+          response="$(curl -sS \
+            --fail-with-body \
+            --max-time 30 \
+            -X POST "https://veer-api.rahuljangir-works.workers.dev/api/releases/publish" \
+            -H "Authorization: Bearer ${VEER_RELEASE_PUBLISH_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$payload")"
+
+          echo "Veer D1 upsert response: ${response}"
+
+          # Verify the endpoint confirmed ok=true
+          echo "${response}" | grep -q '"ok":true' || {
+            echo "::error::Veer D1 upsert did not return ok:true. Response: ${response}"
+            exit 1
+          }
+
+          echo "D1 upsert successful for ${TAG}."
+
   post-release-e2e:
     needs:
       - cut
