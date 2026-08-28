@@ -51,17 +51,17 @@ export default function AboutScreen() {
 
       <View style={styles.brand}>
         <OrcaLogo size={28} />
-        <Text style={styles.brandName}>Orca</Text>
+        <Text style={styles.brandName}>Veer</Text>
         <Text style={styles.brandSub}>Open-source agent IDE for 100x builders</Text>
       </View>
 
       <View style={styles.section}>
         <Pressable
           style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-          onPress={() => void Linking.openURL('https://onOrca.dev')}
+          onPress={() => void Linking.openURL('https://github.com/rahuljangirworks/veer')}
         >
           <Globe size={16} color={colors.textSecondary} />
-          <Text style={styles.rowValue}>onOrca.dev</Text>
+          <Text style={styles.rowValue}>github.com/rahuljangirworks/veer</Text>
         </Pressable>
         <View style={styles.separator} />
         <Pressable

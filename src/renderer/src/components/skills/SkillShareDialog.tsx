@@ -32,11 +32,11 @@ function operationError(status: string): string {
   return status === 'reconnect-required'
     ? translate(
         'auto.components.skills.SkillShareDialog.reconnect',
-        'Reconnect your Orca account before sharing.'
+        'Reconnect your Veer account before sharing.'
       )
     : translate(
         'auto.components.skills.SkillShareDialog.unconfigured',
-        'Connect an Orca Cloud account before sharing.'
+        'Connect a Veer Cloud account before sharing.'
       )
 }
 
@@ -234,7 +234,7 @@ export function SkillShareDialog({
       setError(
         translate(
           'auto.components.skills.SkillShareDialog.cancelRequestFailed',
-          'Orca could not send the cancellation request. The upload may still finish.'
+          'Veer could not send the cancellation request. The upload may still finish.'
         )
       )
     }

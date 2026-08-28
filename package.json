@@ -74,6 +74,8 @@
     "sync:localization-catalog": "node config/scripts/verify-localization-catalog.mjs --fix",
     "verify:localization-extraction": "node config/scripts/verify-localization-extraction.mjs",
     "verify:localization-coverage": "node config/scripts/audit-localization-coverage.mjs --check",
+    "rebrand:translate-fallbacks": "node config/scripts/rebrand-translate-fallbacks.mjs",
+    "resync:locale-fallbacks": "node config/scripts/resync-locale-fallbacks-from-source.mjs",
     "audit:localization": "node config/scripts/audit-localization-coverage.mjs",
     "verify:release": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run build:release",
     "build:cli": "tsc -p config/tsconfig.cli.json --outDir out --composite false --incremental false && node config/scripts/verify-cli-bin.mjs --fix-executable --fix-package-json && node config/scripts/install-dev-cli.mjs",

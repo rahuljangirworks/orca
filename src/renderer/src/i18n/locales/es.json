@@ -56,7 +56,7 @@
     "showStatusBar": "Mostrar barra de estado",
     "showTasksButton": "Botón Mostrar tareas",
     "showAutomationsButton": "Botón Mostrar automatizaciones",
-    "showMobileButton": "Mostrar botón móvil de Orca",
+    "showMobileButton": "Mostrar botón móvil de Veer",
     "showTitlebarAppName": "Mostrar el nombre de la aplicación de la barra de título",
     "view": "Vista",
     "reload": "Recargar",
@@ -113,7 +113,7 @@
       "df1d56bf87": "La vista del espacio de trabajo tuvo un error.",
       "9e0b441a91": "Alternar barra lateral derecha",
       "e81217c1b7": "Ocultar nombre de la aplicación",
-      "5096cbbc86": "Orca",
+      "5096cbbc86": "Veer",
       "8b0b8eb54f": "Menú de aplicaciones",
       "caea5b51b9": "Reiniciar ahora",
       "0a9e810705": "Hasta que reinicies, los cambios no se guardarán. Tus pestañas anteriores siguen guardadas en disco.",
@@ -4407,7 +4407,7 @@
           "80611a8b10": "Buscar",
           "0c3395fd32": "Buscar worktrees y pestañas del navegador",
           "c86d83b5c3": "Nuevo",
-          "1b5c41caee": "Orca Móvil",
+          "1b5c41caee": "Veer Móvil",
           "9c95e1ce91": "Agentes",
           "f323383e9a": "Automatizaciones",
           "e7ad3c540d": "Abrir tareas de Jira",
@@ -5555,9 +5555,9 @@
           "3057983501": "No asignado",
           "0cd9b8228f": "Elige el icono de la app que se muestra en el Dock y en el selector de ventanas.",
           "ca1590d42f": "Icono de la app",
-          "61d842eca0": "Muestra el acceso directo de Orca Mobile en la barra lateral. Sigue estando disponible en Toolbox.",
-          "9da1020447": "Mostrar botón de Orca Mobile",
-          "5db6ba961f": "Muestra el botón de Orca Mobile en la parte superior de la barra lateral izquierda.",
+          "61d842eca0": "Muestra el acceso directo de Veer Mobile en la barra lateral. Sigue estando disponible en Toolbox.",
+          "9da1020447": "Mostrar botón de Veer Mobile",
+          "5db6ba961f": "Muestra el botón de Veer Mobile en la parte superior de la barra lateral izquierda.",
           "fa882a3e6b": "Muestra el botón de Automatizaciones en la parte superior de la barra lateral izquierda.",
           "511f270ebb": "Mostrar botón de Automatizaciones",
           "661942ab7f": "Muestra el botón de Tareas en la parte superior de la barra lateral izquierda.",
@@ -6375,7 +6375,7 @@
           "668016be7a": "en su computadora y teléfono.",
           "1dc87a7fbc": "Tailscale",
           "51d29927eb": "Instalar",
-          "9fc5d203ff": "Orca Mobile se conecta directamente a esta computadora. Para usarlo fuera de la misma LAN, coloque su computadora y teléfono en la misma red superpuesta privada, luego genere el código QR con esa dirección de red seleccionada.",
+          "9fc5d203ff": "Veer Mobile se conecta directamente a esta computadora. Para usarlo fuera de la misma LAN, coloque su computadora y teléfono en la misma red superpuesta privada, luego genere el código QR con esa dirección de red seleccionada.",
           "39fad211d9": "Conéctate fuera de tu Wi-Fi con una tailnet",
           "a9db5d771d": "Actualizar interfaces de red",
           "b2c384cfd6": "No se encontraron interfaces",
@@ -6385,7 +6385,7 @@
           "1e64659126": "Regenerar"
         },
         "MobilePane": {
-          "dd3cd78d04": "Escanear con Orca Móvil",
+          "dd3cd78d04": "Escanear con Veer Móvil",
           "35100bca5d": "Mientras usas un terminal en tu teléfono, Orca lo reduce para que se ajuste a la pantalla del teléfono. Cuando cierras la app o cambias a otra, esto controla si se queda en tamaño de teléfono (para que las herramientas CLI interactivas no se reacomoden) o vuelve al tamaño del escritorio. Siempre puedes usar Restaurar este terminal o Restaurar todos los terminales en el banner para cambiar el tamaño manualmente.",
           "ee56f1c7e4": "Cuando sales de la aplicación móvil",
           "3939fd062c": "Revocar un dispositivo lo desconecta inmediatamente.",
@@ -6407,7 +6407,7 @@
           "1b1b70279a": "Aún no hay dispositivos emparejados.",
           "1592afcc7a": "Aún no hay dispositivos emparejados. Escanea el código QR con la aplicación móvil de Orca.",
           "relayDegradedNotice": "No se pudo contactar con Relay: este código solo funciona en tu LAN o Tailscale. Genera uno nuevo e inténtalo de nuevo.",
-          "pairingQrError": "Este código de emparejamiento no se pudo representar como código QR. Cópialo en Orca Mobile."
+          "pairingQrError": "Este código de emparejamiento no se pudo representar como código QR. Cópialo en Veer Mobile."
         },
         "MobileSettingsPane": {
           "9a3c280e49": "GitHub Releases",
@@ -6416,10 +6416,10 @@
           "c8491c17ef": "Controla Orca desde tu teléfono escaneando un código QR. Beta/vista previa temprana: espera errores y cambios importantes. Obtén la app para iOS en",
           "e7a3ae8c4e": "Móvil",
           "174f4a3c6d": "Controla terminales y agentes desde tu teléfono.",
-          "1de96ec8a6": "Mostrar botón de Orca Mobile",
-          "682293cadf": "Mostrar el botón de Orca Mobile en la parte superior de la barra lateral izquierda.",
-          "d4f2b65f30": "Mostrar el acceso directo de Orca Mobile en la barra lateral.",
-          "installIntro": "Instala Orca Mobile desde la",
+          "1de96ec8a6": "Mostrar botón de Veer Mobile",
+          "682293cadf": "Mostrar el botón de Veer Mobile en la parte superior de la barra lateral izquierda.",
+          "d4f2b65f30": "Mostrar el acceso directo de Veer Mobile en la barra lateral.",
+          "installIntro": "Instala Veer Mobile desde la",
           "installOutro": ", luego empareja a continuación.",
           "androidApkLabel": "Android APK"
         },
@@ -7800,8 +7800,8 @@
             "5bff6a2ef0": "barra lateral",
             "5e5b8878bf": "teléfono",
             "74618577c7": "móvil",
-            "682293cadf": "Muestra el botón de Orca Mobile en la parte superior de la barra lateral izquierda.",
-            "1de96ec8a6": "Mostrar botón de Orca Mobile",
+            "682293cadf": "Muestra el botón de Veer Mobile en la parte superior de la barra lateral izquierda.",
+            "1de96ec8a6": "Mostrar botón de Veer Mobile",
             "4c920ab2d1": "cronograma",
             "58f4e22fa2": "automatización",
             "b186f3cefb": "automatizaciones",
@@ -8638,8 +8638,8 @@
               "f213400800": "móvil",
               "671eb4173c": "Controla terminales y agentes desde tu teléfono.",
               "ffd52a96e4": "Móvil",
-              "1de96ec8a6": "Mostrar botón de Orca Mobile",
-              "682293cadf": "Mostrar el botón de Orca Mobile en la parte superior de la barra lateral izquierda.",
+              "1de96ec8a6": "Mostrar botón de Veer Mobile",
+              "682293cadf": "Mostrar el botón de Veer Mobile en la parte superior de la barra lateral izquierda.",
               "e4f4daea0e": "relé",
               "5d5af8e041": "iPhone"
             }
@@ -9810,7 +9810,7 @@
           "regenerate": "Regenerar",
           "generate": "Generar código QR",
           "refresh": "Actualizar interfaces de red",
-          "overview": "Genera un código QR, luego escanéalo en Orca Mobile en Pair Desktop.",
+          "overview": "Genera un código QR, luego escanéalo en Veer Mobile en Pair Desktop.",
           "step1Title": "Método de conexión",
           "step2Title": "Dirección de este ordenador",
           "step2LocalDescription": "El teléfono debe poder alcanzar esta dirección por Tailscale o Wi‑Fi.",
@@ -11719,7 +11719,7 @@
           "2c47f5465f": "Activa Permitir notificaciones para Orca en Configuración del sistema. Este paso se actualizará automáticamente cuando estén activadas."
         },
         "OnboardingFlow": {
-          "1b5e182e9f": "Bienvenido a Orca",
+          "1b5e182e9f": "Bienvenido a Veer",
           "4db04f2f57": "de",
           "adaa0aa627": "Vaya al paso de incorporación {{value0}}: {{value1}}",
           "a249f81538": "Orca",
@@ -11912,26 +11912,26 @@
           "dfd2aa9d5d": "Red",
           "2f077ef4eb": ", y escanea el código.",
           "3aa7bb2d8b": "Emparejar escritorio",
-          "d1495e5e64": "Abre Orca Mobile, toca",
+          "d1495e5e64": "Abre Veer Mobile, toca",
           "3960f5c339": "Paso 2 de 2",
           "3241f3c26a": "QR de instalación",
           "7af266b80d": "Código QR de instalación",
           "aa97420ba4": "Copiar enlace de instalación",
           "ac1eb64952": "Android",
           "711e6f4b47": "iOS",
-          "e75647ace0": "Escanea el código QR con tu teléfono o abre el enlace de instalación para obtener Orca Mobile.",
+          "e75647ace0": "Escanea el código QR con tu teléfono o abre el enlace de instalación para obtener Veer Mobile.",
           "0d9b33299e": "Obtén la aplicación.",
           "92ddfdfa1f": "Paso 1 de 2",
           "ff48d9d520": "Emparejar otro dispositivo",
           "f9cbf4bb53": "Revocar dispositivo",
           "34f878d04f": "Revocar {{value0}}",
           "94829abdb1": "Emparejado",
-          "266c18c105": "Abre Orca Mobile para continuar donde lo dejaste o emparejar otro dispositivo.",
-          "5410d55d79": "Orca Mobile",
+          "266c18c105": "Abre Veer Mobile para continuar donde lo dejaste o emparejar otro dispositivo.",
+          "5410d55d79": "Veer Mobile",
           "10d27b4cba": "Empezar",
           "da1d5e5ed0": "Disponible en",
           "ec0607bf66": "Plataformas móviles compatibles",
-          "b4ccce5cb7": "Controla Orca desde tu teléfono. Consulta el estado de los agentes, revisa los cambios e inicia tareas cuando estés lejos de tu escritorio.",
+          "b4ccce5cb7": "Controla Veer desde tu teléfono. Consulta el estado de los agentes, revisa los cambios e inicia tareas cuando estés lejos de tu escritorio.",
           "cd4e5e816f": "Tus espacios de trabajo, en tu bolsillo.",
           "a6cffbbb0b": "Generar código",
           "e59a252eca": "Regenerar código",
@@ -11943,7 +11943,7 @@
             "stable": "Estable"
           },
           "relayDegradedNotice": "No se pudo contactar con Relay: este código solo funciona en tu LAN o Tailscale.",
-          "pairingQrError": "Este código de emparejamiento no se pudo representar como código QR. Cópialo en Orca Mobile.",
+          "pairingQrError": "Este código de emparejamiento no se pudo representar como código QR. Cópialo en Veer Mobile.",
           "directAddressDisclosure": "También usar una ruta local más rápida",
           "directAddressHint": "Opcional. Elige la dirección Wi‑Fi o Tailscale que el teléfono usará cuando esté cerca — suele ser más rápido que Relay. Relay sigue funcionando cuando estás fuera."
         },
@@ -11962,18 +11962,18 @@
         },
         "MobilePageToolbar": {
           "ad2284a9e2": "Cerrar · Esc",
-          "9883b58693": "Cerrar Orca Mobile",
+          "9883b58693": "Cerrar Veer Mobile",
           "fb5f28330e": "Mostrar en la barra lateral",
           "c669abcf8f": "Ocultar de la barra lateral",
           "e1c7b4a92d": "Configúralo en Ajustes > Móvil.",
-          "a4f8c2d91e": "Eliminar Orca Mobile de la barra lateral izquierda",
-          "b7e3d1c84a": "Mostrar Orca Mobile en la barra lateral izquierda",
+          "a4f8c2d91e": "Eliminar Veer Mobile de la barra lateral izquierda",
+          "b7e3d1c84a": "Mostrar Veer Mobile en la barra lateral izquierda",
           "f3d8e5b71a": "Vuelve a añadir el acceso directo a la barra lateral."
         },
         "PhoneCarousel": {
           "96d651cb87": "Sesión terminal",
           "93217b41c1": "Lista de worktrees",
-          "89c7713645": "Pantalla de inicio de Orca Móvil"
+          "89c7713645": "Pantalla de inicio de Veer Móvil"
         },
         "mobile": {
           "platform": {
@@ -12013,7 +12013,7 @@
             "00a6903322": "Agentes iniciados",
             "c0e2e9dcd9": "Bienvenido de nuevo",
             "af761a0c0d": "Ajustes",
-            "5d94e8ddcc": "Orca"
+            "5d94e8ddcc": "Veer"
           },
           "TerminalSlide": {
             "0bb39f8fe6": "Enviar",
@@ -12076,18 +12076,18 @@
           "add-custom": "Añadir dirección personalizada…"
         },
         "WindowsFirewallNotice": {
-          "repair-success": "Windows Firewall now allows Orca Mobile on private networks",
+          "repair-success": "Windows Firewall now allows Veer Mobile on private networks",
           "repair-failed": "Could not update the Windows Firewall rules",
           "public-title": "Windows marks this network as public",
           "missing-title": "Allow phone connections through Windows Firewall",
-          "public-description": "Change this trusted Wi-Fi network to Private before allowing Orca Mobile connections.",
-          "missing-description": "Windows may block the pairing server. Add a rule for this Orca app and TCP port {{port}} on Private networks.",
+          "public-description": "Change this trusted Wi-Fi network to Private before allowing Veer Mobile connections.",
+          "missing-description": "Windows may block the pairing server. Add a rule for this Veer app and TCP port {{port}} on Private networks.",
           "open-settings": "Open network settings",
           "waiting": "Waiting for Windows…",
           "allow": "Allow phone connections",
           "repair-unverified": "Windows Firewall access could not be verified",
-          "blocked-title": "Windows may be blocking Orca Mobile",
-          "blocked-description": "An existing inbound Block rule can override the pairing exception. Repair removes conflicting TCP rules for this Orca app, then allows port {{port}} on Private networks.",
+          "blocked-title": "Windows may be blocking Veer Mobile",
+          "blocked-description": "An existing inbound Block rule can override the pairing exception. Repair removes conflicting TCP rules for this Veer app, then allows port {{port}} on Private networks.",
           "repair": "Repair firewall access",
           "relay-note": "El emparejamiento sigue funcionando por Orca Relay: permitirlo solo añade la conexión local más rápida."
         }

@@ -5,7 +5,7 @@ export const JA_UNIFIED_VALUES = {
   "Can't reach {{value0}}": '{{value0}} に接続できません',
   'Copy Address': 'アドレスをコピー',
   'Open Externally': '外部で開く',
-  'Show Orca Mobile Button': 'Orca Mobile ボタンを表示',
+  'Show Veer Mobile Button': 'Veer Mobile ボタンを表示',
   Paste: '貼り付け',
   'WSL default': 'WSL のデフォルト',
   'Unable to open the workspace attached to this issue.':
@@ -129,8 +129,8 @@ export const JA_UNIFIED_VALUES = {
   Replace: '置換',
   'Account scope': 'アカウントスコープ',
   'Agent Permissions': 'Agent の権限',
-  'Show the Orca Mobile button at the top of the left sidebar.':
-    '左サイドバー上部に Orca Mobile ボタンを表示します。',
+  'Show the Veer Mobile button at the top of the left sidebar.':
+    '左サイドバー上部に Veer Mobile ボタンを表示します。',
   'Enable Orca CLI': 'Orca CLI を有効化',
   'Registered the Orca CLI in PATH.': 'Orca CLI を PATH に登録しました。',
   'Failed to load CLI status.': 'CLI ステータスの読み込みに失敗しました。',

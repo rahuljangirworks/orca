@@ -14,9 +14,9 @@ const BASE_LOCALE_KEY_OVERRIDES = {
   'auto.components.onboarding.ThemeStep.ab2a583a97': { ja: 'カーソル' },
   'menu.reportCrash': { ko: '크래시 신고...', zh: '报告崩溃...', ja: 'クラッシュを報告...' },
   'menu.showMobileButton': {
-    ko: 'Orca 모바일 버튼 표시',
-    zh: '显示 Orca Mobile 按钮',
-    ja: 'Orca Mobile ボタンを表示'
+    ko: 'Veer 모바일 버튼 표시',
+    zh: '显示 Veer Mobile 按钮',
+    ja: 'Veer Mobile ボタンを表示'
   },
   'menu.toggleLeftSidebar': {
     ko: '왼쪽 사이드바 표시/숨기기',
@@ -176,7 +176,7 @@ const BASE_LOCALE_KEY_OVERRIDES = {
     zh: '打开 Linear 任务',
     ja: 'Linear タスクを開く'
   },
-  // Onboarding pill beside Orca Mobile: "New" marks a new feature, not a create action.
+  // Onboarding pill beside Veer Mobile: "New" marks a new feature, not a create action.
   'auto.components.sidebar.SidebarNav.c86d83b5c3': {
     ko: '신규',
     zh: '新功能',

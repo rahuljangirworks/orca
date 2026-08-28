@@ -65,7 +65,7 @@ function ProjectViewTab({
           ? view.name
           : translate(
               'auto.components.github.project.ProjectViewWrapper.2edf5e7e77',
-              "{{value0}} — Orca doesn't support {{value1}} project views yet. File a feature request at {{value2}}.",
+              "{{value0}} — Veer doesn't support {{value1}} project views yet. File a feature request at {{value2}}.",
               { value0: view.name, value1: layoutLabel, value2: ORCA_FEATURE_REQUEST_URL }
             )
       }
@@ -107,7 +107,7 @@ function ProjectViewTab({
             {message}{' '}
             {translate(
               'auto.components.github.project.ProjectViewWrapper.1bf8c01c8b',
-              'Switch to a Table view to work with this project in Orca.'
+              'Switch to a Table view to work with this project in Veer.'
             )}
           </p>
           <Button

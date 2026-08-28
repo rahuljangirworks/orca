@@ -100,7 +100,7 @@ export function safetyBlockerState(
       ),
       description: translate(
         'auto.components.right.sidebar.checks.panel.review.existing.body',
-        'Orca found an existing {{reviewLabel}} for this branch.',
+        'Veer found an existing {{reviewLabel}} for this branch.',
         { reviewLabel }
       ),
       composerMode: 'hidden',
