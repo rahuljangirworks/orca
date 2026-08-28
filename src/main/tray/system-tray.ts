@@ -47,9 +47,17 @@ let nativeThemeUpdatedListener: (() => void) | null = null
 // tooltip carries the worktree/branch label so hovering tells them apart.
 function baseTooltip(): string {
   if (!devIndicator) {
-    return 'Orca'
+    return translateMain('tray.baseTooltip', 'Veer')
   }
-  return devIndicator.label ? `Orca DEV (${devIndicator.label})` : 'Orca DEV'
+  // Why: translateMain() returns the raw fallback verbatim (no i18next
+  // interpolation) whenever main i18n hasn't finished initializing yet, so
+  // the fallback must already carry the real label -- {{label}} in the
+  // default would leak through unsubstituted in that path.
+  return devIndicator.label
+    ? translateMain('tray.baseTooltipDevLabeled', `Veer DEV (${devIndicator.label})`, {
+        label: devIndicator.label
+      })
+    : translateMain('tray.baseTooltipDev', 'Veer DEV')
 }
 
 // Why: on Windows the notification area expects a 16px icon; the app icon PNG
