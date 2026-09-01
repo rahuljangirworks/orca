@@ -82,12 +82,13 @@ export function getOrcaCloudAuthConfig(
   const allowLoopbackHttp = PERSONAL_FORK_POLICY.localServiceOverridesEnabled || !packaged
   const cleanEndpointUrl = (value: string | undefined): string | null =>
     cleanUrl(value, allowLoopbackHttp)
-  const configuredApiBaseUrl = env.ORCA_CLOUD_API_URL?.trim()
+  const configuredApiBaseUrl = env.VEER_PLATFORM_API_URL?.trim()
   // Personal builds never fall back to Orca Cloud. A self-hosted service must
   // be explicitly configured and must resolve to this machine.
   const apiBaseUrl = configuredApiBaseUrl ? cleanEndpointUrl(configuredApiBaseUrl) : null
-  const clientId = env.ORCA_CLOUD_CLIENT_ID?.trim()
-  if (!apiBaseUrl || !clientId) {
+  const clientId = env.VEER_GOOGLE_DESKTOP_CLIENT_ID?.trim()
+  const hasUsableClientId = !!clientId && !/^<[^>]+>$/.test(clientId)
+  if (!apiBaseUrl || !hasUsableClientId) {
     return {
       configured: false,
       setupMessage: `${PERSONAL_FORK_NETWORK_DISABLED_MESSAGE} Configure a loopback cloud service to enable this feature.`
@@ -125,7 +126,7 @@ export function getOrcaCloudAuthConfig(
       relayDirectorUrl:
         cleanOrigin(env.ORCA_RELAY_URL, allowLoopbackHttp) ?? new URL(apiBaseUrl).origin,
       clientId,
-      scope: env.ORCA_CLOUD_AUTH_SCOPE?.trim() || DEFAULT_SCOPE
+      scope: env.VEER_GOOGLE_AUTH_SCOPE?.trim() || DEFAULT_SCOPE
     }
   }
 }

@@ -7,6 +7,7 @@ import {
   exchangeOrcaCloudAuthCode,
   refreshOrcaCloudCapabilities,
   refreshOrcaCloudSession,
+  revokeOrcaCloudSession,
   selectOrcaCloudOrg
 } from './profile-cloud-client'
 
@@ -129,11 +130,8 @@ describe('Orca cloud client', () => {
     )
   })
 
-  it('creates cloud profiles with a profile-scoped session response', async () => {
+  it('creates cloud profiles without replacing the existing session tokens', async () => {
     mockFetchJson({
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
-      expiresAt: 1000,
       cloud: {
         cloudProfileId: 'cloud-profile-2',
         userId: 'user-1',
@@ -151,8 +149,9 @@ describe('Orca cloud client', () => {
     await expect(
       createOrcaCloudProfile(config, session, { orgId: 'org-1', name: 'Acme' })
     ).resolves.toMatchObject({
-      accessToken: 'new-access-token',
-      refreshToken: 'new-refresh-token',
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+      expiresAt: 999,
       cloud: expect.objectContaining({ cloudProfileId: 'cloud-profile-2' }),
       organizations: [{ orgId: 'org-1', name: 'Acme', role: undefined }]
     })
@@ -162,6 +161,25 @@ describe('Orca cloud client', () => {
         body: JSON.stringify({ orgId: 'org-1', name: 'Acme' })
       })
     )
+  })
+
+  it('accepts the JSON logout response contract', async () => {
+    mockFetchJson({ ok: true })
+
+    await expect(revokeOrcaCloudSession(config, session)).resolves.toBeUndefined()
+    expect(fetchMock).toHaveBeenCalledWith(
+      config.logoutEndpoint,
+      expect.objectContaining({
+        headers: expect.objectContaining({ authorization: 'Bearer access-token' }),
+        body: JSON.stringify({ refreshToken: 'refresh-token' })
+      })
+    )
+  })
+
+  it('accepts a legacy empty logout response while the API rolls forward', async () => {
+    fetchMock.mockResolvedValue({ ok: true, status: 204 })
+
+    await expect(revokeOrcaCloudSession(config, session)).resolves.toBeUndefined()
   })
 
   it('refreshes session material without exposing refresh tokens in URLs', async () => {

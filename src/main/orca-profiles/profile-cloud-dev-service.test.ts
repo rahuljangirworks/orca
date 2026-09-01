@@ -64,8 +64,8 @@ describe('Orca cloud dev auth service', () => {
     vi.unstubAllEnvs()
     vi.stubEnv('NODE_ENV', 'development')
     vi.stubEnv('ORCA_CLOUD_DEV_AUTH', '1')
-    vi.stubEnv('ORCA_CLOUD_API_URL', '')
-    vi.stubEnv('ORCA_CLOUD_CLIENT_ID', '')
+    vi.stubEnv('VEER_PLATFORM_API_URL', '')
+    vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', '')
   })
 
   afterEach(() => {

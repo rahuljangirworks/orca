@@ -34,6 +34,12 @@ type CapabilityRefreshResponse = {
   capabilities: OrcaCloudCapabilities
 }
 
+type ProfileResponse = {
+  cloud: OrcaProfileCloudSummary
+  organizations?: OrcaCloudOrgSummary[]
+  capabilities: OrcaCloudCapabilities
+}
+
 export class OrcaCloudRequestError extends Error {
   // Why: `errorCode` carries the server's JSON `{error}` discriminator (e.g.
   // 'already_member', 'cannot_remove_self') so callers can distinguish the
@@ -157,6 +163,18 @@ function normalizeSessionResponse(value: unknown): OrcaCloudSessionExchangeRespo
   }
 }
 
+function normalizeProfileResponse(value: unknown): ProfileResponse {
+  if (!value || typeof value !== 'object') {
+    throw new Error('invalid_orca_cloud_profile_response')
+  }
+  const record = value as Record<string, unknown>
+  return {
+    cloud: normalizeCloudSummary(record.cloud),
+    organizations: normalizeOrganizations(record.organizations),
+    capabilities: normalizeCapabilities(record.capabilities)
+  }
+}
+
 const CLOUD_REQUEST_TIMEOUT_MS = 30_000
 
 async function postJson<T>(url: string, body: unknown, accessToken?: string): Promise<T> {
@@ -176,6 +194,9 @@ async function postJson<T>(url: string, body: unknown, accessToken?: string): Pr
   if (!response.ok) {
     await cancelUnreadResponseBody(response)
     throw new OrcaCloudRequestError(response.status)
+  }
+  if (response.status === 204) {
+    return undefined as T
   }
   return (await response.json()) as T
 }
@@ -228,8 +249,8 @@ export async function createOrcaCloudProfile(
   session: OrcaCloudSession,
   args: CreateCloudProfileArgs
 ): Promise<OrcaCloudSessionExchangeResponse> {
-  return normalizeSessionResponse(
-    await postJson(
+  const response = normalizeProfileResponse(
+    await postJson<ProfileResponse>(
       config.profileEndpoint,
       {
         orgId: args.orgId,
@@ -238,6 +259,11 @@ export async function createOrcaCloudProfile(
       session.accessToken
     )
   )
+  return {
+    ...session,
+    ...response,
+    organizations: response.organizations ?? session.organizations
+  }
 }
 
 export async function selectOrcaCloudOrg(

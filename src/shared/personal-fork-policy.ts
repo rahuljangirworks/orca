@@ -12,11 +12,9 @@ export const PERSONAL_FORK_POLICY = Object.freeze({
   firstPartyNetworkEnabled: false,
   localServiceOverridesEnabled: true,
   updateStrategy: 'git-upstream-rebase',
-  // Veer Platform API origins (production and rollback/dev)
-  veerPlatformOrigins: [
-    'https://veer.rahuljangir.work', // production custom domain
-    'https://veer-api.rahuljangir-works.workers.dev' // rollback/dev endpoint
-  ]
+  // The frontend root is owned by Pages. Desktop auth must use the canonical
+  // API origin and must not fall back to workers.dev or the Pages origin.
+  veerPlatformOrigins: ['https://api.veer.rahuljangir.work']
 } as const)
 
 export const PERSONAL_FORK_NETWORK_DISABLED_MESSAGE =

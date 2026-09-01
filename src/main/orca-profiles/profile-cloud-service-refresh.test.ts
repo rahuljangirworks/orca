@@ -89,8 +89,8 @@ function futureExpiresAt(): number {
 }
 
 function configureCloudEnv(): void {
-  vi.stubEnv('ORCA_CLOUD_API_URL', 'http://127.0.0.1:4100')
-  vi.stubEnv('ORCA_CLOUD_CLIENT_ID', 'desktop-client')
+  vi.stubEnv('VEER_PLATFORM_API_URL', 'http://127.0.0.1:4100')
+  vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', 'desktop-client')
 }
 
 function mockSuccessfulConnect(expiresAt = futureExpiresAt()): void {
@@ -126,8 +126,8 @@ describe('Orca cloud profile service session refresh', () => {
     safeStorageMock.encryptString.mockImplementation((value: string) => Buffer.from(value, 'utf-8'))
     safeStorageMock.isEncryptionAvailable.mockReturnValue(true)
     vi.unstubAllEnvs()
-    vi.stubEnv('ORCA_CLOUD_API_URL', '')
-    vi.stubEnv('ORCA_CLOUD_CLIENT_ID', '')
+    vi.stubEnv('VEER_PLATFORM_API_URL', '')
+    vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', '')
   })
 
   afterEach(() => {

@@ -76,8 +76,8 @@ const organizations: OrcaCloudOrgSummary[] = [
 ]
 
 function configureCloudEnv(): void {
-  vi.stubEnv('ORCA_CLOUD_API_URL', 'http://127.0.0.1:4100')
-  vi.stubEnv('ORCA_CLOUD_CLIENT_ID', 'desktop-client')
+  vi.stubEnv('VEER_PLATFORM_API_URL', 'http://127.0.0.1:4100')
+  vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', 'desktop-client')
 }
 
 function futureExpiresAt(): number {
@@ -118,8 +118,8 @@ describe('Orca cloud profile service', () => {
     safeStorageMock.isEncryptionAvailable.mockReturnValue(true)
     revokeOrcaCloudSessionMock.mockResolvedValue(undefined)
     vi.unstubAllEnvs()
-    vi.stubEnv('ORCA_CLOUD_API_URL', '')
-    vi.stubEnv('ORCA_CLOUD_CLIENT_ID', '')
+    vi.stubEnv('VEER_PLATFORM_API_URL', '')
+    vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', '')
   })
 
   afterEach(() => {
@@ -182,8 +182,8 @@ describe('Orca cloud profile service', () => {
     configureCloudEnv()
     mockSuccessfulConnect()
     await connectCurrentOrcaProfile(userDataPath)
-    vi.stubEnv('ORCA_CLOUD_API_URL', '')
-    vi.stubEnv('ORCA_CLOUD_CLIENT_ID', '')
+    vi.stubEnv('VEER_PLATFORM_API_URL', '')
+    vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', '')
 
     expect(getCurrentOrcaProfileAuthStatus(userDataPath)).toMatchObject({
       configured: false,
@@ -191,7 +191,7 @@ describe('Orca cloud profile service', () => {
       persistence: 'encrypted',
       cloud: cloudSummary,
       setupMessage:
-        'This personal Orca build does not connect to Orca-operated services. Configure a loopback cloud service to enable this feature.'
+        'This personal Veer build does not connect to Orca-operated services. Configure a loopback cloud service to enable this feature.'
     })
     expect(getCurrentOrcaProfileAuthStatus(userDataPath).organizations).toBeUndefined()
     expect(getCurrentOrcaProfileAuthStatus(userDataPath).capabilities).toBeUndefined()

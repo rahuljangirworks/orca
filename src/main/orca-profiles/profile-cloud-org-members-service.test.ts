@@ -73,8 +73,8 @@ function runOperationDirectly(): void {
 }
 
 function configureCloudEnv(): void {
-  vi.stubEnv('ORCA_CLOUD_API_URL', 'http://127.0.0.1:4100')
-  vi.stubEnv('ORCA_CLOUD_CLIENT_ID', 'desktop-client')
+  vi.stubEnv('VEER_PLATFORM_API_URL', 'http://127.0.0.1:4100')
+  vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', 'desktop-client')
 }
 
 const roster: OrcaOrgMembersRoster = {
@@ -95,8 +95,8 @@ describe('Orca cloud org members service (configured)', () => {
     removeOrcaCloudOrgMemberMock.mockReset()
     vi.unstubAllEnvs()
     vi.stubEnv('ORCA_CLOUD_DEV_AUTH', '')
-    vi.stubEnv('ORCA_CLOUD_API_URL', '')
-    vi.stubEnv('ORCA_CLOUD_CLIENT_ID', '')
+    vi.stubEnv('VEER_PLATFORM_API_URL', '')
+    vi.stubEnv('VEER_GOOGLE_DESKTOP_CLIENT_ID', '')
   })
 
   afterEach(() => {
