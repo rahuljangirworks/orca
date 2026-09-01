@@ -54,7 +54,7 @@ export function GeneralWorkspaceSettingsSection({
           )}
           keywords={[
             'external',
-            'non-Orca',
+            'non-Veer',
             'worktree',
             'visibility',
             'sidebar',

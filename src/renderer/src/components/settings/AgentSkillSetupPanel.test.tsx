@@ -83,7 +83,7 @@ function panelProps(
 ): ComponentProps<typeof AgentSkillSetupPanel> {
   return {
     title: 'CLI skill',
-    description: 'Enables agents to use Orca workflows.',
+    description: 'Enables agents to use Veer workflows.',
     command: INSTALL_COMMAND,
     terminalTitle: 'CLI skill setup',
     terminalAriaLabel: 'CLI skill install terminal',

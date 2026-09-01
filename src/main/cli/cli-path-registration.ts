@@ -45,7 +45,7 @@ export class CliPathRegistration extends CliCommandInstallation {
         pathConfigured,
         state: 'not_installed',
         currentTarget: null,
-        detail: `Register ${status.commandPath} to use Orca from Command Prompt or PowerShell.`
+        detail: `Register ${status.commandPath} to use Veer from Command Prompt or PowerShell.`
       }
     }
 
@@ -56,7 +56,7 @@ export class CliPathRegistration extends CliCommandInstallation {
         pathConfigured,
         detail:
           pathProbe.detail ??
-          'The Orca launcher exists, but Orca could not check your Windows user PATH.'
+          'The Veer launcher exists, but Veer could not check your Windows user PATH.'
       }
     }
 

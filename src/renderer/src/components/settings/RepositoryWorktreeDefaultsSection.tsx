@@ -64,7 +64,7 @@ export function RepositoryWorktreeDefaultsSection({
           'auto.components.settings.RepositoryPane.externalWorktreesDescription',
           'Override whether worktrees created outside Veer appear for this project.'
         )}
-        keywords={[repo.displayName, 'external', 'non-Orca', 'visibility', 'sidebar']}
+        keywords={[repo.displayName, 'external', 'non-Veer', 'visibility', 'sidebar']}
         className="space-y-2"
         forceVisible={forceVisible}
       >
