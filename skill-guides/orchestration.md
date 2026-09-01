@@ -1,24 +1,24 @@
 ---
 name: orchestration
 description: >-
-  Use Orca orchestration for structured multi-agent coordination: threaded
+  Use Veer orchestration for structured multi-agent coordination: threaded
   messages, blocking ask/reply flows, task dispatch, worker_done/escalation
   waits, task DAGs, decision gates, coordinator loops, or decomposing work
-  across agents. Use `orca-cli` instead for full ownership handoffs, including
+  across agents. Use `veer-cli` instead for full ownership handoffs, including
   requests phrased as "hand off", "handoff", "handover", "give this to another
   agent", or "another worktree" when the user did not explicitly ask to
-  supervise, monitor, wait for results, or coordinate a DAG. Use `orca-cli` for
-  ordinary terminal control, lightweight terminal prompts, shell commands, Orca
+  supervise, monitor, wait for results, or coordinate a DAG. Use `veer-cli` for
+  ordinary terminal control, lightweight terminal prompts, shell commands, Veer
   worktree management, reading or waiting on terminals, and automation of the
-  browser embedded inside Orca. Use Computer Use for browser windows, webviews,
-  Orca app UI, or desktop UI outside Orca's embedded browser.
+  browser embedded inside Veer. Use Computer Use for browser windows, webviews,
+  Veer app UI, or desktop UI outside Veer's embedded browser.
 ---
 
 # Orca Inter-Agent Orchestration
 
 Orchestration is Orca's structured coordination layer for agent messages, task ownership, dispatch state, and worker completion tracking.
 
-Use this skill when coordination state matters. For lightweight terminal prompts or basic worktree/terminal/built-in-browser control, use `orca-cli`.
+Use this skill when coordination state matters. For lightweight terminal prompts or basic worktree/terminal/built-in-browser control, use `veer-cli`.
 
 ## Tool Boundary
 

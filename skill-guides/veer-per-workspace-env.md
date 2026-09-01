@@ -1,13 +1,13 @@
 ---
-name: orca-per-workspace-env
+name: veer-per-workspace-env
 description: >-
-  Set up, review, debug, or validate Orca per-workspace environment recipes —
+  Set up, review, debug, or validate Veer per-workspace environment recipes —
   on-demand, disposable runtimes (cloud sandboxes, VMs, or local) created fresh
   for each workspace. Covers first-time setup (provider prerequisites, the
   reusable base snapshot, the coding-agent auth snapshot, credentials, and
   state), not just the per-workspace lifecycle scripts. Use to stand up
   per-workspace environments, fix an `environmentRecipes` entry in `orca.yaml`, scaffold
-  provider lifecycle scripts, or resolve an `orca vm recipe doctor` failure.
+  provider lifecycle scripts, or resolve a per-workspace environment recipe doctor failure.
 ---
 
 # Per-Workspace Environments

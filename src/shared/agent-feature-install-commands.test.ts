@@ -6,6 +6,7 @@ import {
   buildAgentFeatureSkillUpdateArgs,
   buildAgentFeatureSkillUpdateCommand,
   COMPUTER_USE_SKILL_UPDATE_COMMAND,
+  EPHEMERAL_VMS_SKILL_INSTALL_COMMAND,
   EPHEMERAL_VMS_SKILL_UPDATE_COMMAND,
   LINEAR_TICKETS_SKILL_UPDATE_COMMAND,
   ORCA_LINEAR_SKILL_UPDATE_COMMAND,
@@ -17,24 +18,24 @@ import {
 describe('agent feature skill commands', () => {
   it('builds a global install command by default', () => {
     expect(buildAgentFeatureSkillInstallCommand(['orca-cli'])).toBe(
-      'npx skills add https://github.com/stablyai/orca --skill orca-cli --global'
+      'npx skills add https://github.com/rahuljangirworks/veer --skill orca-cli --global'
     )
   })
 
   it('drops --global when installing locally', () => {
     expect(buildAgentFeatureSkillInstallCommand(['orca-cli'], { global: false })).toBe(
-      'npx skills add https://github.com/stablyai/orca --skill orca-cli'
+      'npx skills add https://github.com/rahuljangirworks/veer --skill orca-cli'
     )
   })
 
   it('repeats --skill per name for multi-skill installs', () => {
     expect(buildAgentFeatureSkillInstallCommand(['orca-cli', 'orchestration'])).toBe(
-      'npx skills add https://github.com/stablyai/orca --skill orca-cli --skill orchestration --global'
+      'npx skills add https://github.com/rahuljangirworks/veer --skill orca-cli --skill orchestration --global'
     )
     expect(buildAgentFeatureSkillInstallArgs(['orca-cli', 'orchestration'])).toEqual([
       'skills',
       'add',
-      'https://github.com/stablyai/orca',
+      'https://github.com/rahuljangirworks/veer',
       '--skill',
       'orca-cli',
       '--skill',
@@ -76,7 +77,7 @@ describe('agent feature skill commands', () => {
     expect(
       buildAgentFeatureSkillInstallCommand(['orca-cli'], { yes: true, agents: ['universal'] })
     ).toBe(
-      'npx skills add https://github.com/stablyai/orca --skill orca-cli --global --agent universal -y'
+      'npx skills add https://github.com/rahuljangirworks/veer --skill orca-cli --global --agent universal -y'
     )
     expect(buildAgentFeatureSkillUpdateCommand(['orca-cli'], { global: false, yes: true })).toBe(
       'npx skills update orca-cli --project -y'
@@ -117,16 +118,22 @@ describe('agent feature skill commands', () => {
   })
 
   it('exports single-skill update constants without changing install bundles', () => {
-    expect(ORCA_CLI_SKILL_UPDATE_COMMAND).toBe('npx skills update orca-cli --global')
+    expect(ORCA_CLI_SKILL_UPDATE_COMMAND).toBe('npx skills update veer-cli --global')
     expect(COMPUTER_USE_SKILL_UPDATE_COMMAND).toBe('npx skills update computer-use --global')
     expect(ORCHESTRATION_SKILL_UPDATE_COMMAND).toBe('npx skills update orchestration --global')
     expect(EPHEMERAL_VMS_SKILL_UPDATE_COMMAND).toBe(
-      'npx skills update orca-per-workspace-env --global'
+      'npx skills update veer-per-workspace-env --global'
     )
     expect(ORCA_LINEAR_SKILL_UPDATE_COMMAND).toBe('npx skills update orca-linear --global')
     expect(LINEAR_TICKETS_SKILL_UPDATE_COMMAND).toBe('npx skills update linear-tickets --global')
     expect(ORCA_CLI_ORCHESTRATION_SKILL_INSTALL_COMMAND).toBe(
-      buildAgentFeatureSkillInstallCommand(['orca-cli', 'orchestration'])
+      buildAgentFeatureSkillInstallCommand(['veer-cli', 'orchestration'])
+    )
+  })
+
+  it('points the Cloud VM skill install at the Veer repository', () => {
+    expect(EPHEMERAL_VMS_SKILL_INSTALL_COMMAND).toBe(
+      'npx skills add https://github.com/rahuljangirworks/veer --skill veer-per-workspace-env --global'
     )
   })
 })

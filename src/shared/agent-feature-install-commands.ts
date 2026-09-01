@@ -1,11 +1,18 @@
 import { isSkillsCliAgentKeyShaped } from './skills-cli-agent-keys'
 
-export const ORCA_SKILLS_REPOSITORY_URL = 'https://github.com/stablyai/orca'
+// Veer publishes the compatible skill bundles in its fork repository. These are
+// the canonical Veer skill IDs; old Orca IDs are retained only as source-level
+// aliases for existing persisted installations and are never emitted in commands.
+export const ORCA_SKILLS_REPOSITORY_URL = 'https://github.com/rahuljangirworks/veer'
 
-export const ORCA_CLI_SKILL_NAME = 'orca-cli'
+export const VEER_CLI_SKILL_NAME = 'veer-cli'
 export const COMPUTER_USE_SKILL_NAME = 'computer-use'
 export const ORCHESTRATION_SKILL_NAME = 'orchestration'
-export const EPHEMERAL_VMS_SKILL_NAME = 'orca-per-workspace-env'
+export const VEER_PER_WORKSPACE_ENV_SKILL_NAME = 'veer-per-workspace-env'
+/** @deprecated Use VEER_CLI_SKILL_NAME. */
+export const ORCA_CLI_SKILL_NAME = VEER_CLI_SKILL_NAME
+/** @deprecated Use VEER_PER_WORKSPACE_ENV_SKILL_NAME. */
+export const EPHEMERAL_VMS_SKILL_NAME = VEER_PER_WORKSPACE_ENV_SKILL_NAME
 export const ORCA_LINEAR_SKILL_NAME = 'orca-linear'
 export const LINEAR_TICKETS_SKILL_NAME = 'linear-tickets'
 export const LINEAR_AGENT_SKILL_NAMES = [ORCA_LINEAR_SKILL_NAME, LINEAR_TICKETS_SKILL_NAME] as const
@@ -94,8 +101,12 @@ export const ORCA_CLI_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallComma
   ORCA_CLI_SKILL_NAME
 ])
 
+export const VEER_CLI_SKILL_INSTALL_COMMAND = ORCA_CLI_SKILL_INSTALL_COMMAND
+
 export const ORCA_CLI_SKILL_UPDATE_COMMAND =
   buildAgentFeatureSkillUpdateCommand(ORCA_CLI_SKILL_NAME)
+
+export const VEER_CLI_SKILL_UPDATE_COMMAND = ORCA_CLI_SKILL_UPDATE_COMMAND
 
 export const COMPUTER_USE_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand([
   COMPUTER_USE_SKILL_NAME
@@ -115,8 +126,12 @@ export const EPHEMERAL_VMS_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstall
   EPHEMERAL_VMS_SKILL_NAME
 ])
 
+export const VEER_PER_WORKSPACE_ENV_SKILL_INSTALL_COMMAND = EPHEMERAL_VMS_SKILL_INSTALL_COMMAND
+
 export const EPHEMERAL_VMS_SKILL_UPDATE_COMMAND =
   buildAgentFeatureSkillUpdateCommand(EPHEMERAL_VMS_SKILL_NAME)
+
+export const VEER_PER_WORKSPACE_ENV_SKILL_UPDATE_COMMAND = EPHEMERAL_VMS_SKILL_UPDATE_COMMAND
 
 export const ORCA_CLI_ORCHESTRATION_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand([
   ORCA_CLI_SKILL_NAME,

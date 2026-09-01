@@ -1,33 +1,33 @@
 ---
 name: orchestration
 description: >-
-  Use Orca orchestration for structured multi-agent coordination: threaded
+  Use Veer orchestration for structured multi-agent coordination: threaded
   messages, blocking ask/reply flows, task dispatch, worker_done/escalation
   waits, task DAGs, decision gates, coordinator loops, or decomposing work
-  across agents. Use `orca-cli` instead for full ownership handoffs, including
+  across agents. Use `veer-cli` instead for full ownership handoffs, including
   requests phrased as "hand off", "handoff", "handover", "give this to another
   agent", or "another worktree" when the user did not explicitly ask to
-  supervise, monitor, wait for results, or coordinate a DAG. Use `orca-cli` for
-  ordinary terminal control, lightweight terminal prompts, shell commands, Orca
+  supervise, monitor, wait for results, or coordinate a DAG. Use `veer-cli` for
+  ordinary terminal control, lightweight terminal prompts, shell commands, Veer
   worktree management, reading or waiting on terminals, and automation of the
-  browser embedded inside Orca. Use Computer Use for browser windows, webviews,
-  Orca app UI, or desktop UI outside Orca's embedded browser.
+  browser embedded inside Veer. Use Computer Use for browser windows, webviews,
+  Veer app UI, or desktop UI outside Veer's embedded browser.
 ---
 
-# Orca Orchestration
+# Veer Orchestration
 
 This file is a discovery stub, not the usage guide. The full, version-matched Orca
 orchestration reference is served by the `orca` binary itself — kept out of this file on
 purpose so it can never drift from the binary that will actually run your commands.
 
-Engage Orca orchestration whenever you need structured multi-agent coordination: threaded
+Engage Veer orchestration whenever you need structured multi-agent coordination: threaded
 messages, blocking ask/reply flows, task dispatch, worker_done/escalation waits, task DAGs,
-decision gates, coordinator loops, or decomposing work across agents. Use the orca-cli skill
+decision gates, coordinator loops, or decomposing work across agents. Use the veer-cli skill
 instead for full ownership handoffs ("hand off", "handoff", "handover", "give this to
 another agent", "another worktree") when the user did not ask to supervise, monitor, wait
 for results, or coordinate a DAG — and for ordinary terminal control, shell commands,
-worktree management, and the built-in browser. Coordination requires real Orca runtime
-state; never substitute a non-Orca subagent tool.
+worktree management, and the built-in browser. Coordination requires real Veer runtime
+state; never substitute a non-Veer subagent tool.
 
 ## Resolve the CLI for this session
 

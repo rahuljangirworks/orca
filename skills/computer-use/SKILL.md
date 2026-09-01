@@ -1,26 +1,26 @@
 ---
 name: computer-use
 description: >-
-  Use Orca's computer-use CLI to inspect and operate local desktop app windows
+  Use Veer's computer-use CLI to inspect and operate local desktop app windows
   through accessibility trees, screenshots, and safe UI actions. Use for
   desktop app interaction: list apps/windows, get app state, read visible UI,
   click controls, type, press keys, scroll, drag, set values, or perform
-  accessibility actions. Also use for browser windows, webviews, Orca app UI,
-  or other desktop UI. Triggers include "computer use", "orca computer", "read
+  accessibility actions. Also use for browser windows, webviews, Veer app UI,
+  or other desktop UI. Triggers include "computer use", "Veer computer", "read
   Spotify", "read Slack", "control/click/read in a desktop app", and "get app
   state".
 ---
 
-# Computer Use
+# Veer Computer Use
 
 This file is a discovery stub, not the usage guide. The full, version-matched computer-use
 reference is served by the `orca` binary itself — kept out of this file on purpose so it can
 never drift from the binary that will actually run your commands.
 
-Engage Orca's computer-use surface whenever you must inspect or operate a local desktop app
+Engage Veer's computer-use surface whenever you must inspect or operate a local desktop app
 window — reading its accessibility tree, taking screenshots, or performing safe UI actions
 (click controls, type, press keys, scroll, drag, set values). It also covers browser
-windows, webviews, and Orca's own UI. Triggers include "computer use", "orca computer",
+windows, webviews, and Veer's own UI. Triggers include "computer use", "Veer computer",
 "read Spotify", "read Slack", "control/click/read in a desktop app", and "get app state".
 
 ## Resolve the CLI for this session

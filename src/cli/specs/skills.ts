@@ -55,7 +55,7 @@ export const SKILL_COMMAND_SPECS: CommandSpec[] = [
       'Use --full to include bundled reference documents when the guide provides them.',
       'Use --json for a deterministic object containing canonical topic metadata and content.'
     ],
-    examples: ['orca skills get orca-cli', 'orca skills get orchestration --full']
+    examples: ['orca skills get veer-cli', 'orca skills get orchestration --full']
   },
   {
     path: ['skills', 'install'],
@@ -85,9 +85,9 @@ export const SKILL_COMMAND_SPECS: CommandSpec[] = [
     ],
     examples: [
       'orca skills install',
-      'orca skills install --skill orca-cli --skill orchestration',
-      'orca skills install --skill orca-cli --local',
-      'orca skills install --skill orca-cli --agent claude-code,codex',
+      'orca skills install --skill veer-cli --skill orchestration',
+      'orca skills install --skill veer-cli --local',
+      'orca skills install --skill veer-cli --agent claude-code,codex',
       'orca skills install --all --dry-run'
     ]
   },
@@ -112,8 +112,8 @@ export const SKILL_COMMAND_SPECS: CommandSpec[] = [
     ],
     examples: [
       'orca skills update',
-      'orca skills update --skill orca-cli --skill orchestration',
-      'orca skills update --skill orca-cli --local',
+      'orca skills update --skill veer-cli --skill orchestration',
+      'orca skills update --skill veer-cli --local',
       'orca skills update --all --dry-run'
     ]
   }

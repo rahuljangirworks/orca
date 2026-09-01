@@ -10,11 +10,11 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, '..', '..')
 const CANONICAL_GUIDE_NAMES = [
   'computer-use',
   'linear-tickets',
-  'orca-cli',
+  'veer-cli',
   'orca-emulator',
   'orca-emulator-android',
   'orca-linear',
-  'orca-per-workspace-env',
+  'veer-per-workspace-env',
   'orchestration'
 ]
 
@@ -23,11 +23,11 @@ const CANONICAL_GUIDE_NAMES = [
 const GUIDE_ALIASES = {
   'computer-use': [],
   'linear-tickets': [],
-  'orca-cli': [],
+  'veer-cli': ['orca-cli'],
   'orca-emulator': [],
   'orca-emulator-android': [],
   'orca-linear': [],
-  'orca-per-workspace-env': [],
+  'veer-per-workspace-env': ['orca-per-workspace-env'],
   orchestration: []
 }
 
@@ -39,11 +39,11 @@ const GUIDE_ALIASES = {
 const STUB_TOPICS = [
   'computer-use',
   'linear-tickets',
-  'orca-cli',
+  'veer-cli',
   'orca-emulator',
   'orca-emulator-android',
   'orca-linear',
-  'orca-per-workspace-env',
+  'veer-per-workspace-env',
   'orchestration'
 ]
 
