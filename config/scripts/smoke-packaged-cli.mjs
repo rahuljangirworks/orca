@@ -28,7 +28,7 @@ function getPackagedCliPath(appDir) {
   if (process.platform === 'win32') {
     return join(appDir, 'resources', 'bin', 'orca.exe')
   }
-  return join(appDir, 'resources', 'bin', 'orca-ide')
+  return join(appDir, 'resources', 'bin', 'veer-ide')
 }
 
 const appDir = resolve(readAppDirArg(process.argv.slice(2)))

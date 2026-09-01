@@ -34,14 +34,14 @@ vi.mock('../runtime-client', async () => {
 import { main } from '../index'
 import { okFixture, queueFixtures } from '../test-fixtures'
 
-describe('orca linear CLI handlers', () => {
+describe('veer linear CLI handlers', () => {
   const originalEnv = { ...process.env }
 
   beforeEach(() => {
     vi.restoreAllMocks()
     callMock.mockReset()
     process.env = { ...originalEnv }
-    // Why: these tests can run inside an Orca-managed terminal, which exports
+    // Why: these tests can run inside an Veer-managed terminal, which exports
     // real worktree/terminal/pairing env hints; clear them so handler context
     // assertions stay deterministic.
     delete process.env.ORCA_WORKTREE_ID

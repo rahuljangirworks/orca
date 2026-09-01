@@ -8,12 +8,12 @@ vi.mock('electron', () => ({
   app: { isPackaged: true }
 }))
 
-import { ensureLinuxTerminalOrcaCliShimDir } from './linux-terminal-orca-cli-shim'
+import { ensureLinuxTerminalVeerCliShimDir } from './linux-terminal-veer-cli-shim'
 
 const created: string[] = []
 
 async function makeFixture(): Promise<{ userDataPath: string; resourcesPath: string }> {
-  const root = await mkdtemp(join(tmpdir(), 'orca-terminal-cli-shim-'))
+  const root = await mkdtemp(join(tmpdir(), 'veer-terminal-cli-shim-'))
   created.push(root)
   const resourcesPath = join(root, 'resources')
   // The bundled orca-ide launcher must exist for the shim to be written.
@@ -26,21 +26,21 @@ afterEach(async () => {
   await Promise.all(created.splice(0).map((dir) => rm(dir, { recursive: true, force: true })))
 })
 
-describe('ensureLinuxTerminalOrcaCliShimDir', () => {
-  it('writes an executable bare-orca shim that execs the bundled orca-ide launcher', async () => {
+describe('ensureLinuxTerminalVeerCliShimDir', () => {
+  it('writes an executable veer shim that execs the bundled CLI launcher', async () => {
     const { userDataPath, resourcesPath } = await makeFixture()
 
-    const shimDir = ensureLinuxTerminalOrcaCliShimDir({
+    const shimDir = ensureLinuxTerminalVeerCliShimDir({
       userDataPath,
       resourcesPath,
       appImagePath: null
     })
 
-    expect(shimDir).toBe(join(userDataPath, 'linux-orca-cli-shim'))
-    const content = readFileSync(join(shimDir!, 'orca'), 'utf8')
+    expect(shimDir).toBe(join(userDataPath, 'linux-veer-cli-shim'))
+    const content = readFileSync(join(shimDir!, 'veer'), 'utf8')
     // Single-quoted so a resources path with shell metacharacters can't break out.
     expect(content).toContain(`exec '${join(resourcesPath, 'bin', 'orca-ide')}' "$@"`)
-    const mode = statSync(join(shimDir!, 'orca')).mode & 0o777
+    const mode = statSync(join(shimDir!, 'veer')).mode & 0o777
     expect(mode & 0o111).not.toBe(0)
   })
 
@@ -48,30 +48,30 @@ describe('ensureLinuxTerminalOrcaCliShimDir', () => {
     const { userDataPath, resourcesPath } = await makeFixture()
     const options = { userDataPath, resourcesPath, appImagePath: null }
 
-    const first = ensureLinuxTerminalOrcaCliShimDir(options)
+    const first = ensureLinuxTerminalVeerCliShimDir(options)
     expect(first).not.toBeNull()
-    const shimPath = join(first!, 'orca')
+    const shimPath = join(first!, 'veer')
     chmodSync(shimPath, 0o644)
 
     // A distinct userData path is not memoized, so ensure runs again and heals
     // the exec bit lost above only when it actually processes that path.
-    const second = ensureLinuxTerminalOrcaCliShimDir(options)
+    const second = ensureLinuxTerminalVeerCliShimDir(options)
     expect(second).toBe(first)
 
-    const root = await mkdtemp(join(tmpdir(), 'orca-terminal-cli-shim-2-'))
+    const root = await mkdtemp(join(tmpdir(), 'veer-terminal-cli-shim-2-'))
     created.push(root)
     const otherUserData = join(root, 'user-data')
-    mkdirSync(join(otherUserData, 'linux-orca-cli-shim'), { recursive: true })
-    writeFileSync(join(otherUserData, 'linux-orca-cli-shim', 'orca'), 'stale contents', 'utf8')
-    chmodSync(join(otherUserData, 'linux-orca-cli-shim', 'orca'), 0o644)
+    mkdirSync(join(otherUserData, 'linux-veer-cli-shim'), { recursive: true })
+    writeFileSync(join(otherUserData, 'linux-veer-cli-shim', 'veer'), 'stale contents', 'utf8')
+    chmodSync(join(otherUserData, 'linux-veer-cli-shim', 'veer'), 0o644)
 
-    const healed = ensureLinuxTerminalOrcaCliShimDir({
+    const healed = ensureLinuxTerminalVeerCliShimDir({
       userDataPath: otherUserData,
       resourcesPath,
       appImagePath: null
     })
     expect(healed).not.toBeNull()
-    const healedPath = join(healed!, 'orca')
+    const healedPath = join(healed!, 'veer')
     expect(readFileSync(healedPath, 'utf8')).toContain('orca-ide')
     expect(statSync(healedPath).mode & 0o111).not.toBe(0)
   })
@@ -80,23 +80,23 @@ describe('ensureLinuxTerminalOrcaCliShimDir', () => {
     const { userDataPath, resourcesPath } = await makeFixture()
     const appImagePath = join(userDataPath, 'Applications', 'Orca.AppImage')
 
-    const shimDir = ensureLinuxTerminalOrcaCliShimDir({
+    const shimDir = ensureLinuxTerminalVeerCliShimDir({
       userDataPath,
       resourcesPath,
       appImagePath
     })
 
-    const content = readFileSync(join(shimDir!, 'orca'), 'utf8')
+    const content = readFileSync(join(shimDir!, 'veer'), 'utf8')
     expect(content).toContain(appImagePath)
     expect(content).not.toContain(resourcesPath)
   })
 
   it('returns null (and does not memoize) when the bundled launcher is missing', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'orca-terminal-cli-shim-missing-'))
+    const root = await mkdtemp(join(tmpdir(), 'veer-terminal-cli-shim-missing-'))
     created.push(root)
     const userDataPath = join(root, 'user-data')
 
-    const missing = ensureLinuxTerminalOrcaCliShimDir({
+    const missing = ensureLinuxTerminalVeerCliShimDir({
       userDataPath,
       resourcesPath: join(root, 'resources'),
       appImagePath: null
@@ -108,11 +108,11 @@ describe('ensureLinuxTerminalOrcaCliShimDir', () => {
     const resourcesPath = join(root, 'resources')
     mkdirSync(join(resourcesPath, 'bin'), { recursive: true })
     writeFileSync(join(resourcesPath, 'bin', 'orca-ide'), '#!/usr/bin/env bash\n', 'utf8')
-    const recovered = ensureLinuxTerminalOrcaCliShimDir({
+    const recovered = ensureLinuxTerminalVeerCliShimDir({
       userDataPath,
       resourcesPath,
       appImagePath: null
     })
-    expect(recovered).toBe(join(userDataPath, 'linux-orca-cli-shim'))
+    expect(recovered).toBe(join(userDataPath, 'linux-veer-cli-shim'))
   })
 })

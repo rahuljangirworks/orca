@@ -6,7 +6,7 @@ description: >-
   for each workspace. Covers first-time setup (provider prerequisites, the
   reusable base snapshot, the coding-agent auth snapshot, credentials, and
   state), not just the per-workspace lifecycle scripts. Use to stand up
-  per-workspace environments, fix an `environmentRecipes` entry in `orca.yaml`, scaffold
+  per-workspace environments, fix an `environmentRecipes` entry in `veer.yaml`, scaffold
   provider lifecycle scripts, or resolve a per-workspace environment recipe doctor failure.
 ---
 
@@ -16,7 +16,7 @@ Help a user stand up and maintain a repo-owned per-workspace environment recipe 
 workspace gets its own on-demand, disposable runtime (a cloud sandbox, a VM, or a local one),
 created fresh and torn down after.
 
-Orca is a **thin wrapper**: you guide, detect, and scaffold; you never own the user's cloud account,
+Veer is a **thin wrapper**: you guide, detect, and scaffold; you never own the user's cloud account,
 billing, images, or credentials.
 
 - **You DO:** sequence the setup, detect what's detectable (provider CLI present/logged-in? recipe
@@ -35,20 +35,20 @@ them in order:
 
 Then the **per-workspace contract** (create/suspend/resume/destroy) runs fast (§8).
 
-**The one branch that shapes everything — connection mode:** **Orca-server** (`create` runs `orca serve`
+**The one branch that shapes everything — connection mode:** **Veer-server** (`create` runs `veer serve`
 in the env and emits a `pairingCode`; §7c/§7f) vs **SSH** (`create` runs no server and emits a
-`connection.type:"ssh"` block Orca dials into; §7g/§7h). Settle this first — it changes the `create`
+`connection.type:"ssh"` block Veer dials into; §7g/§7h). Settle this first — it changes the `create`
 output shape and half the templates.
 
-Keep Orca's checkout behavior unchanged by default: omit `checkoutMode`, emit schema version 1, and
-let Orca create a linked worktree. Only use `checkoutMode: provisioned-root` when the user explicitly
+Keep Veer's checkout behavior unchanged by default: omit `checkoutMode`, emit schema version 1, and
+let Veer create a linked worktree. Only use `checkoutMode: provisioned-root` when the user explicitly
 wants one ephemeral machine to clone the finished workspace itself. This niche mode currently requires
 direct SSH, an ordinary non-bare/non-sparse primary checkout at `projectRoot`, and schema version 2.
 
-**Quick-start (happy path):** interview the user (connection mode Orca-server vs SSH, provider, agent CLI,
-git auth — §1.2) + read the provider's CLI docs → scaffold `scripts/orca-vm/` from §7 → run the
-base-snapshot script, then the auth script (you invoke these by hand; not via `orca.yaml`) → wire
-`environmentRecipes` in `orca.yaml` → `orca vm recipe doctor <id> --json` (free) → then the `--provision`
+**Quick-start (happy path):** interview the user (connection mode Veer-server vs SSH, provider, agent CLI,
+git auth — §1.2) + read the provider's CLI docs → scaffold `scripts/veer-vm/` from §7 → run the
+base-snapshot script, then the auth script (you invoke these by hand; not via `veer.yaml`) → wire
+`environmentRecipes` in `veer.yaml` → `veer vm recipe doctor <id> --json` (free) → then the `--provision`
 self-test loop (§9) until it passes.
 
 ---
@@ -56,14 +56,14 @@ self-test loop (§9) until it passes.
 ## 1. Setup workflow
 
 Drive these with the user. **[CHECKPOINT]** steps need explicit confirmation — they spend money, take
-a long time, or need the user at the keyboard. Never create an Orca workspace or commit unless asked.
+a long time, or need the user at the keyboard. Never create an Veer workspace or commit unless asked.
 
-1. **Inspect the repo** for an existing `environmentRecipes` entry, `scripts/orca-vm/`, a state file, or setup
+1. **Inspect the repo** for an existing `environmentRecipes` entry, `scripts/veer-vm/`, a state file, or setup
    notes. If a working recipe exists, jump to Doctor (§9) instead of rebuilding.
 2. **Interview the user up front** — gather these choices and confirm them back before scaffolding
    anything. Don't pick for them (§11); don't guess.
-   - **Connection mode:** how Orca attaches to the environment — an **Orca server** (the VM runs
-     `orca serve` and Orca pairs over its pairing URL; worked example §7f) or **SSH** (Orca connects to
+   - **Connection mode:** how Veer attaches to the environment — an **Veer server** (the VM runs
+     `veer serve` and Veer pairs over its pairing URL; worked example §7f) or **SSH** (Veer connects to
      the host over SSH; §7g). This decides the recipe's connection shape, so settle it first.
    - **Checkout ownership:** do not ask by default. Only when the user requires the environment to
      create the exact final checkout, confirm `provisioned-root` and direct SSH; otherwise omit it.
@@ -71,7 +71,7 @@ a long time, or need the user at the keyboard. Never create an Orca workspace or
      ask scope/project/region and plan limits (§2). Then **read that provider's CLI/SDK docs** (or
      `<cli> --help`) before scaffolding — you need its exact create/exec/snapshot/remove verbs.
      If a provider advertises `ssh`, verify whether it exposes a real dialable SSH target
-     (host/port/user/key or proxy command) or only a provider-mediated interactive shell; Orca SSH mode
+     (host/port/user/key or proxy command) or only a provider-mediated interactive shell; Veer SSH mode
      needs the former.
    - **Coding-agent CLI + account:** which agent runs in the VM (`codex`, `claude`, …) and that the user
      has an account for it — it gets logged in during the Phase-3 auth snapshot (§4).
@@ -89,16 +89,16 @@ a long time, or need the user at the keyboard. Never create an Orca workspace or
    the non-interactive phases around it. After kicking it off, **ask the user to report back once the login
    finishes** — you can't observe it completing, and you need that confirmation before resuming the
    non-interactive steps (base/auth commit, doctor, provision).
-7. **Wire the recipe** so `orca.yaml` points create/suspend/resume/destroy at the scripts (§8). The
-   workspace composer reads `environmentRecipes` from the project's primary checkout of `orca.yaml`, **not** from
+7. **Wire the recipe** so `veer.yaml` points create/suspend/resume/destroy at the scripts (§8). The
+   workspace composer reads `environmentRecipes` from the project's primary checkout of `veer.yaml`, **not** from
    a feature branch or worktree. So a recipe added only on a branch won't appear as a "Run on" option
-   until that `orca.yaml` change is committed and merged to the project's primary branch. Tell the user
+   until that `veer.yaml` change is committed and merged to the project's primary branch. Tell the user
    this up front: `doctor`/`--provision` validate the scripts from the working copy on any branch, but
    creating a workspace from the recipe in the picker needs it on primary.
-8. **Dry-run doctor** — `orca vm recipe doctor <recipe-id> --repo-path <repo> --json` (free, static; §9).
+8. **Dry-run doctor** — `veer vm recipe doctor <recipe-id> --repo-path <repo> --json` (free, static; §9).
    Fix every failure before going live.
 9. **[CHECKPOINT] Live self-test** — get the user's OK once, then run
-   `orca vm recipe doctor <recipe-id> --provision --json` as a loop: it runs create → validates →
+   `veer vm recipe doctor <recipe-id> --provision --json` as a loop: it runs create → validates →
    destroys, and on failure returns a full transcript. Read it, fix the scripts, and re-run yourself until
    it passes (§9). Spends cloud money; the one approval covers the loop.
 10. **[CHECKPOINT] Optional workspace test** — only if asked: create a workspace via the picker, then
@@ -111,7 +111,7 @@ a long time, or need the user at the keyboard. Never create an Orca workspace or
 The user's responsibility; verify what's verifiable, ask for the rest, invent nothing. State which
 items you verified vs. which the user asserted.
 
-- **Connection mode** (Orca server vs SSH) confirmed with the user — see §1 step 2; it shapes the recipe.
+- **Connection mode** (Veer server vs SSH) confirmed with the user — see §1 step 2; it shapes the recipe.
 - **Cloud account + plan** that allows sandboxes/VMs. Ask.
 - **Provider CLI installed + authenticated** — detect (`command -v <cli>`), check auth (e.g.
   `vercel whoami`). If missing, point at the provider's docs; don't log them in.
@@ -190,14 +190,14 @@ inside the disposable runtime and snapshot/commit that runtime layer.
 
 ## 6. State file
 
-A repo-local JSON file (e.g. `scripts/orca-vm/<provider>-state.json`) threads non-secret values between
+A repo-local JSON file (e.g. `scripts/veer-vm/<provider>-state.json`) threads non-secret values between
 phases. Each script resolves values as **env var → state → built-in fallback**, and merges its outputs
 back. Phase 2 writes the base `snapshotId`; Phase 3 overwrites it with the authenticated snapshot;
 per-workspace `create` boots from `snapshotId`.
 
 ```json
 {
-  "baseName": "orca-base",
+  "baseName": "veer-base",
   "snapshotId": "snap_authenticated_image_id",
   "authSourceSnapshotId": "snap_base_image_id",
   "scope": "<provider-scope>",
@@ -213,7 +213,7 @@ per-workspace `create` boots from `snapshotId`.
 
 ## 7. Script templates (provider-agnostic shapes)
 
-Scaffold under `scripts/orca-vm/`. These are **shapes** — fill in the provider's real commands. All
+Scaffold under `scripts/veer-vm/`. These are **shapes** — fill in the provider's real commands. All
 reserve stdout for the final JSON and log progress to stderr. Include a shared `json_value <key>` /
 `env_value <NAME>` reader (env → state → fallback) in each.
 
@@ -222,7 +222,7 @@ reserve stdout for the final JSON and log progress to stderr. Include a shared `
 - **Local-side** (`create`/`suspend`/`resume`/`destroy` + the base-snapshot/auth scripts the user
   invokes) runs **on the user's desktop**, so it must run on their OS. macOS/Linux: `#!/usr/bin/env
   bash`, `set -euo pipefail`, quoted paths. **Windows:** a bare `.sh` won't run — scaffold `.ps1`/`.cmd`
-  or require WSL/Git-Bash and point `orca.yaml` at the right launcher.
+  or require WSL/Git-Bash and point `veer.yaml` at the right launcher.
 - **Remote-side** (commands you `exec` *inside* the Linux VM) always runs in the VM's Linux shell, so
   bash is fine there regardless of the user's OS.
 
@@ -242,7 +242,7 @@ set -euo pipefail
 # print only the state JSON to stdout
 ```
 
-Worked Vercel commands for this phase are in §7f. You run this script by hand (not via `orca.yaml`),
+Worked Vercel commands for this phase are in §7f. You run this script by hand (not via `veer.yaml`),
 after exporting the first-run inputs the state file doesn't have yet — e.g. provider scope/project, the
 repo URL/ref, and a git token (`GH_TOKEN`); later runs read them back from state.
 
@@ -273,29 +273,29 @@ set -euo pipefail
 set -euo pipefail
 # read authenticated snapshotId/scope/project/port/repo*/project_root (env→state→fallback)
 # fail clearly if snapshotId is missing (point back to Phases 2–3)
-# name = orca-${ORCA_RECIPE_ID}-${ORCA_VM_INSTANCE_ID} (sanitized, length-capped)
+# name = veer-${VEER_RECIPE_ID}-${VEER_VM_INSTANCE_ID} (sanitized, length-capped)
 # 1. boot sandbox from snapshotId with a published port; capture the public URL → pairing address
 #    (an externally reachable wss:// URL); trap: remove sandbox on error
 # 2. remote exec: ensure repo at desired commit; rebuild only if commit changed (cache marker)
-# 3. remote exec: start orca serve in the background and read the recipe JSON it writes (see below)
+# 3. remote exec: start veer serve in the background and read the recipe JSON it writes (see below)
 # 4. print serve's JSON to stdout, optionally enriched with userData:
 #    { schemaVersion:1, pairingCode, projectRoot, userData:{ provider, resourceId:name, snapshotId } }
 ```
 
-**The exact `orca serve` invocation and its output (verified — do not improvise the flags).** Inside the
+**The exact `veer serve` invocation and its output (verified — do not improvise the flags).** Inside the
 VM, run:
 
 ```bash
-orca serve \
+veer serve \
   --port "$PORT" \
   --project-root "$ABS_REPO_PATH_ON_REMOTE" \
   --pairing-address "$EXTERNAL_WSS_URL" \
   --recipe-json
 ```
 
-**Binary name:** in a VM built from source (the Phase-2 flow), run it as `pnpm exec orca-dev serve …`
-from the repo root — `orca-dev` is the in-repo entrypoint and is what the §7f example uses. Plain
-`orca serve …` is the same command when the built CLI is installed on the VM's PATH. The flags/output
+**Binary name:** in a VM built from source (the Phase-2 flow), run it as `pnpm exec veer-dev serve …`
+from the repo root — `veer-dev` is the in-repo entrypoint and is what the §7f example uses. Plain
+`veer serve …` is the same command when the built CLI is installed on the VM's PATH. The flags/output
 are identical either way.
 
 There is **no `--host` flag**. `--project-root` must be an absolute directory on the remote. With
@@ -303,7 +303,7 @@ There is **no `--host` flag**. `--project-root` must be an absolute directory on
 keeps serving:
 
 ```json
-{ "schemaVersion": 1, "pairingCode": "<orca pairing URL>", "projectRoot": "<the --project-root you passed>" }
+{ "schemaVersion": 1, "pairingCode": "<veer pairing URL>", "projectRoot": "<the --project-root you passed>" }
 ```
 
 `pairingCode` is the pairing URL, already pointing at whatever you passed as `--pairing-address` — so set
@@ -317,12 +317,12 @@ and poll until that file parses as JSON (and bail if the process dies — dump i
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
-payload="$(cat)"                       # Orca passes lifecycle JSON on stdin
+payload="$(cat)"                       # Veer passes lifecycle JSON on stdin
 resource_id="$(node -e 'const d=JSON.parse(process.argv[1]); process.stdout.write(d.recipeResult?.userData?.resourceId ?? "")' "$payload")"
 [ -n "$resource_id" ] || { echo "No resource id in lifecycle payload" >&2; exit 1; }
 # suspend: provider suspend "$resource_id"
 # resume:  provider resume "$resource_id"; then RE-EMIT fresh recipe JSON (pairing may change)
-# destroy: provider remove "$resource_id"   (or set destroy: none in orca.yaml)
+# destroy: provider remove "$resource_id"   (or set destroy: none in veer.yaml)
 ```
 
 ### 7e. State file — scaffold with scope/project/repo filled in and snapshot ids empty (§6).
@@ -376,12 +376,12 @@ set -euo pipefail
 vercel_args=(); [ -n "$scope" ] && vercel_args+=(--scope "$scope"); [ -n "$project" ] && vercel_args+=(--project "$project")
 [ -n "$snapshot_id" ] || { echo "snapshotId missing — run Phases 2–3 first" >&2; exit 1; }
 gh_token="${GH_TOKEN:-${GITHUB_TOKEN:-$(command -v gh >/dev/null 2>&1 && gh auth token 2>/dev/null || true)}}"
-recipe_id="${ORCA_RECIPE_ID:-vercel-sandbox}"
+recipe_id="${VEER_RECIPE_ID:-vercel-sandbox}"
 recipe_id="${recipe_id//./-}"  # Vercel names forbid dots.
-instance_id="${ORCA_VM_INSTANCE_ID:-$(date +%s)}"
+instance_id="${VEER_VM_INSTANCE_ID:-$(date +%s)}"
 max_recipe_id_length=$((128 - ${#instance_id} - 6))  # Preserve the unique instance suffix.
-[ "$max_recipe_id_length" -gt 0 ] || { echo "ORCA_VM_INSTANCE_ID is too long for a Vercel sandbox name" >&2; exit 1; }
-name="orca-${recipe_id:0:max_recipe_id_length}-${instance_id}"
+[ "$max_recipe_id_length" -gt 0 ] || { echo "VEER_VM_INSTANCE_ID is too long for a Vercel sandbox name" >&2; exit 1; }
+name="veer-${recipe_id:0:max_recipe_id_length}-${instance_id}"
 
 # Arm cleanup BEFORE create so a failing create can't leak a half-built paid sandbox.
 cleanup_on_error() { [ "$?" -ne 0 ] && vercel sandbox remove "$name" "${vercel_args[@]}" >/dev/null 2>&1 || true; }
@@ -397,33 +397,33 @@ pairing_ws="${public_url/https:\/\//wss://}"
 
 # 2. (remote) ensure the repo is at the right commit; rebuild only if the commit changed (cache marker)
 vercel sandbox exec "$name" "${vercel_args[@]}" --timeout 20m \
-  --env "GH_TOKEN=$gh_token" --env "ORCA_PROJECT_ROOT=$project_root" \
-  --env "ORCA_REPO_URL=$repo_url" --env "ORCA_REPO_REF=$repo_ref" \
-  -- bash -lc 'set -euo pipefail; cd "$ORCA_PROJECT_ROOT"; \
+  --env "GH_TOKEN=$gh_token" --env "VEER_PROJECT_ROOT=$project_root" \
+  --env "VEER_REPO_URL=$repo_url" --env "VEER_REPO_REF=$repo_ref" \
+  -- bash -lc 'set -euo pipefail; cd "$VEER_PROJECT_ROOT"; \
     # Re-establish git auth for the private-repo fetch (why + full rationale: §5); else it hangs on a prompt.
     # Load-bearing escaping: \$1 and \$GH_TOKEN must land LITERALLY and resolve at git-runtime. Test after
     # any edit here — reformatting the nested printf/node quoting silently breaks the fetch or leaks the token.
     if [ -n "${GH_TOKEN:-}" ]; then \
       printf "%s\n" "#!/usr/bin/env bash" "case \"\$1\" in *Username*) echo x-access-token;; *Password*) echo \"\$GH_TOKEN\";; esac" > /tmp/askpass.sh; \
       chmod 700 /tmp/askpass.sh; export GIT_ASKPASS=/tmp/askpass.sh GIT_TERMINAL_PROMPT=0; fi; \
-    git fetch origin "$ORCA_REPO_REF"; \
-    git checkout -B "$ORCA_REPO_REF" FETCH_HEAD; \
+    git fetch origin "$VEER_REPO_REF"; \
+    git checkout -B "$VEER_REPO_REF" FETCH_HEAD; \
     rm -f /tmp/askpass.sh; \
-    c="$(git rev-parse HEAD)"; [ -f .orca-built ] && [ "$(cat .orca-built)" = "$c" ] || { \
+    c="$(git rev-parse HEAD)"; [ -f .veer-built ] && [ "$(cat .veer-built)" = "$c" ] || { \
       pnpm install --prefer-offline && pnpm run build:cli && \
       node config/scripts/run-electron-vite-build.mjs --config config/electron-vite.vm-serve.config.ts && \
-      printf "%s" "$c" > .orca-built; }' >&2
+      printf "%s" "$c" > .veer-built; }' >&2
 
-# 3. (remote) start orca serve in the background, writing recipe JSON to a file; poll until it parses
+# 3. (remote) start veer serve in the background, writing recipe JSON to a file; poll until it parses
 recipe_json="$(vercel sandbox exec "$name" "${vercel_args[@]}" --timeout 60s \
-  --env "ORCA_PORT=$port" --env "ORCA_PROJECT_ROOT=$project_root" --env "ORCA_PAIRING_ADDRESS=$pairing_ws" \
-  -- bash -lc 'set -euo pipefail; cd "$ORCA_PROJECT_ROOT"; rm -f /tmp/orca-recipe.json /tmp/orca-serve.log; \
-    nohup pnpm exec orca-dev serve --port "$ORCA_PORT" --project-root "$ORCA_PROJECT_ROOT" \
-      --pairing-address "$ORCA_PAIRING_ADDRESS" --recipe-json >/tmp/orca-recipe.json 2>/tmp/orca-serve.log </dev/null & \
+  --env "VEER_PORT=$port" --env "VEER_PROJECT_ROOT=$project_root" --env "VEER_PAIRING_ADDRESS=$pairing_ws" \
+  -- bash -lc 'set -euo pipefail; cd "$VEER_PROJECT_ROOT"; rm -f /tmp/veer-recipe.json /tmp/veer-serve.log; \
+    nohup pnpm exec veer-dev serve --port "$VEER_PORT" --project-root "$VEER_PROJECT_ROOT" \
+      --pairing-address "$VEER_PAIRING_ADDRESS" --recipe-json >/tmp/veer-recipe.json 2>/tmp/veer-serve.log </dev/null & \
     pid=$!; for _ in $(seq 1 80); do \
-      node -e "JSON.parse(require(\"node:fs\").readFileSync(\"/tmp/orca-recipe.json\",\"utf8\"))" >/dev/null 2>&1 && { cat /tmp/orca-recipe.json; exit 0; }; \
-      kill -0 "$pid" 2>/dev/null || { cat /tmp/orca-serve.log >&2; exit 1; }; sleep 0.25; \
-    done; cat /tmp/orca-serve.log >&2; echo "serve recipe JSON timed out" >&2; exit 1')"
+      node -e "JSON.parse(require(\"node:fs\").readFileSync(\"/tmp/veer-recipe.json\",\"utf8\"))" >/dev/null 2>&1 && { cat /tmp/veer-recipe.json; exit 0; }; \
+      kill -0 "$pid" 2>/dev/null || { cat /tmp/veer-serve.log >&2; exit 1; }; sleep 0.25; \
+    done; cat /tmp/veer-serve.log >&2; echo "serve recipe JSON timed out" >&2; exit 1')"
 
 # 4. print serve's JSON enriched with userData (single object on stdout)
 node -e 'const p=JSON.parse(process.argv[1]); console.log(JSON.stringify({...p, schemaVersion:1,
@@ -433,18 +433,18 @@ trap - EXIT
 ```
 
 `suspend`/`resume`/`destroy` use `vercel sandbox stop|...|remove "$resource_id"` reading
-`userData.resourceId` from stdin (§7d). This is the **Orca-server** connection mode (the recipe emits a
+`userData.resourceId` from stdin (§7d). This is the **Veer-server** connection mode (the recipe emits a
 pairing URL). If the user chose **SSH** in the §1 interview, use §7g instead.
 
 ### 7g. Worked example — existing SSH host (SSH connection mode)
 
 SSH mode is **fundamentally different from §7c/§7f**, not a relabeling of them:
 
-- **`create` does NOT run `orca serve` and does NOT emit a `pairingCode`.** Orca itself connects to the
+- **`create` does NOT run `veer serve` and does NOT emit a `pairingCode`.** Veer itself connects to the
   host over its SSH relay, brings up the git + filesystem providers, and imports the repo. The script's
-  only job is to make the host ready and **print SSH connection details** Orca will dial.
+  only job is to make the host ready and **print SSH connection details** Veer will dial.
 - The result uses a `connection` block with `type: "ssh"` and a `target`, **not** the flat
-  `pairingCode`/`projectRoot` shape. Exact shape (Orca rejects anything else):
+  `pairingCode`/`projectRoot` shape. Exact shape (Veer rejects anything else):
 
 ```json
 {
@@ -470,18 +470,18 @@ SSH mode is **fundamentally different from §7c/§7f**, not a relabeling of them
 `label`, `host`, `port`, `username` are required; the rest are optional — omit any you don't need.
 
 For an explicitly requested one-VM-per-workspace checkout, the create script must read
-`ORCA_RECIPE_RESULT_SCHEMA_VERSION`, `ORCA_REPO_URL`, `ORCA_REPO_REF`, `ORCA_REPO_REF_HEAD`, and
-`ORCA_REPO_BRANCH`. Use `ORCA_REPO_REF` to fetch the selected source, but create
-`ORCA_REPO_BRANCH` at the exact `ORCA_REPO_REF_HEAD` commit; resolving the symbolic ref again can race
-with an upstream update. `ORCA_REPO_URL` and `ORCA_REPO_REF` are a matched fetch pair, including when
+`VEER_RECIPE_RESULT_SCHEMA_VERSION`, `VEER_REPO_URL`, `VEER_REPO_REF`, `VEER_REPO_REF_HEAD`, and
+`VEER_REPO_BRANCH`. Use `VEER_REPO_REF` to fetch the selected source, but create
+`VEER_REPO_BRANCH` at the exact `VEER_REPO_REF_HEAD` commit; resolving the symbolic ref again can race
+with an upstream update. `VEER_REPO_URL` and `VEER_REPO_REF` are a matched fetch pair, including when
 the desktop source uses multiple remotes. Return that primary checkout at `projectRoot` and emit the
 same SSH result with:
 
 ```bash
-[ -n "${ORCA_REPO_REF_HEAD:-}" ] || { echo "missing pinned source commit" >&2; exit 1; }
-git fetch origin "$ORCA_REPO_REF"
-git cat-file -e "${ORCA_REPO_REF_HEAD}^{commit}"
-git checkout -B "$ORCA_REPO_BRANCH" "$ORCA_REPO_REF_HEAD"
+[ -n "${VEER_REPO_REF_HEAD:-}" ] || { echo "missing pinned source commit" >&2; exit 1; }
+git fetch origin "$VEER_REPO_REF"
+git cat-file -e "${VEER_REPO_REF_HEAD}^{commit}"
+git checkout -B "$VEER_REPO_BRANCH" "$VEER_REPO_REF_HEAD"
 ```
 
 ```json
@@ -499,14 +499,14 @@ git checkout -B "$ORCA_REPO_BRANCH" "$ORCA_REPO_REF_HEAD"
 Fail if the requested schema is not `2`; do not silently fall back to the ordinary recipe shape.
 
 **Networking → which `target` fields to set** (how *your desktop* reaches the box — there is no
-`orca serve` URL in SSH mode):
+`veer serve` URL in SSH mode):
 
 - Public IP / DNS, or a Tailscale/VPN address → `host`; SSH port → `port` (usually 22).
 - Key auth → `identityFile` (add `identitiesOnly: true` if the agent has many keys).
 - Through a bastion → `jumpHost` (a `user@host` ProxyJump) **or** a full `proxyCommand` (e.g. an access
   proxy). Use one, not both.
 - A service port the workspace needs → add entries to `portForwards`.
-- `relayGracePeriodSeconds` (optional): how long Orca keeps the SSH relay alive after the workspace
+- `relayGracePeriodSeconds` (optional): how long Veer keeps the SSH relay alive after the workspace
   detaches before tearing it down; `0` = tear down immediately. Leave it off unless the user wants a
   reconnect grace window.
 
@@ -528,7 +528,7 @@ ssh_opts=(-p "$ssh_port"); [ -n "$identity_file" ] && ssh_opts+=(-i "$identity_f
 # non-interactive create. Pre-add the key (or set the option) so it can't block.
 ssh-keyscan -p "$ssh_port" "$host" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
 
-# 1. ensure the repo is present and at the right commit on the host (NO orca serve here)
+# 1. ensure the repo is present and at the right commit on the host (NO veer serve here)
 ssh "${ssh_opts[@]}" "$ssh_target" \
   "GH_TOKEN='$gh_token' GIT_TERMINAL_PROMPT=0 bash -lc '
      set -euo pipefail
@@ -536,7 +536,7 @@ ssh "${ssh_opts[@]}" "$ssh_target" \
      cd \"$project_root\" && git fetch origin \"$repo_ref\" && git checkout -B \"$repo_ref\" FETCH_HEAD
    '" >&2
 
-# 2. print the SSH connection block (NO pairingCode, NO orca serve). host/port/username tell Orca's
+# 2. print the SSH connection block (NO pairingCode, NO veer serve). host/port/username tell Veer's
 #    relay how to dial in; identityFile/jumpHost/proxyCommand/portForwards are emitted when set.
 node -e 'const [host,port,user,idf,jh,pc,root]=process.argv.slice(1);
   const target={ label:"per-workspace-host", host, port:Number(port), username:user };
@@ -547,12 +547,12 @@ node -e 'const [host,port,user,idf,jh,pc,root]=process.argv.slice(1);
 ```
 
 `suspend`/`resume`/`destroy`: on a persistent host there's usually nothing to tear down — set
-`destroy: none` and omit suspend/resume. (Orca still disconnects/reconnects its own SSH relay on
+`destroy: none` and omit suspend/resume. (Veer still disconnects/reconnects its own SSH relay on
 sleep/wake/delete — that's separate from these scripts.)
 
 If the SSH host is instead an **ephemeral/snapshot-capable VM** (your hypervisor, or a cloud VM with
 image support), keep the §7f Phase-2/3 base-image model for provisioning, but still emit the
-`connection.type:"ssh"` block above instead of starting `orca serve`.
+`connection.type:"ssh"` block above instead of starting `veer serve`.
 
 ### 7h. Worked example — local Docker SSH (SSH connection mode)
 
@@ -577,14 +577,14 @@ Key points:
 - Do not bind-mount or copy the host's full agent home into the image. Let each container have writable
   agent state; only the committed auth image should carry reusable authenticated state.
 - If committing from an interactive shell, force the runtime entrypoint back to `sshd`:
-  `docker commit --change='ENTRYPOINT ["/usr/local/bin/orca-docker-ssh-entrypoint"]' …`.
+  `docker commit --change='ENTRYPOINT ["/usr/local/bin/veer-docker-ssh-entrypoint"]' …`.
 - `destroy` should read `recipeResult.userData.resourceId` and run `docker rm -f "$resource_id"`.
 
 Validation before wiring/live use:
 
 ```bash
 docker image inspect "$auth_image" --format '{{json .Config.Entrypoint}}'
-docker run -d --name "$name" -p 127.0.0.1::22 -e "ORCA_SSH_PUBLIC_KEY=$pubkey" "$auth_image"
+docker run -d --name "$name" -p 127.0.0.1::22 -e "VEER_SSH_PUBLIC_KEY=$pubkey" "$auth_image"
 docker ps -a --filter "name=$name"
 docker logs "$name"
 ssh -i "$key" -p "$port" -o IdentitiesOnly=yes user@127.0.0.1 'codex --version'
@@ -600,7 +600,7 @@ weren't baked into the base image (see the `ssh-keygen -A` point above).
 ### 7i. Windows local-side scripts
 
 The local-side scripts run on the user's desktop. On **Windows**, a bare `.sh` won't execute. Either
-require WSL/Git-Bash (and point `orca.yaml` at e.g. `bash ./scripts/orca-vm/<name>.sh` via a `.cmd`
+require WSL/Git-Bash (and point `veer.yaml` at e.g. `bash ./scripts/veer-vm/<name>.sh` via a `.cmd`
 launcher), or scaffold PowerShell equivalents. Minimal PowerShell shape:
 
 ```powershell
@@ -608,7 +608,7 @@ launcher), or scaffold PowerShell equivalents. Minimal PowerShell shape:
 $ErrorActionPreference = 'Stop'
 # resolve env→state→fallback; run the provider CLI / ssh the same way;
 # capture provider output; build the result object for the chosen mode and write ONE line of JSON to stdout.
-# Orca-server mode: @{ schemaVersion=1; pairingCode=$pairingCode; projectRoot=$projectRoot; userData=@{...} }
+# Veer-server mode: @{ schemaVersion=1; pairingCode=$pairingCode; projectRoot=$projectRoot; userData=@{...} }
 # SSH mode:        @{ schemaVersion=1; connection=@{ type="ssh"; projectRoot=$projectRoot;
 #                     target=@{ label=$label; host=$host; port=$port; username=$user } } }  (see §7g/§7h)
 ($result | ConvertTo-Json -Compress -Depth 6)
@@ -622,41 +622,41 @@ The remote-side commands you run *inside* the Linux VM stay bash regardless of t
 ## 8. Per-workspace recipe contract (the fast path)
 
 Once the authenticated snapshot exists, this runs on every workspace create. Define recipes in
-`orca.yaml`:
+`veer.yaml`:
 
 ```yaml
 environmentRecipes:
   - id: cloud-sandbox
     name: Cloud Sandbox
-    create: ./scripts/orca-vm/cloud-sandbox-create.sh
-    suspend: ./scripts/orca-vm/cloud-sandbox-suspend.sh
-    resume: ./scripts/orca-vm/cloud-sandbox-resume.sh
-    destroy: ./scripts/orca-vm/cloud-sandbox-destroy.sh
+    create: ./scripts/veer-vm/cloud-sandbox-create.sh
+    suspend: ./scripts/veer-vm/cloud-sandbox-suspend.sh
+    resume: ./scripts/veer-vm/cloud-sandbox-resume.sh
+    destroy: ./scripts/veer-vm/cloud-sandbox-destroy.sh
 ```
 
 `create` runs **locally from the repo root** and prints **one** JSON object to stdout. Its shape depends
 on the connection mode chosen in §1:
 
-**Orca-server mode** — boot the env, start `orca serve` in it, and print serve's result:
+**Veer-server mode** — boot the env, start `veer serve` in it, and print serve's result:
 
 ```json
 {
   "schemaVersion": 1,
-  "pairingCode": "orca-pairing-code-or-url",
+  "pairingCode": "veer-pairing-code-or-url",
   "projectRoot": "/absolute/path/to/repo/on/remote",
   "userData": { "provider": "example", "resourceId": "provider-resource-id" }
 }
 ```
 
-Here `pairingCode` (from `orca serve --recipe-json`) and `projectRoot` are required; `schemaVersion` (`1`)
+Here `pairingCode` (from `veer serve --recipe-json`) and `projectRoot` are required; `schemaVersion` (`1`)
 and `userData` are optional.
 
-**SSH mode** — do **not** run `orca serve`; print the `connection.type:"ssh"` block instead (full shape +
+**SSH mode** — do **not** run `veer serve`; print the `connection.type:"ssh"` block instead (full shape +
 worked script in §7g). `pairingCode` is **not** used in SSH mode.
 
 **Optional provisioned root** — only for direct SSH and only when explicitly requested. Add
-`checkoutMode: provisioned-root` to the recipe, require `ORCA_RECIPE_RESULT_SCHEMA_VERSION=2`, create
-the requested `ORCA_REPO_BRANCH` at the pinned `ORCA_REPO_REF_HEAD` commit (use `ORCA_REPO_REF` only
+`checkoutMode: provisioned-root` to the recipe, require `VEER_RECIPE_RESULT_SCHEMA_VERSION=2`, create
+the requested `VEER_REPO_BRANCH` at the pinned `VEER_REPO_REF_HEAD` commit (use `VEER_REPO_REF` only
 to fetch that commit) at the returned `projectRoot`, and emit schema version 2 with
 `checkoutMode: "provisioned-root"`. All recipes without this field retain the schema-v1 behavior above.
 
@@ -667,7 +667,7 @@ Lifecycle hooks (all run locally):
 - `resume`: optional. Wake; reads payload on stdin and **prints fresh recipe JSON** (pairing may change).
 - `destroy`: optional unless `destroy: none`. Delete/cleanup; reads payload on stdin.
 
-Start Orca remotely with `orca serve --port "$PORT" --project-root "$ABS_ROOT" --pairing-address
+Start Veer remotely with `veer serve --port "$PORT" --project-root "$ABS_ROOT" --pairing-address
 "$EXTERNAL_WSS_URL" --recipe-json` (exact flags + output in §7c). Set `--pairing-address` to the
 externally reachable address so the emitted `pairingCode` is reachable; tunneling/port mapping is the
 script's job.
@@ -683,14 +683,14 @@ Validate in two stages — the cheap dry run first, then the live self-test.
 
 ### Dry run (free, non-destructive) — always do this first
 
-`orca vm recipe doctor <recipe-id> --repo-path <repo> --json` validates **static wiring only** — it does
+`veer vm recipe doctor <recipe-id> --repo-path <repo> --json` validates **static wiring only** — it does
 **not** boot anything. It checks: local-host execution (v1), repo path, recipe id exists,
 create/destroy/suspend/resume command paths resolve, suspend/resume are paired, and each script is
 executable (POSIX exec bit; skipped on Windows). Fix every failure here before spending any cloud money.
 
 ### Live self-test (`--provision`) — diagnose and iterate yourself
 
-`orca vm recipe doctor <recipe-id> --repo-path <repo> --provision --json` actually runs the recipe end
+`veer vm recipe doctor <recipe-id> --repo-path <repo> --provision --json` actually runs the recipe end
 to end: it executes `create`, validates the returned recipe JSON, then runs `destroy` to **tear the
 environment back down** (so the test leaves nothing running, as long as `destroy` works). It spends real
 cloud money, so get the user's OK **once** before starting — that one approval covers the whole loop
@@ -773,5 +773,5 @@ startup-only `docker run` before the full clone/install path.
 - Don't invent or store credentials; no secrets in `userData`, state, comments, docs, or commits.
 - Don't run paid/long phases (base snapshot, auth, live test) without an explicit OK.
 - Don't hide provider errors behind generic messages — preserve actionable stderr.
-- Don't make Orca own provider lifecycle beyond invoking the configured scripts.
-- Don't commit or create an Orca workspace unless asked.
+- Don't make Veer own provider lifecycle beyond invoking the configured scripts.
+- Don't commit or create an Veer workspace unless asked.

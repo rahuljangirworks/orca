@@ -8,7 +8,7 @@ import {
   isDirectClaudeCommand,
   type ClaudeAgentTeamsMode
 } from '../../shared/claude-agent-teams-tmux-compat'
-import { getOrcaCliCommandNameForPlatform } from '../../shared/orca-cli-command-name'
+import { getVeerCliCommandNameForPlatform } from '../../shared/veer-cli-command-name'
 import { resolvePathEnvKey } from '../pty/windows-path-segment-merge'
 
 export type ClaudeAgentTeamsLaunchPlan = {
@@ -79,7 +79,7 @@ export function resolveClaudeAgentTeamsShimBin(
   }
   return (
     findExecutableOnPath(process.platform === 'win32' ? 'orca-dev.cmd' : 'orca-dev', pathValue) ??
-    findExecutableOnPath(getOrcaCliCommandNameForPlatform(process.platform), pathValue)
+    findExecutableOnPath(getVeerCliCommandNameForPlatform(process.platform), pathValue)
   )
 }
 
@@ -95,7 +95,7 @@ function bundledLauncherPath(): string | null {
     return join(process.resourcesPath, 'bin', 'orca')
   }
   if (process.platform === 'linux') {
-    return join(process.resourcesPath, 'bin', 'orca-ide')
+    return join(process.resourcesPath, 'bin', 'veer-ide')
   }
   if (process.platform === 'win32') {
     return join(process.resourcesPath, 'bin', 'orca.exe')

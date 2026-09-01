@@ -14777,16 +14777,16 @@ export class OrcaRuntimeService {
       : undefined
   }
 
-  getTerminalOrchestrationCliCommand(handle: string): 'orca' | 'orca-ide' {
+  getTerminalOrchestrationCliCommand(handle: string): 'veer' | 'veer-ide' | 'orca' | 'orca-ide' {
     let pty: RuntimePtyWorktreeRecord | null = null
     try {
       const ptyId = this.resolveLeafForHandle(handle)?.ptyId
       pty = ptyId ? (this.ptysById.get(ptyId) ?? null) : null
     } catch {
-      return 'orca'
+      return 'veer'
     }
     if (!pty) {
-      return 'orca'
+      return 'veer'
     }
     return resolveTerminalOrchestrationCliCommand({
       connectionId: pty.connectionId,
@@ -25431,7 +25431,7 @@ export class OrcaRuntimeService {
     }
 
     const workspaceRoot = computeWorkspaceRoot(repo.path, worktreePathSettings)
-    // Why: CLI-managed WSL worktrees live under ~/orca/workspaces inside the
+    // Why: CLI-managed WSL worktrees live under ~/veer/workspaces inside the
     // distro filesystem through computeWorkspaceRoot. If home lookup fails,
     // still validate against the effective workspace dir.
     let branchName = ''

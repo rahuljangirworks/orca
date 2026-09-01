@@ -78,9 +78,13 @@ export function installedElectronCandidates(
     ]
   }
   return [
+    joinPath(homePath, '.local', 'bin', 'veer-ide'),
     joinPath(homePath, '.local', 'bin', 'orca-ide'),
+    '/usr/local/bin/veer-ide',
     '/usr/local/bin/orca-ide',
+    '/usr/bin/veer-ide',
     '/usr/bin/orca-ide',
+    '/opt/Veer/veer-ide',
     '/opt/Orca/orca-ide'
   ]
 }

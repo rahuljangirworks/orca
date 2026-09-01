@@ -44,7 +44,7 @@ import { main } from './index'
 import { localRepoDestinationFixtures, okFixture, queueFixtures } from './test-fixtures'
 import { useWorktreeAwarenessEnvironment } from './index-test-harness'
 
-describe('orca cli worktree awareness', () => {
+describe('veer cli worktree awareness', () => {
   useWorktreeAwarenessEnvironment({
     callMock,
     serveOrcaAppMock,

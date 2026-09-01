@@ -167,6 +167,13 @@ export function getDefaultOnboardingState(): OnboardingState {
 export function getDefaultWorkspaceDir(homeDir: string): string {
   const separator = homeDir.includes('\\') ? '\\' : '/'
   const trimmedHomeDir = homeDir.replace(/[\\/]+$/, '')
+  return [trimmedHomeDir, 'veer', 'workspaces'].join(separator)
+}
+
+/** Previous stock root. Existing settings keep using it; new installs use Veer. */
+export function getLegacyDefaultWorkspaceDir(homeDir: string): string {
+  const separator = homeDir.includes('\\') ? '\\' : '/'
+  const trimmedHomeDir = homeDir.replace(/[\\/]+$/, '')
   return [trimmedHomeDir, 'orca', 'workspaces'].join(separator)
 }
 

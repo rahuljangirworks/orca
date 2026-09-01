@@ -35,7 +35,7 @@ function superviseUntilExit(code: number | null, signal: NodeJS.Signals | null):
 
 function superviseChild(child: FakeChildProcess): Promise<number> {
   return superviseForegroundServe({
-    executable: '/Applications/Orca.app/Contents/MacOS/Orca',
+    executable: '/Applications/Veer.app/Contents/MacOS/Veer',
     childArgs: ['--serve'],
     spawnOptions: {},
     spawnChild: vi.fn() as never,
@@ -62,7 +62,7 @@ describe('serveSignalExitError', () => {
     expect(error.data).toMatchObject({
       nextSteps: [
         expect.stringContaining('macOS desktop login'),
-        expect.stringContaining('~/Library/Logs/DiagnosticReports/Orca-*.ips')
+        expect.stringContaining('~/Library/Logs/DiagnosticReports/Veer-*.ips')
       ]
     })
   })
@@ -71,7 +71,7 @@ describe('serveSignalExitError', () => {
     for (const platform of ['linux', 'win32'] as const) {
       const error = serveSignalExitError('SIGABRT', platform)
 
-      expect(error.message).toBe('Orca serve exited via SIGABRT.')
+      expect(error.message).toBe('Veer serve exited via SIGABRT.')
       expect(error.data).toBeUndefined()
     }
   })
@@ -79,13 +79,13 @@ describe('serveSignalExitError', () => {
   it('does not claim the macOS cause for other darwin signals', () => {
     const error = serveSignalExitError('SIGKILL', 'darwin')
 
-    expect(error.message).toBe('Orca serve exited via SIGKILL.')
+    expect(error.message).toBe('Veer serve exited via SIGKILL.')
     expect(error.data).toBeUndefined()
   })
 
   it('stays clear when neither a code nor a signal is reported', () => {
     expect(serveSignalExitError(null, 'darwin').message).toBe(
-      'Orca serve exited without reporting an exit code or signal.'
+      'Veer serve exited without reporting an exit code or signal.'
     )
   })
 })
@@ -116,7 +116,7 @@ describe('superviseForegroundServe signal exits', () => {
     expect(child.kill).toHaveBeenCalledTimes(2)
 
     child.emit('exit', null, 'SIGKILL')
-    await expect(supervised).rejects.toThrow('Orca serve exited via SIGKILL.')
+    await expect(supervised).rejects.toThrow('Veer serve exited via SIGKILL.')
   })
 
   it('lets a shared-console Windows child handle Ctrl-C gracefully', async () => {
@@ -140,7 +140,7 @@ describe('superviseForegroundServe signal exits', () => {
     await rm(missingParent, { recursive: true })
     const child = new FakeChildProcess()
     const supervised = superviseForegroundServe({
-      executable: '/Applications/Orca.app/Contents/MacOS/Orca',
+      executable: '/Applications/Veer.app/Contents/MacOS/Veer',
       childArgs: ['--serve'],
       spawnOptions: {},
       spawnChild: vi.fn() as never,
@@ -180,7 +180,7 @@ describe('superviseForegroundServe signal exits', () => {
     setPlatform('linux')
 
     await expect(superviseUntilExit(null, 'SIGABRT')).rejects.toThrow(
-      'Orca serve exited via SIGABRT.'
+      'Veer serve exited via SIGABRT.'
     )
   })
 

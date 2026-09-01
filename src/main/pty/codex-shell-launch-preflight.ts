@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { getBundledLauncherPath } from '../cli/bundled-cli-launcher-path'
 
 const DEV_LAUNCHER_DIR = ['cli', 'bin']
-const DEV_COMMAND_NAME = 'orca-dev'
+const DEV_COMMAND_NAME = 'veer-dev'
 
 export type CodexShellLaunchPreflightCommandOptions = {
   hooksEnabled: boolean
@@ -18,7 +18,7 @@ export type CodexShellLaunchPreflightCommandOptions = {
   platform?: NodeJS.Platform
 }
 
-/** Absolute path of the Orca CLI the preflight must execute, or null to skip it.
+/** Absolute path of the Veer CLI the preflight must execute, or null to skip it.
  *
  *  Why absolute: the value rides in ORCA_CODEX_LAUNCH_PREFLIGHT and is invoked
  *  from the codex() wrapper, which shell-ready emits *after* the user's profile

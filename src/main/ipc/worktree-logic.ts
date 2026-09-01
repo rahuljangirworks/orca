@@ -95,7 +95,7 @@ export function ensurePathWithinWorkspace(targetPath: string, workspaceDir: stri
  * must also live on the WSL filesystem. Creating them on the Windows side
  * (/mnt/c/...) would be extremely slow due to cross-filesystem I/O and
  * the terminal would open a Windows shell instead of WSL. We mirror the
- * Windows workspace layout inside ~/orca/workspaces on the WSL filesystem
+ * Windows workspace layout inside ~/veer/workspaces on the WSL filesystem
  * (e.g. \\wsl.localhost\Ubuntu\home\user\orca\workspaces\repo\feature).
  */
 export function computeWorktreePath(

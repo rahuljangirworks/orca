@@ -1,6 +1,8 @@
 /**
  * Rahul's personal Orca fork is local-first. Orca/Stably-operated services
  * must never become an implicit runtime dependency of this build.
+ * `firstPartyNetworkEnabled` applies only to Orca/Stably services; it does not
+ * authorize Veer Platform requests.
  *
  * Keep this policy as a small, stable merge boundary. Upstream integrations
  * should be gated at their composition roots and network configuration

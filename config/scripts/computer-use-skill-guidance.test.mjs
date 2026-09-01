@@ -15,12 +15,12 @@ describe('computer-use skill guidance', () => {
   it('keeps web-app targeting on the computer-use surface', () => {
     const skill = readFileSync(guidePath, 'utf8')
 
-    expect(skill).toContain('Use this skill for desktop UI through `orca computer`')
+    expect(skill).toContain('Use this skill for desktop UI through `veer computer`')
     expect(skill).toContain('operate the desktop browser app/window that contains the page')
-    expect(skill).not.toContain('orca goto')
-    expect(skill).not.toContain('orca snapshot')
-    expect(skill).not.toContain('orca click')
-    expect(skill).not.toContain('orca fill')
+    expect(skill).not.toContain('veer goto')
+    expect(skill).not.toContain('veer snapshot')
+    expect(skill).not.toContain('veer click')
+    expect(skill).not.toContain('veer fill')
     expect(skill).not.toContain('Routing:')
   })
 
@@ -74,13 +74,13 @@ describe('computer-use install stub', () => {
     const stub = readFileSync(stubPath, 'utf8')
 
     expect(stub).toContain('discovery stub')
-    expect(stub).toContain('ORCA skills get computer-use')
-    // The safe CLI-resolution contract must survive in the stub, never a bare `orca`.
-    expect(stub).toContain('ORCA_CLI_COMMAND')
-    expect(stub).toContain('orca-dev')
-    expect(stub).toContain('orca-ide')
-    expect(stub).toContain('GNOME Orca screen reader')
-    expect(stub).not.toMatch(/^orca /mu)
+    expect(stub).toContain('VEER skills get computer-use')
+    // The safe CLI-resolution contract must survive in the stub, never a bare `veer`.
+    expect(stub).toContain('VEER_CLI_COMMAND')
+    expect(stub).toContain('veer-dev')
+    expect(stub).toContain(
+      'If it is unavailable, ask the user to install the Veer CLI from Settings.'
+    )
   })
 
   it('gives older binaries a bounded fallback instead of a dead end', () => {

@@ -51,7 +51,7 @@ import {
 } from './test-fixtures'
 import { pairRuntimeEnvironment, useWorktreeAwarenessEnvironment } from './index-test-harness'
 
-describe('orca cli worktree awareness', () => {
+describe('veer cli worktree awareness', () => {
   useWorktreeAwarenessEnvironment({
     callMock,
     serveOrcaAppMock,
@@ -144,7 +144,7 @@ describe('orca cli worktree awareness', () => {
             hostId: 'local',
             repoId: 'repo-local',
             path: '/tmp/orca',
-            displayName: 'Orca',
+            displayName: 'Veer',
             setupState: 'ready',
             setupMethod: 'legacy-repo',
             createdAt: 1,
@@ -156,7 +156,7 @@ describe('orca cli worktree awareness', () => {
             hostId: 'runtime:gpu',
             repoId: 'repo-gpu',
             path: '/srv/orca',
-            displayName: 'Orca',
+            displayName: 'Veer',
             setupState: 'ready',
             setupMethod: 'legacy-repo',
             createdAt: 1,
@@ -224,7 +224,7 @@ describe('orca cli worktree awareness', () => {
             hostId: 'runtime:gpu',
             repoId: 'repo-gpu',
             path: '/srv/orca',
-            displayName: 'Orca',
+            displayName: 'Veer',
             setupState: 'ready',
             setupMethod: 'legacy-repo',
             createdAt: 1,

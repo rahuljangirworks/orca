@@ -1,15 +1,15 @@
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { buildBareOrcaCliScript } from './linux-bare-orca-dispatcher'
+import { buildVeerCliScript } from './linux-veer-dispatcher'
 
-const SHIM_DIR_NAME = 'linux-orca-cli-shim'
+const SHIM_DIR_NAME = 'linux-veer-cli-shim'
 
 // Why: rewriting the shim on every PTY spawn is wasted fs work; the target only
 // changes with the install itself, so one successful write per process is enough.
 // Failures are NOT cached so a transient fs error retries on the next spawn.
 const ensuredShimDirs = new Map<string, string>()
 
-export type LinuxTerminalOrcaCliShimOptions = {
+export type LinuxTerminalVeerCliShimOptions = {
   userDataPath: string
   /** Test seam — defaults to the packaged resources root. */
   resourcesPath?: string | null
@@ -17,15 +17,10 @@ export type LinuxTerminalOrcaCliShimOptions = {
   appImagePath?: string | null
 }
 
-// Why: on Linux the CLI installs as `orca-ide` so it never shadows the GNOME
-// Orca screen reader at /usr/bin/orca — but agent-facing surfaces (skills,
-// dispatch preambles, CLI hints) all invoke bare `orca`, so on stock Ubuntu an
-// agent inside an Orca terminal would launch the screen reader instead
-// (stablyai/orca#7904). Prepending this userData-scoped shim dir to managed-PTY
-// PATH makes bare `orca` resolve to the Orca CLI inside Orca terminals only,
-// leaving the user's own shells (and their screen reader) untouched.
-export function ensureLinuxTerminalOrcaCliShimDir(
-  options: LinuxTerminalOrcaCliShimOptions
+// Why: `veer` is the canonical agent-facing command. Its managed-PTY shim
+// keeps the bundled CLI available before the user opts into global installation.
+export function ensureLinuxTerminalVeerCliShimDir(
+  options: LinuxTerminalVeerCliShimOptions
 ): string | null {
   const cached = ensuredShimDirs.get(options.userDataPath)
   if (cached !== undefined) {
@@ -36,7 +31,7 @@ export function ensureLinuxTerminalOrcaCliShimDir(
   if (!resourcesPath) {
     return null
   }
-  const resolved = buildBareOrcaCliScript(
+  const resolved = buildVeerCliScript(
     resourcesPath,
     options.appImagePath ?? process.env.APPIMAGE ?? null
   )
@@ -45,7 +40,7 @@ export function ensureLinuxTerminalOrcaCliShimDir(
   }
 
   const shimDir = join(options.userDataPath, SHIM_DIR_NAME)
-  const shimPath = join(shimDir, 'orca')
+  const shimPath = join(shimDir, 'veer')
   try {
     if (readShim(shimPath) !== resolved.script) {
       mkdirSync(shimDir, { recursive: true })

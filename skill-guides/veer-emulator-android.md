@@ -1,20 +1,20 @@
 ---
-name: orca-emulator-android
+name: veer-emulator-android
 description: >
-  Control an Android emulator / device from inside Orca using the `orca` CLI.
+  Control an Android emulator / device from inside Veer using the `veer` CLI.
   Use for listing/booting AVDs, taps, swipes, typing, hardware buttons (incl. Back
   and Recents), rotation, app install/launch, runtime permissions, the accessibility
   tree, and logcat — driving a real adb-connected device or emulator. Cross-platform
-  (Windows, Linux, macOS). Complements the orca-emulator (iOS) and orca-cli skills.
+  (Windows, Linux, macOS). Complements the veer-emulator (iOS) and veer-cli skills.
 license: Apache-2.0
 ---
 
-# Orca Emulator — Android (adb / emulator powered)
+# Veer Emulator — Android (adb / emulator powered)
 
-Drive an Android emulator or adb-connected device **from within Orca** using
-`ORCA emulator ...` commands. The Android backend shells out to the Android SDK
+Drive an Android emulator or adb-connected device **from within Veer** using
+`VEER emulator ...` commands. The Android backend shells out to the Android SDK
 (`adb`, `emulator`, `avdmanager`) that Android Studio installs, so it works on
-Windows, Linux, and macOS — unlike the iOS backend (`orca-emulator`), which is
+Windows, Linux, and macOS — unlike the iOS backend (`veer-emulator`), which is
 macOS-only. Device control uses `adb shell input`, so it works without any extra
 streaming server.
 
@@ -25,14 +25,13 @@ streaming server.
 
 ## CLI executable
 
-Choose the Orca executable once: use the `ORCA_CLI_COMMAND` environment value when set;
-otherwise use `orca-dev` in a dev session exposing `ORCA_DEV_REPO_ROOT`, `orca-ide` on
-Linux outside an Orca-managed terminal, and `orca` everywhere else. Never try bare
-`orca` first on unmanaged Linux because it normally resolves to the GNOME screen reader.
+Choose the Veer executable once: use the `VEER_CLI_COMMAND` environment value when set;
+otherwise use `veer-dev` in a dev session exposing `VEER_DEV_REPO_ROOT`, and `veer`
+everywhere else. If `veer` is unavailable, ask the user to install the Veer CLI from Settings.
 
-In every command example — fenced blocks, tables, and prose — `ORCA` is a documentation
+In every command example — fenced blocks, tables, and prose — `VEER` is a documentation
 placeholder. Replace it with the chosen executable before running the command; do not
-create a shell variable or run `ORCA` literally. The command examples are intentionally
+create a shell variable or run `VEER` literally. The command examples are intentionally
 shell-neutral for POSIX shells, PowerShell, and cmd.exe.
 
 ## When to use
@@ -46,30 +45,30 @@ shell-neutral for POSIX shells, PowerShell, and cmd.exe.
 
 ## When NOT to use
 
-- iOS simulators → use the `orca-emulator` skill (macOS only).
+- iOS simulators → use the `veer-emulator` skill (macOS only).
 - Building the app → use Gradle / `./gradlew assembleDebug`, then `install`.
 - Camera/sensor injection → not supported yet (Android virtual-scene is out of
   scope for now).
 - Remote/SSH device control → out of scope; the SDK + device are local to the host.
 
-## Prerequisites (surfaced by Orca)
+## Prerequisites (surfaced by Veer)
 
 - **Android Studio / Android SDK** installed, with `ANDROID_HOME` (or
-  `ANDROID_SDK_ROOT`) set. Orca also checks the per-OS default location
+  `ANDROID_SDK_ROOT`) set. Veer also checks the per-OS default location
   (`%LOCALAPPDATA%\Android\Sdk`, `~/Library/Android/sdk`, `~/Android/Sdk`).
 - `adb` + `emulator` on the SDK path; at least one **AVD** (create in Android
   Studio ▸ Device Manager) or a connected device with USB debugging.
 - A device that is **booted and `adb`-visible** for input/capability commands
   (an AVD that is still shutdown can be listed but must be booted first).
 
-Orca returns a clear message when the SDK is missing
+Veer returns a clear message when the SDK is missing
 (`Android SDK not found. Install Android Studio and set ANDROID_HOME.`).
 
 ## Mental model
 
 ```text
 ┌────────────────────────┐
-│ orca CLI (agents)      │  e.g. ORCA emulator tap 0.5 0.7 --device emulator-5554
+│ veer CLI (agents)      │  e.g. VEER emulator tap 0.5 0.7 --device emulator-5554
 └───────────┬────────────┘
             │ RPC
             ▼
@@ -80,36 +79,36 @@ Orca returns a clear message when the SDK is missing
                                                    Android emulator / device
 ```
 
-Orca owns backend routing and the per-worktree active-device registry. The
-Android backend converts Orca's normalized 0–1 coordinates to device pixels and
+Veer owns backend routing and the per-worktree active-device registry. The
+Android backend converts Veer's normalized 0–1 coordinates to device pixels and
 issues `adb shell input` events; AVD names resolve to running adb serials.
 
 ## Common operations
 
 Use `--json` for agent-friendly output. Coordinates are **normalized 0..1**
-(top-left origin) — never pixels; Orca converts using the live screen size.
+(top-left origin) — never pixels; Veer converts using the live screen size.
 
 | Goal                       | Command                                                        | Notes |
 |----------------------------|----------------------------------------------------------------|-------|
-| List devices + AVDs        | `ORCA emulator devices --json`                                 | Cross-platform; shows iOS + Android with a platform column, booted vs shutdown. |
-| Single tap                 | `ORCA emulator tap <x> <y> --device <serial>`                  | Normalized 0..1. Preferred for single taps. |
-| Swipe / gesture            | `ORCA emulator gesture '<json>' --device <serial>`             | adb approximates the path by its endpoints (start→end). |
-| Type text                  | `ORCA emulator type "user@example.com" --device <serial>`      | US ASCII; spaces handled. No newlines. |
-| Hardware button            | `ORCA emulator button back --device <serial>`                  | home, back, recents, power, volume_up, volume_down. |
-| Rotate                     | `ORCA emulator rotate landscape_left --device <serial>`        | Sets user_rotation (disables auto-rotate). |
-| Install an APK             | `ORCA emulator install ./app-debug.apk --reinstall --device <serial>` | `--reinstall` passes `-r`. |
-| Launch an app              | `ORCA emulator launch com.acme.app --activity .MainActivity --device <serial>` | Omit `--activity` to launch the default LAUNCHER activity. |
-| Grant a permission         | `ORCA emulator permissions grant com.acme.app android.permission.CAMERA --device <serial>` | grant / revoke / reset. |
-| Accessibility tree         | `ORCA emulator ax --device <serial> --json`                    | `uiautomator dump` parsed to a node tree. |
-| Logcat (one-shot)          | `ORCA emulator logcat --lines 200 --device <serial>`           | Dumps recent lines; parsed to entries. |
-| Raw adb shell              | `ORCA emulator exec --command "getprop ro.build.version.sdk" --device <serial>` | Runs `adb -s <serial> shell <command>`. |
+| List devices + AVDs        | `VEER emulator devices --json`                                 | Cross-platform; shows iOS + Android with a platform column, booted vs shutdown. |
+| Single tap                 | `VEER emulator tap <x> <y> --device <serial>`                  | Normalized 0..1. Preferred for single taps. |
+| Swipe / gesture            | `VEER emulator gesture '<json>' --device <serial>`             | adb approximates the path by its endpoints (start→end). |
+| Type text                  | `VEER emulator type "user@example.com" --device <serial>`      | US ASCII; spaces handled. No newlines. |
+| Hardware button            | `VEER emulator button back --device <serial>`                  | home, back, recents, power, volume_up, volume_down. |
+| Rotate                     | `VEER emulator rotate landscape_left --device <serial>`        | Sets user_rotation (disables auto-rotate). |
+| Install an APK             | `VEER emulator install ./app-debug.apk --reinstall --device <serial>` | `--reinstall` passes `-r`. |
+| Launch an app              | `VEER emulator launch com.acme.app --activity .MainActivity --device <serial>` | Omit `--activity` to launch the default LAUNCHER activity. |
+| Grant a permission         | `VEER emulator permissions grant com.acme.app android.permission.CAMERA --device <serial>` | grant / revoke / reset. |
+| Accessibility tree         | `VEER emulator ax --device <serial> --json`                    | `uiautomator dump` parsed to a node tree. |
+| Logcat (one-shot)          | `VEER emulator logcat --lines 200 --device <serial>`           | Dumps recent lines; parsed to entries. |
+| Raw adb shell              | `VEER emulator exec --command "getprop ro.build.version.sdk" --device <serial>` | Runs `adb -s <serial> shell <command>`. |
 
 ## Critical gotchas (teach agents)
 
-- **All coordinates are normalized 0..1** (top-left origin), never pixels — Orca
+- **All coordinates are normalized 0..1** (top-left origin), never pixels — Veer
   scales to the device's live resolution.
 - **Target a running device by its adb serial** (e.g. `emulator-5554`) shown in
-  `ORCA emulator devices`. An AVD name resolves only once that AVD is booted.
+  `VEER emulator devices`. An AVD name resolves only once that AVD is booted.
 - The device must be **booted and adb-visible** before input/capability commands;
   a shutdown AVD is listed with `state: shutdown` and must be started first
   (Android Studio, or `emulator @<avd>`).
@@ -127,7 +126,7 @@ Use `--json` for agent-friendly output. Coordinates are **normalized 0..1**
 
 - Explicit device: `--device <serial>` (recommended for Android today) or an AVD
   name once booted.
-- `ORCA emulator devices` is global (lists every backend's devices); other verbs
+- `VEER emulator devices` is global (lists every backend's devices); other verbs
   target the resolved device's backend automatically.
 - `--worktree <selector>` scopes to a worktree's active device once the
   attach/active flow lands for Android.
@@ -135,21 +134,21 @@ Use `--json` for agent-friendly output. Coordinates are **normalized 0..1**
 ## Examples (agent-friendly)
 
 ```text
-ORCA emulator devices --json
-ORCA emulator tap 0.5 0.85 --device emulator-5554 --json
-ORCA emulator type "hello world" --device emulator-5554 --json
-ORCA emulator button recents --device emulator-5554 --json
-ORCA emulator install ./app-debug.apk --reinstall --device emulator-5554 --json
-ORCA emulator launch com.acme.app --device emulator-5554 --json
-ORCA emulator permissions grant com.acme.app android.permission.CAMERA --device emulator-5554 --json
-ORCA emulator ax --device emulator-5554 --json
-ORCA emulator logcat --lines 100 --device emulator-5554 --json
+VEER emulator devices --json
+VEER emulator tap 0.5 0.85 --device emulator-5554 --json
+VEER emulator type "hello world" --device emulator-5554 --json
+VEER emulator button recents --device emulator-5554 --json
+VEER emulator install ./app-debug.apk --reinstall --device emulator-5554 --json
+VEER emulator launch com.acme.app --device emulator-5554 --json
+VEER emulator permissions grant com.acme.app android.permission.CAMERA --device emulator-5554 --json
+VEER emulator ax --device emulator-5554 --json
+VEER emulator logcat --lines 100 --device emulator-5554 --json
 ```
 
 ## Next action
 
-Run `ORCA emulator devices --json` to find a booted device, then drive it with
+Run `VEER emulator devices --json` to find a booted device, then drive it with
 `--device <serial>` while watching the emulator window.
 
-See also: `orca-emulator` (iOS, macOS-only), `orca-cli` (terminals, worktrees,
+See also: `veer-emulator` (iOS, macOS-only), `veer-cli` (terminals, worktrees,
 built-in browser), `computer-use` (desktop UI outside the emulator).

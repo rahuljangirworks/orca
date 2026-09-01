@@ -11,9 +11,9 @@ const CANONICAL_GUIDE_NAMES = [
   'computer-use',
   'linear-tickets',
   'veer-cli',
-  'orca-emulator',
-  'orca-emulator-android',
-  'orca-linear',
+  'veer-emulator',
+  'veer-emulator-android',
+  'veer-linear',
   'veer-per-workspace-env',
   'orchestration'
 ]
@@ -24,9 +24,9 @@ const GUIDE_ALIASES = {
   'computer-use': [],
   'linear-tickets': [],
   'veer-cli': ['orca-cli'],
-  'orca-emulator': [],
-  'orca-emulator-android': [],
-  'orca-linear': [],
+  'veer-emulator': ['orca-emulator'],
+  'veer-emulator-android': ['orca-emulator-android'],
+  'veer-linear': ['orca-linear'],
   'veer-per-workspace-env': ['orca-per-workspace-env'],
   orchestration: []
 }
@@ -40,9 +40,9 @@ const STUB_TOPICS = [
   'computer-use',
   'linear-tickets',
   'veer-cli',
-  'orca-emulator',
-  'orca-emulator-android',
-  'orca-linear',
+  'veer-emulator',
+  'veer-emulator-android',
+  'veer-linear',
   'veer-per-workspace-env',
   'orchestration'
 ]

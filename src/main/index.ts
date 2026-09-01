@@ -392,7 +392,7 @@ import {
 } from './network/proxy-settings'
 import { preserveAgentAuthBeforeRestart } from './agent-auth-restart-preservation'
 import { CliInstaller } from './cli/cli-installer'
-import { installLinuxBareOrcaDispatcher } from './cli/linux-bare-orca-dispatcher'
+import { installLinuxVeerDispatcher } from './cli/linux-veer-dispatcher'
 import { reconcileManagedWslCliRegistrations } from './cli/wsl-cli-registration-reconciliation'
 
 let mainWindow: BrowserWindow | null = null
@@ -3187,14 +3187,7 @@ void app.whenReady().then(async () => {
 
   logStartupMilestone('services-initialized')
 
-  // Veer: Start periodic update checker (uses Veer Platform API)
-  if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
-    void import('./updates/check-updates').then(({ startPeriodicUpdateChecker }) => {
-      void startPeriodicUpdateChecker().catch((error) => {
-        console.warn('[Veer Updates] Failed to start periodic update checker:', error)
-      })
-    })
-  }
+  // Veer Platform update checks are manual-only: a personal local build must not phone home at startup.
 
   await ensureMainI18n()
   await setMainUiLanguage(store.getSettings().uiLanguage)
@@ -3405,7 +3398,7 @@ void app.whenReady().then(async () => {
           }
         }).install()
         console.log(
-          `[serve] orca CLI install: ${cliStatus.state}${cliStatus.commandPath ? ` (${cliStatus.commandPath})` : ''}`
+          `[serve] Veer CLI install: ${cliStatus.state}${cliStatus.commandPath ? ` (${cliStatus.commandPath})` : ''}`
         )
       } catch (error) {
         console.warn(
@@ -3414,14 +3407,15 @@ void app.whenReady().then(async () => {
         )
       }
     }
-    // Why: Linux CLI installs as `orca-ide`, but the Claude Team launcher invokes bare `orca`; drop a ~/.local/bin dispatcher (ahead of /usr/bin) so it resolves. Best-effort.
+    // Why: Linux installs the canonical `veer` dispatcher; keep the bare `orca`
+    // relay name available only for legacy Claude Team integrations. Best-effort.
     if (process.platform === 'linux' && app.isPackaged && process.resourcesPath) {
       try {
-        const dispatcher = await installLinuxBareOrcaDispatcher({
+        const dispatcher = await installLinuxVeerDispatcher({
           resourcesPath: process.resourcesPath
         })
         console.log(
-          `[serve] bare orca dispatcher ${dispatcher.state}: ${dispatcher.dispatcherPath}` +
+          `[serve] bare Veer dispatcher ${dispatcher.state}: ${dispatcher.dispatcherPath}` +
             `${dispatcher.target ? ` -> ${dispatcher.target}` : ''}`
         )
       } catch (error) {

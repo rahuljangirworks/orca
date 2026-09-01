@@ -1,9 +1,7 @@
-export function getOrcaCliCommandNameForPlatform(platform: NodeJS.Platform): string {
-  if (platform === 'linux') {
-    return 'orca-ide'
-  }
-  if (platform === 'win32') {
-    return 'orca.cmd'
-  }
-  return 'orca'
-}
+// Compatibility module for upstream imports. New code belongs in the Veer
+// named module; retain this path until the upstream delta can be retired.
+export { getVeerCliCommandNameForPlatform } from './veer-cli-command-name'
+import { getVeerCliCommandNameForPlatform } from './veer-cli-command-name'
+
+/** @deprecated Use getVeerCliCommandNameForPlatform. */
+export const getOrcaCliCommandNameForPlatform = getVeerCliCommandNameForPlatform

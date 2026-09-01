@@ -165,7 +165,7 @@ async function getCreateRepoSelector(
   }
   throw new RuntimeClientError(
     'invalid_argument',
-    'Missing repo selector. Pass --repo or run from inside an Orca-managed worktree.'
+    'Missing repo selector. Pass --repo or run from inside an Veer-managed worktree.'
   )
 }
 
@@ -221,7 +221,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     ) {
       try {
         // Why: agent shells can lose ORCA_TERMINAL_HANDLE while still running
-        // inside an Orca worktree. Cwd keeps CLI-created children nestable and
+        // inside an Veer worktree. Cwd keeps CLI-created children nestable and
         // lets create infer the repo for the common current-workspace case.
         cwdParentWorktree = await resolveCurrentWorktreeSelector(cwd, client)
       } catch {
@@ -289,7 +289,7 @@ export const WORKTREE_HANDLERS: Record<string, CommandHandler> = {
     if (!hostId) {
       throw new RuntimeClientError(
         'worktree_host_unresolved',
-        'Orca cannot tell which host owns this workspace. Refresh projects and try again.'
+        'Veer cannot tell which host owns this workspace. Refresh projects and try again.'
       )
     }
     const result = await client.call<RuntimeWorktreeRemoveResult>('worktree.rm', {

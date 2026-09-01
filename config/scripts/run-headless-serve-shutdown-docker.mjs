@@ -70,7 +70,7 @@ try {
     [
       '7z x /input/orca.AppImage -o/artifacts/root -y >/dev/null',
       launcherExecOverlay
-        ? "sed -i 's/^ELECTRON_RUN_AS_NODE=1 /export ELECTRON_RUN_AS_NODE=1\\nexec /' /artifacts/root/resources/bin/orca-ide"
+        ? "sed -i 's/^ELECTRON_RUN_AS_NODE=1 /export ELECTRON_RUN_AS_NODE=1\\nexec /' /artifacts/root/resources/bin/veer-ide"
         : ':',
       'chmod -R a+rX /artifacts/root'
     ].join(' && ')

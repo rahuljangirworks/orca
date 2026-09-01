@@ -44,7 +44,7 @@ import { main } from './index'
 import { okFixture, queueFixtures } from './test-fixtures'
 import { useWorktreeAwarenessEnvironment } from './index-test-harness'
 
-describe('orca cli worktree awareness', () => {
+describe('veer cli worktree awareness', () => {
   useWorktreeAwarenessEnvironment({
     callMock,
     serveOrcaAppMock,
@@ -71,7 +71,7 @@ describe('orca cli worktree awareness', () => {
             worktreeId: 'repo::/tmp/repo/feature',
             worktreeName: 'feature',
             repoId: 'repo',
-            repoName: 'Orca',
+            repoName: 'Veer',
             cpu: 2.5,
             memory: 1024 * 1024,
             sessions: [
@@ -136,7 +136,7 @@ describe('orca cli worktree awareness', () => {
             worktreeId: 'repo::/tmp/repo/feature',
             worktreeName: 'feature',
             repoId: 'repo',
-            repoName: 'Orca',
+            repoName: 'Veer',
             cpu: 2.5,
             memory: 1024 * 1024,
             privateMemory: 14 * 1024 * 1024,

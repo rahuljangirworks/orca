@@ -153,8 +153,8 @@ export const FEATURE_WALL_TILES: readonly FeatureWallTile[] = [
   {
     id: 'tile-09',
     kind: 'media',
-    title: 'Orca CLI',
-    caption: 'Agents can drive Orca too: create workspaces, snapshot screens, click, and fill.',
+    title: 'Veer CLI',
+    caption: 'Agents can drive Veer too: create workspaces, snapshot screens, click, and fill.',
     gifPath: 'tile-09.gif',
     posterPath: 'tile-09.poster.jpg',
     recordedAtPath: 'tile-09.recorded-at.json',

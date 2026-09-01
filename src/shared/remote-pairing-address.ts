@@ -99,7 +99,7 @@ export function parseHostAccessLink(input: string): ParseHostAccessLinkResult {
     return {
       ok: false,
       kind: 'mobile-only',
-      message: 'This link grants mobile-only access. Generate a link for another Orca client.'
+      message: 'This link grants mobile-only access. Generate a link for another Veer client.'
     }
   }
   let endpoint: URL

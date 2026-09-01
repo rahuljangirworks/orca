@@ -45,7 +45,7 @@ async function loadRuntimeClientClass(): Promise<typeof RuntimeClient> {
   return (await import('./runtime-client.js')).RuntimeClient
 }
 
-// Why: the SSH relay bridge executes this CLI on the Orca host while the
+// Why: the SSH relay bridge executes this CLI on the Veer host while the
 // caller's shell cwd lives on the remote machine (which cannot be chdir'd
 // into). ORCA_CLI_CWD carries that remote cwd so cwd-based selectors like
 // `--worktree active` resolve against the caller's directory.
@@ -87,7 +87,7 @@ export async function main(
 
   try {
     // Why: CLI syntax and flag errors should be reported before any runtime
-    // lookup so users do not get misleading "Orca is not running" failures for
+    // lookup so users do not get misleading "Veer is not running" failures for
     // simple command typos or unsupported flags.
     validateCommandAndFlags(COMMAND_SPECS, parsed)
     const RuntimeClientClass = await loadRuntimeClientClass()
@@ -164,8 +164,8 @@ export async function main(
 
 async function runClaudeTeams(argv: string[], cwd: string): Promise<void> {
   try {
-    // Why: everything after `orca claude-teams` belongs to Claude Code, not
-    // Orca's own flag parser, so new Claude flags work without Orca changes.
+    // Why: everything after `veer claude-teams` belongs to Claude Code, not
+    // Veer's own flag parser, so new Claude flags work without Veer changes.
     const client = new (await loadRuntimeClientClass())(undefined, undefined, null, null)
     await dispatch(['claude-teams'], {
       flags: new Map(),

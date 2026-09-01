@@ -6,7 +6,11 @@ import { homedir } from 'node:os'
 import { isAbsolute, join } from 'node:path'
 import type { Store } from '../../persistence'
 import type { Repo } from '../../../shared/repo-types'
-import { DEFAULT_REPO_BADGE_COLOR, getDefaultWorkspaceDir } from '../../../shared/constants'
+import {
+  DEFAULT_REPO_BADGE_COLOR,
+  getDefaultWorkspaceDir,
+  getLegacyDefaultWorkspaceDir
+} from '../../../shared/constants'
 import { normalizeRuntimePathForComparison } from '../../../shared/cross-platform-path'
 import { LOCAL_EXECUTION_HOST_ID } from '../../../shared/execution-host'
 import { getEffectiveHostSetting } from '../../../shared/host-setting-overrides'
@@ -40,7 +44,7 @@ async function isGitAvailable(): Promise<boolean> {
  * override for the local host, which is the only scope this handler answers for.
  *
  * Why the untouched default does not count: `workspaceDir` is never blank -- new
- * installs seed it with `~/orca/workspaces`. Treating that seeded value as a choice
+ * installs seed it with `~/veer/workspaces`. Treating that seeded value as a choice
  * would silently relocate every existing user's projects into the worktree root,
  * where each project would then host its own worktrees inside its working tree.
  */
@@ -53,13 +57,14 @@ function getDefaultCreateProjectParent(store: Store): string {
     'defaultWorktreeLocation',
     settings.workspaceDir ?? ''
   ).trim()
-  const isUntouchedDefault =
-    normalizeRuntimePathForComparison(configured) ===
-    normalizeRuntimePathForComparison(getDefaultWorkspaceDir(home))
+  const normalizedConfigured = normalizeRuntimePathForComparison(configured)
+  const isUntouchedDefault = [getDefaultWorkspaceDir(home), getLegacyDefaultWorkspaceDir(home)]
+    .map(normalizeRuntimePathForComparison)
+    .includes(normalizedConfigured)
   if (configured && !isUntouchedDefault) {
     return configured
   }
-  return join(home, 'orca', 'projects')
+  return join(home, 'veer', 'projects')
 }
 
 export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: Store): void {
@@ -167,7 +172,7 @@ export function registerRepoCreationHandlers(mainWindow: BrowserWindow, store: S
       let createdDir = false
       let targetExists = false
       try {
-        // Why: the default parent (~/orca/projects) may not exist on a fresh install; create only the parent before probing the target.
+        // Why: the default parent (~/veer/projects) may not exist on a fresh install; create only the parent before probing the target.
         await mkdir(parentPath, { recursive: true })
         await access(targetPath)
         targetExists = true

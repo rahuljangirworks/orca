@@ -28,7 +28,7 @@ vi.mock('../runtime-client', async () => {
 import { main } from '../index'
 import { okFixture, queueFixtures } from '../test-fixtures'
 
-describe('orca emulator CLI handlers', () => {
+describe('veer emulator CLI handlers', () => {
   const originalWorkspaceId = process.env.ORCA_WORKSPACE_ID
   const originalWorktreeId = process.env.ORCA_WORKTREE_ID
 
@@ -89,7 +89,7 @@ describe('orca emulator CLI handlers', () => {
     )
   })
 
-  it('uses the folder workspace exported by the current Orca terminal', async () => {
+  it('uses the folder workspace exported by the current Veer terminal', async () => {
     process.env.ORCA_WORKSPACE_ID = 'folder:folder-1'
     delete process.env.ORCA_WORKTREE_ID
     callMock.mockResolvedValue(
@@ -109,7 +109,7 @@ describe('orca emulator CLI handlers', () => {
     )
   })
 
-  it('uses the current git worktree exported by the Orca terminal', async () => {
+  it('uses the current git worktree exported by the Veer terminal', async () => {
     process.env.ORCA_WORKSPACE_ID = 'folder:stale-parent'
     process.env.ORCA_WORKTREE_ID = 'repo-1::/repo/project '
     callMock.mockResolvedValue(

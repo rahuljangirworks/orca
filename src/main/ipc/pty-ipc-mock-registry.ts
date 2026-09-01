@@ -151,8 +151,8 @@ export const classifyErrorModuleMock = () => ({
 
 // Why: the real ensure writes to process.resourcesPath (absent under vitest); env assembly only needs the returned dir path.
 export const linuxCliShimModuleMock = () => ({
-  ensureLinuxTerminalOrcaCliShimDir: (options: { userDataPath: string }) =>
-    join(options.userDataPath, 'linux-orca-cli-shim')
+  ensureLinuxTerminalVeerCliShimDir: (options: { userDataPath: string }) =>
+    join(options.userDataPath, 'linux-veer-cli-shim')
 })
 
 export const ptyRegistryModuleMock = () => ({

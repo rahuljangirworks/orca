@@ -6,11 +6,11 @@ import { buildAppImageCliWrapper, quoteShell } from './appimage-cli-wrapper'
 import { getBundledLauncherPath } from './cli-installer'
 
 // Why: marks a dispatcher this function wrote so repeat serve starts overwrite
-// our own file idempotently but never clobber a user's own ~/.local/bin/orca.
-const DISPATCHER_MARKER = '# orca-serve-bare-orca-dispatcher'
+// our own file idempotently but never clobber a user's own ~/.local/bin/veer.
+const DISPATCHER_MARKER = '# veer-serve-dispatcher'
 
-export type LinuxBareOrcaDispatcherOptions = {
-  /** Packaged app resources root; the bundled `orca-ide` launcher lives under it. */
+export type LinuxVeerDispatcherOptions = {
+  /** Packaged app resources root; the bundled `veer-ide` launcher lives under it. */
   resourcesPath: string
   /** Test seam — defaults to the real home directory. */
   homePath?: string
@@ -18,29 +18,21 @@ export type LinuxBareOrcaDispatcherOptions = {
   appImagePath?: string | null
 }
 
-export type LinuxBareOrcaDispatcherState =
-  | 'installed'
-  | 'skipped-foreign'
-  | 'skipped-launcher-missing'
+export type LinuxVeerDispatcherState = 'installed' | 'skipped-foreign' | 'skipped-launcher-missing'
 
-export type LinuxBareOrcaDispatcherResult = {
-  state: LinuxBareOrcaDispatcherState
+export type LinuxVeerDispatcherResult = {
+  state: LinuxVeerDispatcherState
   dispatcherPath: string
-  /** What the dispatcher execs: the stable AppImage, or the bundled orca-ide. */
+  /** What the dispatcher execs: the stable AppImage, or the bundled veer-ide. */
   target: string | null
 }
 
-// Why: on Linux the CLI installs as `orca-ide`, not bare `orca`, to avoid
-// shadowing GNOME Orca's /usr/bin/orca. But the Claude Team launcher typed into
-// the initial managed terminal invokes the literal `orca claude-teams`, so a
-// headless serve box needs a bare-`orca` dispatcher on the managed-terminal PATH
-// (~/.local/bin, which patchPackagedProcessPath puts ahead of /usr/bin). It is a
-// plain file, not a managed symlink, so CliInstaller.removeLegacyLinuxCommandIfManaged
-// never reclaims it.
-export async function installLinuxBareOrcaDispatcher(
-  options: LinuxBareOrcaDispatcherOptions
-): Promise<LinuxBareOrcaDispatcherResult> {
-  const dispatcherPath = join(options.homePath ?? homedir(), '.local', 'bin', 'orca')
+// Why: a headless Veer server still needs the canonical CLI on its managed
+// terminal PATH before a GUI user has installed it globally.
+export async function installLinuxVeerDispatcher(
+  options: LinuxVeerDispatcherOptions
+): Promise<LinuxVeerDispatcherResult> {
+  const dispatcherPath = join(options.homePath ?? homedir(), '.local', 'bin', 'veer')
   const appImagePath = options.appImagePath ?? process.env.APPIMAGE ?? null
 
   const resolved = resolveDispatcherScript(options.resourcesPath, appImagePath)
@@ -49,7 +41,7 @@ export async function installLinuxBareOrcaDispatcher(
   }
 
   // Why: only (re)write a dispatcher we previously created; leave a user's own
-  // `orca` untouched rather than silently clobbering it on every serve start.
+  // `veer` untouched rather than silently clobbering it on every serve start.
   if (existsSync(dispatcherPath) && !(await isOwnedDispatcher(dispatcherPath))) {
     return { state: 'skipped-foreign', dispatcherPath, target: resolved.target }
   }
@@ -60,10 +52,10 @@ export async function installLinuxBareOrcaDispatcher(
   return { state: 'installed', dispatcherPath, target: resolved.target }
 }
 
-/** Bare-`orca` script that execs the Orca CLI: the stable AppImage when running
- *  from one, otherwise the bundled `orca-ide` launcher. Shared by the serve
+/** `veer` script that execs the Veer CLI: the stable AppImage when running
+ *  from one, otherwise the bundled `veer-ide` launcher. Shared by the serve
  *  dispatcher and the managed-terminal PATH shim. */
-export function buildBareOrcaCliScript(
+export function buildVeerCliScript(
   resourcesPath: string,
   appImagePath: string | null
 ): { script: string; target: string } | null {
@@ -91,7 +83,7 @@ function resolveDispatcherScript(
   resourcesPath: string,
   appImagePath: string | null
 ): { script: string; target: string } | null {
-  const resolved = buildBareOrcaCliScript(resourcesPath, appImagePath)
+  const resolved = buildVeerCliScript(resourcesPath, appImagePath)
   return resolved && { script: withMarker(resolved.script), target: resolved.target }
 }
 

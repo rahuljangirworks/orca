@@ -1,5 +1,6 @@
+/* eslint-disable max-lines -- Agent launch matrix keeps platform and compatibility policy together. */
 import type { TuiAgent } from './tui-agent'
-import { getOrcaCliCommandNameForPlatform } from './orca-cli-command-name'
+import { getVeerCliCommandNameForPlatform } from './veer-cli-command-name'
 
 export type AgentPromptInjectionMode =
   | 'argv'
@@ -28,6 +29,8 @@ export type TuiAgentConfig = {
   launchCmd: string
   /** Platform-specific launch command when the public binary name differs. */
   launchCmdByPlatform?: Partial<Record<NodeJS.Platform, string>>
+  /** Relay-compatible command for remote hosts that still expose the upstream shim. */
+  remoteLaunchCmd?: string
   expectedProcess: string
   promptInjectionMode: AgentPromptInjectionMode
   /** Option terminator required before positional prompts that may look like CLI syntax. */
@@ -62,17 +65,18 @@ export const TUI_AGENT_CONFIG: Record<TuiAgent, TuiAgentConfig> = {
     draftPromptFlag: '--prefill'
   },
   'claude-agent-teams': {
-    // Why: an Orca-provided launch mode, not a separate binary; detection follows the Orca CLI.
-    detectCmd: 'orca',
-    detectCmdAliases: ['orca-dev', 'orca-ide'],
-    // Why: require Claude too so fresh installs (Orca shim always present) don't report Agent Teams without an agent CLI.
+    // Why: a Veer-provided launch mode, not a separate binary; detection follows the Veer CLI.
+    detectCmd: 'veer',
+    detectCmdAliases: ['veer-dev', 'veer-ide', 'orca', 'orca-dev', 'orca-ide'],
+    // Why: require Claude too so fresh installs (Veer shim always present) don't report Agent Teams without an agent CLI.
     detectRequiredCommands: ['claude'],
     // Why: Windows/WSL use Claude's in-process Agent Teams fallback, not this Orca native-pane/tmux-shim wrapper.
     detectUnsupportedRuntimes: ['win32', 'wsl'],
-    launchCmd: 'orca claude-teams',
+    launchCmd: 'veer claude-teams',
+    remoteLaunchCmd: 'orca claude-teams',
     launchCmdByPlatform: {
-      linux: `${getOrcaCliCommandNameForPlatform('linux')} claude-teams`,
-      win32: `${getOrcaCliCommandNameForPlatform('win32')} claude-teams`
+      linux: `${getVeerCliCommandNameForPlatform('linux')} claude-teams`,
+      win32: `${getVeerCliCommandNameForPlatform('win32')} claude-teams`
     },
     expectedProcess: 'claude',
     promptInjectionMode: 'stdin-after-start'
@@ -354,9 +358,9 @@ export function getTuiAgentLaunchCommand(
   platform: NodeJS.Platform,
   opts?: { isRemote?: boolean }
 ): string {
-  // Why: local-only orca-ide rename (avoids GNOME Orca clash) must not leak to Linux remotes, whose relay shim is always `orca`.
+  // Why: local-only veer-ide launcher must not leak to Linux remotes, whose relay shim is still `orca`.
   if (opts?.isRemote && platform === 'linux') {
-    return config.launchCmd
+    return config.remoteLaunchCmd ?? config.launchCmd
   }
   return config.launchCmdByPlatform?.[platform] ?? config.launchCmd
 }

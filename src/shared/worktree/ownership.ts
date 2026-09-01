@@ -100,12 +100,19 @@ function buildWslWorkspaceLayouts(
   if (!linuxHome) {
     return []
   }
-  const root = `//wsl.localhost/${parsed.distro}${linuxHome}/orca/workspaces`
+  // New WSL worktrees use Veer; retain the former Orca root so existing
+  // checkouts remain classified and removable after the branding migration.
+  const roots = [
+    `//wsl.localhost/${parsed.distro}${linuxHome}/veer/workspaces`,
+    `//wsl.localhost/${parsed.distro}${linuxHome}/orca/workspaces`
+  ]
   const historicalModes = (settings.workspaceDirHistory ?? []).map(
     (layout) => layout.nestWorkspaces
   )
   const modes = [settings.nestWorkspaces, ...historicalModes]
-  return [...new Set(modes)].map((nestWorkspaces) => ({ path: root, nestWorkspaces }))
+  return roots.flatMap((path) =>
+    [...new Set(modes)].map((nestWorkspaces) => ({ path, nestWorkspaces }))
+  )
 }
 
 export function classifyWorktreeOwnership(args: {

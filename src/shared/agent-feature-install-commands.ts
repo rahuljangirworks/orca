@@ -9,13 +9,22 @@ export const VEER_CLI_SKILL_NAME = 'veer-cli'
 export const COMPUTER_USE_SKILL_NAME = 'computer-use'
 export const ORCHESTRATION_SKILL_NAME = 'orchestration'
 export const VEER_PER_WORKSPACE_ENV_SKILL_NAME = 'veer-per-workspace-env'
+export const VEER_LINEAR_SKILL_NAME = 'veer-linear'
+export const ORCA_LINEAR_LEGACY_SKILL_NAME = 'orca-linear'
 /** @deprecated Use VEER_CLI_SKILL_NAME. */
 export const ORCA_CLI_SKILL_NAME = VEER_CLI_SKILL_NAME
 /** @deprecated Use VEER_PER_WORKSPACE_ENV_SKILL_NAME. */
 export const EPHEMERAL_VMS_SKILL_NAME = VEER_PER_WORKSPACE_ENV_SKILL_NAME
-export const ORCA_LINEAR_SKILL_NAME = 'orca-linear'
+/** @deprecated Use VEER_LINEAR_SKILL_NAME. */
+export const ORCA_LINEAR_SKILL_NAME = ORCA_LINEAR_LEGACY_SKILL_NAME
 export const LINEAR_TICKETS_SKILL_NAME = 'linear-tickets'
-export const LINEAR_AGENT_SKILL_NAMES = [ORCA_LINEAR_SKILL_NAME, LINEAR_TICKETS_SKILL_NAME] as const
+// The first entry is the canonical Veer name. The legacy entries keep existing
+// global installs detectable so users can update without reinstalling first.
+export const LINEAR_AGENT_SKILL_NAMES = [
+  VEER_LINEAR_SKILL_NAME,
+  ORCA_LINEAR_LEGACY_SKILL_NAME,
+  LINEAR_TICKETS_SKILL_NAME
+] as const
 
 // Why: `yes` and `agents` default off so every Settings/onboarding string a human
 // pastes keeps its interactive prompts and the CLI's own agent detection. Only an
@@ -138,12 +147,17 @@ export const ORCA_CLI_ORCHESTRATION_SKILL_INSTALL_COMMAND = buildAgentFeatureSki
   ORCHESTRATION_SKILL_NAME
 ])
 
-export const ORCA_LINEAR_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand([
-  ORCA_LINEAR_SKILL_NAME
+export const VEER_LINEAR_SKILL_INSTALL_COMMAND = buildAgentFeatureSkillInstallCommand([
+  VEER_LINEAR_SKILL_NAME
 ])
 
-export const ORCA_LINEAR_SKILL_UPDATE_COMMAND =
-  buildAgentFeatureSkillUpdateCommand(ORCA_LINEAR_SKILL_NAME)
+export const VEER_LINEAR_SKILL_UPDATE_COMMAND =
+  buildAgentFeatureSkillUpdateCommand(VEER_LINEAR_SKILL_NAME)
+
+/** @deprecated Use VEER_LINEAR_SKILL_INSTALL_COMMAND. */
+export const ORCA_LINEAR_SKILL_INSTALL_COMMAND = VEER_LINEAR_SKILL_INSTALL_COMMAND
+/** @deprecated Use VEER_LINEAR_SKILL_UPDATE_COMMAND. */
+export const ORCA_LINEAR_SKILL_UPDATE_COMMAND = VEER_LINEAR_SKILL_UPDATE_COMMAND
 
 export const LINEAR_TICKETS_SKILL_UPDATE_COMMAND =
   buildAgentFeatureSkillUpdateCommand(LINEAR_TICKETS_SKILL_NAME)

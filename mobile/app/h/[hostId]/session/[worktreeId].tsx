@@ -715,6 +715,17 @@ function FileReader({
   return renderSourceText(doc.content)
 }
 
+function scheduleSessionTimer(
+  timers: ReturnType<typeof setTimeout>[],
+  isDisposed: () => boolean,
+  fn: () => void,
+  ms: number
+): void {
+  if (!isDisposed()) {
+    timers.push(setTimeout(fn, ms))
+  }
+}
+
 export default function SessionScreen() {
   const {
     hostId,
@@ -2649,12 +2660,6 @@ export default function SessionScreen() {
     initializedHandlesRef.current.clear()
     let disposed = false
     const timers: ReturnType<typeof setTimeout>[] = []
-    function addTimer(fn: () => void, ms: number) {
-      if (disposed) {
-        return
-      }
-      timers.push(setTimeout(fn, ms))
-    }
     void (async () => {
       const reportActivationOutcome = (response: RpcSuccess | null): void => {
         if (!disposed && response && headlessActivationNeedsHostRenderer(response.result)) {
@@ -2683,29 +2688,51 @@ export default function SessionScreen() {
       if (disposed) {
         return
       }
-      addTimer(() => void fetchTerminals({ allowEmptyLoaded: false }), 750)
-      addTimer(() => void fetchTerminals({ allowEmptyLoaded: true }), 1500)
+      scheduleSessionTimer(
+        timers,
+        () => disposed,
+        () => void fetchTerminals({ allowEmptyLoaded: false }),
+        750
+      )
+      scheduleSessionTimer(
+        timers,
+        () => disposed,
+        () => void fetchTerminals({ allowEmptyLoaded: true }),
+        1500
+      )
       if (client && created === '1' && !isFloatingWorkspaceRoute) {
-        addTimer(() => {
-          if (activeHandleRef.current) {
-            return
-          }
-          void (async () => {
-            const activationResponse = await client
-              .sendRequest('worktree.activate', {
-                worktree: `id:${worktreeId}`,
-                notifyClients: false,
-                navigation: 'caller'
-              })
-              .catch(() => null)
-            reportActivationOutcome(activationResponse?.ok ? activationResponse : null)
-            if (disposed) {
+        scheduleSessionTimer(
+          timers,
+          () => disposed,
+          () => {
+            if (activeHandleRef.current) {
               return
             }
-            await fetchTerminals({ allowEmptyLoaded: true })
-            addTimer(() => void fetchTerminals({ allowEmptyLoaded: true }), 750)
-          })()
-        }, 1800)
+            void (async () => {
+              const activationResponse = await client
+                .sendRequest('worktree.activate', {
+                  worktree: `id:${worktreeId}`,
+                  notifyClients: false,
+                  navigation: 'caller'
+                })
+                .catch(() => null)
+              reportActivationOutcome(activationResponse?.ok ? activationResponse : null)
+              if (disposed) {
+                return
+              }
+              await fetchTerminals({ allowEmptyLoaded: true })
+              if (!disposed) {
+                scheduleSessionTimer(
+                  timers,
+                  () => disposed,
+                  () => void fetchTerminals({ allowEmptyLoaded: true }),
+                  750
+                )
+              }
+            })()
+          },
+          1800
+        )
       }
     })()
     return () => {

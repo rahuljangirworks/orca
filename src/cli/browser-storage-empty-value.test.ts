@@ -38,7 +38,7 @@ import { main } from './index'
 import { okFixture, queueFixtures } from './test-fixtures'
 
 // Why: StorageKeyValue requires a non-empty key but accepts any string value, empty included.
-describe('orca cli storage set preserves an empty value', () => {
+describe('veer cli storage set preserves an empty value', () => {
   beforeEach(() => {
     callMock.mockReset()
     process.exitCode = undefined

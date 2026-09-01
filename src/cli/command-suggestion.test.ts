@@ -12,19 +12,19 @@ const specs: CommandSpec[] = [
     ],
     destructive: true,
     summary: 'Remove a worktree',
-    usage: 'orca worktree rm',
+    usage: 'veer worktree rm',
     allowedFlags: []
   },
   {
     path: ['worktree', 'list'],
     summary: 'List worktrees',
-    usage: 'orca worktree list',
+    usage: 'veer worktree list',
     allowedFlags: []
   },
   {
     path: ['terminal', 'send'],
     summary: 'Send input',
-    usage: 'orca terminal send',
+    usage: 'veer terminal send',
     allowedFlags: []
   },
   {
@@ -33,7 +33,7 @@ const specs: CommandSpec[] = [
     path: ['emulator', 'kill'],
     destructive: true,
     summary: 'Kill the emulator',
-    usage: 'orca emulator kill',
+    usage: 'veer emulator kill',
     allowedFlags: []
   }
 ]
@@ -118,7 +118,7 @@ describe('unknownCommandData', () => {
     const data = unknownCommandData(specs, ['worktree', 'remov'])
     expect(data.suggestions).toContain('worktree rm')
     expect(data.nextSteps[0]).toContain('Did you mean')
-    expect(data.nextSteps[0]).toContain('orca worktree rm')
+    expect(data.nextSteps[0]).toContain('veer worktree rm')
   })
 
   it('produces empty nextSteps when nothing is close', () => {

@@ -43,7 +43,7 @@ case "$entrypoint_kind" in
   app) entrypoint=("$app_root/AppRun" --no-sandbox) ;;
   launcher)
     export ELECTRON_DISABLE_SANDBOX=1
-    entrypoint=("$app_root/resources/bin/orca-ide")
+    entrypoint=("$app_root/resources/bin/veer-ide")
     ;;
   *) echo "unsupported entrypoint: $entrypoint_kind" >&2; exit 64 ;;
 esac
@@ -104,7 +104,7 @@ fi
 
 signal_target_pid=$app_pid
 if [[ "$signal_target_kind" == serving-electron ]]; then
-  signal_target_pid=$(awk '/\/orca-ide .* --serve / {print $1; exit}' <<<"$tree_snapshot")
+  signal_target_pid=$(awk '/\/veer-ide .* --serve / {print $1; exit}' <<<"$tree_snapshot")
   [[ -n "$signal_target_pid" ]] || { echo "FAIL: serving Electron process not found" >&2; exit 1; }
 elif [[ "$signal_target_kind" != app ]]; then
   echo "unsupported signal target: $signal_target_kind" >&2
@@ -148,7 +148,7 @@ for pid in "${tree_pids[@]}"; do
   fi
 done
 owned_residue=$(ps -eo pid=,ppid=,stat=,args= | awk -v state="$state_dir" \
-  '($0 ~ state || $0 ~ /\/artifacts\/root\/orca-ide/ || $0 ~ /[X]vfb :99 /) && $0 !~ /awk -v state=/ {print}' || true)
+  '($0 ~ state || $0 ~ /\/artifacts\/root\/veer-ide/ || $0 ~ /[X]vfb :99 /) && $0 !~ /awk -v state=/ {print}' || true)
 
 canary_alive=false
 if kill -0 "$canary_pid" 2>/dev/null \

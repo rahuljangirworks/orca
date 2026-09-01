@@ -12,14 +12,17 @@ export function appendOrcaRpcOutput(output, chunk, bytes, limit = MAX_ORCA_RPC_O
   }
 }
 
-export function resolveOrcaCliCommand({ env = process.env, platform = process.platform } = {}) {
+export function resolveOrcaCliCommand({ env = process.env, _platform = process.platform } = {}) {
+  if (env.VEER_CLI_COMMAND?.trim()) {
+    return env.VEER_CLI_COMMAND.trim()
+  }
   if (env.ORCA_CLI_COMMAND?.trim()) {
     return env.ORCA_CLI_COMMAND.trim()
   }
   if (env.ORCA_DEV_REPO_ROOT) {
-    return 'orca-dev'
+    return 'veer-dev'
   }
-  return platform === 'linux' ? 'orca-ide' : 'orca'
+  return 'veer'
 }
 
 export function resolveOrcaCliInvocation({

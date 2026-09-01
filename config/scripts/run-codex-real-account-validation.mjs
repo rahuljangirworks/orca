@@ -360,10 +360,13 @@ function validationCliCommand() {
   if (process.env.ORCA_VALIDATION_CLI) {
     return process.env.ORCA_VALIDATION_CLI
   }
+  if (process.env.VEER_CLI_COMMAND) {
+    return process.env.VEER_CLI_COMMAND
+  }
   if (process.env.ORCA_CLI_COMMAND) {
     return process.env.ORCA_CLI_COMMAND
   }
-  return process.platform === 'linux' ? 'orca-ide' : 'orca'
+  return 'veer'
 }
 
 async function probeTerminalEnvironment(terminalHandle, launchEnv) {

@@ -75,24 +75,24 @@ describe('bundled skill guide generator', () => {
 
   it('keeps pre-guide fallback useful and read-only for every converted domain', async () => {
     const expectedFallbackCommands = {
-      'computer-use': ['ORCA computer capabilities --json', 'ORCA computer list-apps --json'],
-      'linear-tickets': ['ORCA linear --help', 'ORCA linear issue --current --full --json'],
-      'orca-emulator': ['ORCA emulator list --json'],
-      'orca-emulator-android': ['ORCA emulator devices --json'],
-      'orca-linear': ['ORCA linear --help', 'ORCA linear issue --current --full --json'],
-      'veer-per-workspace-env': ['ORCA vm recipe doctor <recipe-id> --repo-path <repo> --json'],
-      orchestration: ['ORCA orchestration task-list --json', 'ORCA terminal list --json']
+      'computer-use': ['VEER computer capabilities --json', 'VEER computer list-apps --json'],
+      'linear-tickets': ['VEER linear --help', 'VEER linear issue --current --full --json'],
+      'veer-emulator': ['VEER emulator list --json'],
+      'veer-emulator-android': ['VEER emulator devices --json'],
+      'veer-linear': ['VEER linear --help', 'VEER linear issue --current --full --json'],
+      'veer-per-workspace-env': ['VEER vm recipe doctor <recipe-id> --repo-path <repo> --json'],
+      orchestration: ['VEER orchestration task-list --json', 'VEER terminal list --json']
     }
 
     for (const [name, commands] of Object.entries(expectedFallbackCommands)) {
       const stub = await readFile(path.join(projectDir, 'skill-stubs', `${name}.md`), 'utf8')
-      const fallback = stub.split('## If an older Orca does not recognize `skills get`')[1]
+      const fallback = stub.split('## If an older Veer does not recognize `skills get`')[1]
 
       expect(fallback, name).toBeDefined()
       for (const command of commands) {
         expect(fallback, name).toContain(command)
       }
-      expect(fallback, name).not.toContain('ORCA worktree ps --json')
+      expect(fallback, name).not.toContain('VEER worktree ps --json')
     }
   })
 
@@ -102,11 +102,11 @@ describe('bundled skill guide generator', () => {
       'utf8'
     )
 
-    expect(source).toContain('ORCA_RECIPE_ID')
-    expect(source).not.toContain('ORCA_VM_RECIPE_ID')
+    expect(source).toContain('VEER_RECIPE_ID')
+    expect(source).not.toContain('VEER_VM_RECIPE_ID')
     expect(source).toContain('recipe_id="${recipe_id//./-}"')
     expect(source).toContain('max_recipe_id_length=$((128 - ${#instance_id} - 6))')
-    expect(source).toContain('name="orca-${recipe_id:0:max_recipe_id_length}-${instance_id}"')
+    expect(source).toContain('name="veer-${recipe_id:0:max_recipe_id_length}-${instance_id}"')
   })
 
   it.skipIf(process.platform === 'win32')(
@@ -116,8 +116,8 @@ describe('bundled skill guide generator', () => {
         path.join(projectDir, 'skill-guides', 'veer-per-workspace-env.md'),
         'utf8'
       )
-      const startMarker = 'recipe_id="${ORCA_RECIPE_ID:-vercel-sandbox}"'
-      const endMarker = 'name="orca-${recipe_id:0:max_recipe_id_length}-${instance_id}"'
+      const startMarker = 'recipe_id="${VEER_RECIPE_ID:-vercel-sandbox}"'
+      const endMarker = 'name="veer-${recipe_id:0:max_recipe_id_length}-${instance_id}"'
       const start = source.indexOf(startMarker)
       const endStart = source.indexOf(endMarker, start)
       expect(start).toBeGreaterThanOrEqual(0)
@@ -126,11 +126,11 @@ describe('bundled skill guide generator', () => {
       const renderName = async (recipeId, instanceId) =>
         (
           await execFileAsync('bash', ['-u', '-c', script], {
-            env: { ...process.env, ORCA_RECIPE_ID: recipeId, ORCA_VM_INSTANCE_ID: instanceId }
+            env: { ...process.env, VEER_RECIPE_ID: recipeId, VEER_VM_INSTANCE_ID: instanceId }
           })
         ).stdout
 
-      const instanceId = 'orca-123e4567-e89b-12d3-a456-426614174000'
+      const instanceId = 'veer-123e4567-e89b-12d3-a456-426614174000'
       const dotted = await renderName('provider.cloud_sandbox', instanceId)
       const maximum = await renderName(`a${'.'.repeat(63)}`, instanceId)
       const longInstanceId = 'i'.repeat(100)
@@ -139,7 +139,7 @@ describe('bundled skill guide generator', () => {
         longInstanceId
       )
 
-      expect(dotted).toBe(`orca-provider-cloud_sandbox-${instanceId}`)
+      expect(dotted).toBe(`veer-provider-cloud_sandbox-${instanceId}`)
       expect(maximum).toMatch(/^[a-zA-Z0-9_-]{1,128}$/u)
       expect(capped).toHaveLength(128)
       expect(capped.endsWith(`-${longInstanceId}`)).toBe(true)
@@ -165,15 +165,15 @@ describe('bundled skill guide generator', () => {
   })
 
   it('keeps CLI guide examples safe across shells and Linux command names', async () => {
-    for (const name of ['veer-cli', 'computer-use', 'orca-emulator', 'orca-emulator-android']) {
+    for (const name of ['veer-cli', 'computer-use', 'veer-emulator', 'veer-emulator-android']) {
       const source = await readFile(path.join(projectDir, 'skill-guides', `${name}.md`), 'utf8')
 
-      expect(source).toContain('ORCA_CLI_COMMAND')
-      expect(source).toContain('orca-dev')
-      expect(source).toContain('orca-ide')
+      expect(source).toContain('VEER_CLI_COMMAND')
+      expect(source).toContain('veer-dev')
+      expect(source).toContain('veer')
       expect(source).toContain('PowerShell')
       expect(source).toContain('cmd.exe')
-      expect(source).toMatch(/^ORCA .+--json$/mu)
+      expect(source).toMatch(/^VEER .+--json$/mu)
       // Why: bare command lines can launch GNOME Orca, while shell variables make
       // the same guide unusable from PowerShell and cmd.exe.
       expect(source).not.toMatch(/^orca /mu)

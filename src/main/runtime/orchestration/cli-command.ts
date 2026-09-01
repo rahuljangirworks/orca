@@ -2,7 +2,7 @@ import type { ProjectExecutionRuntimeResolution } from '../../../shared/project-
 import { isWslUncPath } from '../../../shared/wsl-paths'
 import { splitWorktreeIdForFilesystem } from '../../../shared/worktree/id'
 
-export type OrchestrationCliCommand = 'orca' | 'orca-ide'
+export type OrchestrationCliCommand = 'veer' | 'veer-ide' | 'orca' | 'orca-ide'
 
 export function resolveTerminalOrchestrationCliCommand(args: {
   connectionId: string | null
@@ -14,12 +14,12 @@ export function resolveTerminalOrchestrationCliCommand(args: {
     return 'orca'
   }
   if (args.isWsl !== null && args.isWsl !== undefined) {
-    return args.isWsl ? 'orca-ide' : 'orca'
+    return args.isWsl ? 'veer-ide' : 'veer'
   }
   if (args.projectRuntime?.status === 'resolved' && args.projectRuntime.runtime.kind === 'wsl') {
-    return 'orca-ide'
+    return 'veer-ide'
   }
 
   const worktreePath = splitWorktreeIdForFilesystem(args.worktreeId)?.worktreePath
-  return worktreePath && isWslUncPath(worktreePath) ? 'orca-ide' : 'orca'
+  return worktreePath && isWslUncPath(worktreePath) ? 'veer-ide' : 'veer'
 }
