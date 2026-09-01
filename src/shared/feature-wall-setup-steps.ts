@@ -81,20 +81,8 @@ export const FEATURE_WALL_SETUP_STEPS: readonly FeatureWallSetupStep[] = [
 export const FEATURE_WALL_SETUP_STEP_IDS = FEATURE_WALL_SETUP_STEPS.map((step) => step.id)
 
 export function getFeatureWallSetupSteps(): readonly FeatureWallSetupStep[] {
-  // Why: personal fork policy - filter out steps that require Orca services
-  if (typeof window !== 'undefined') {
-    try {
-      const { PERSONAL_FORK_POLICY } = require('./personal-fork-policy')
-      if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
-        // Filter out agent-capabilities (CLI install) and task-sources (integrations)
-        return FEATURE_WALL_SETUP_STEPS.filter(
-          (step) => step.id !== 'agent-capabilities' && step.id !== 'task-sources'
-        )
-      }
-    } catch {
-      // Module not available in this context
-    }
-  }
+  // Why: Veer's CLI, skills, and provider integrations are local/bring-your-own
+  // workflows. They do not require a connection to an Orca-operated service.
   return FEATURE_WALL_SETUP_STEPS
 }
 
@@ -111,7 +99,7 @@ export function getFeatureWallSetupSectionId(
 export function getFeatureWallSetupStepsForSection(
   sectionId: FeatureWallSetupSectionId
 ): readonly FeatureWallSetupStep[] {
-  return FEATURE_WALL_SETUP_STEPS.filter(
+  return getFeatureWallSetupSteps().filter(
     (step) => getFeatureWallSetupSectionId(step.id) === sectionId
   )
 }
@@ -127,7 +115,7 @@ export function getFirstIncompleteFeatureWallSetupStepId(
   const parallelStep = getFeatureWallSetupStepsForSection('parallel-work').find(
     (step) => !stepDone[step.id]
   )
-  return parallelStep?.id ?? FEATURE_WALL_SETUP_STEPS[0].id
+  return parallelStep?.id ?? getFeatureWallSetupSteps()[0].id
 }
 
 export function isFeatureWallSetupStepId(value: unknown): value is FeatureWallSetupStepId {

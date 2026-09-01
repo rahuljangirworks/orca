@@ -24,15 +24,6 @@ export type SetupGuideEntryVisibilityInput = {
 }
 
 export function shouldShowSetupGuideEntry(input: SetupGuideEntryVisibilityInput): boolean {
-  // Personal fork: never show setup guide (it requires Orca services)
-  try {
-    const { PERSONAL_FORK_POLICY } = require('../../../../shared/personal-fork-policy')
-    if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
-      return false
-    }
-  } catch {
-    // Module not available
-  }
   return input.ready && !input.setupComplete && !input.dismissed
 }
 

@@ -1,5 +1,5 @@
 /**
- * Rahul's personal Orca fork is local-first. Orca/Stably-operated services
+ * Rahul's personal Veer fork is local-first. Orca/Stably-operated services
  * must never become an implicit runtime dependency of this build.
  * `firstPartyNetworkEnabled` applies only to Orca/Stably services; it does not
  * authorize Veer Platform requests.
@@ -15,7 +15,7 @@ export const PERSONAL_FORK_POLICY = Object.freeze({
 } as const)
 
 export const PERSONAL_FORK_NETWORK_DISABLED_MESSAGE =
-  'This personal Orca build does not connect to Orca-operated services.'
+  'This personal Veer build does not connect to Orca-operated services.'
 
 export function isLoopbackServiceUrl(value: string): boolean {
   try {

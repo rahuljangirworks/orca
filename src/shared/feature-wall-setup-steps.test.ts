@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { FEATURE_WALL_SETUP_STEPS } from './feature-wall-setup-steps'
+import {
+  FEATURE_WALL_SETUP_STEPS,
+  getFeatureWallSetupSteps,
+  getFeatureWallSetupStepsForSection
+} from './feature-wall-setup-steps'
 
 describe('feature wall setup copy', () => {
   it('uses Veer branding in onboarding-visible setup steps', () => {
@@ -18,5 +22,18 @@ describe('feature wall setup copy', () => {
     })
     expect(cli?.description).toContain('Register the Veer shell command')
     expect(repos?.description).toContain('into Veer')
+  })
+
+  it('uses one step set for the rail, active pane, and progress', () => {
+    const activeSteps = getFeatureWallSetupSteps()
+    const sectionSteps = [
+      ...getFeatureWallSetupStepsForSection('parallel-work'),
+      ...getFeatureWallSetupStepsForSection('setup')
+    ]
+
+    expect(sectionSteps.map((step) => step.id)).toEqual(activeSteps.map((step) => step.id))
+    expect(activeSteps.map((step) => step.id)).toEqual(
+      FEATURE_WALL_SETUP_STEPS.map((step) => step.id)
+    )
   })
 })

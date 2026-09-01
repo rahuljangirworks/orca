@@ -1,7 +1,7 @@
 import type { FeatureInteractionState } from '../../../../shared/feature-interactions'
 import { hasFeatureInteraction } from '../../../../shared/feature-interactions'
 import {
-  FEATURE_WALL_SETUP_STEPS,
+  getFeatureWallSetupSteps,
   type FeatureWallSetupStepId
 } from '../../../../shared/feature-wall-setup-steps'
 import type { GlobalSettings } from '../../../../shared/global-settings-types'
@@ -68,7 +68,7 @@ export function getFeatureWallSetupProgress(
   return {
     ready: input.ready ?? true,
     stepDone,
-    coreDoneCount: FEATURE_WALL_SETUP_STEPS.filter((step) => stepDone[step.id]).length,
-    coreTotal: FEATURE_WALL_SETUP_STEPS.length
+    coreDoneCount: getFeatureWallSetupSteps().filter((step) => stepDone[step.id]).length,
+    coreTotal: getFeatureWallSetupSteps().length
   }
 }
