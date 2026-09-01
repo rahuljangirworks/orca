@@ -109,15 +109,15 @@ describe('Orca cloud auth config', () => {
 
   it('allows Veer Platform production API origin', () => {
     const state = getOrcaCloudAuthConfig({
-      ORCA_CLOUD_API_URL: 'https://api.veer.rahuljangir.com',
+      ORCA_CLOUD_API_URL: 'https://veer.rahuljangir.work',
       ORCA_CLOUD_CLIENT_ID: 'desktop-client'
     })
 
     expect(state).toMatchObject({
       configured: true,
       config: {
-        apiBaseUrl: 'https://api.veer.rahuljangir.com',
-        authorizeEndpoint: 'https://api.veer.rahuljangir.com/v1/desktop/auth/authorize'
+        apiBaseUrl: 'https://veer.rahuljangir.work',
+        authorizeEndpoint: 'https://veer.rahuljangir.work/v1/desktop/auth/authorize'
       }
     })
   })

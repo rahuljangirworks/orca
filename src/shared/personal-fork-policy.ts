@@ -12,10 +12,10 @@ export const PERSONAL_FORK_POLICY = Object.freeze({
   firstPartyNetworkEnabled: false,
   localServiceOverridesEnabled: true,
   updateStrategy: 'git-upstream-rebase',
-  // Veer Platform API origins (development and production)
+  // Veer Platform API origins (production and rollback/dev)
   veerPlatformOrigins: [
-    'https://veer-api.rahuljangir-works.workers.dev', // development
-    'https://api.veer.rahuljangir.com' // production (future)
+    'https://veer.rahuljangir.work', // production custom domain
+    'https://veer-api.rahuljangir-works.workers.dev' // rollback/dev endpoint
   ]
 } as const)
 
