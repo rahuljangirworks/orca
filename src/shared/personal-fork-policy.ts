@@ -11,7 +11,12 @@
 export const PERSONAL_FORK_POLICY = Object.freeze({
   firstPartyNetworkEnabled: false,
   localServiceOverridesEnabled: true,
-  updateStrategy: 'git-upstream-rebase'
+  updateStrategy: 'git-upstream-rebase',
+  // Veer Platform API origins (development and production)
+  veerPlatformOrigins: [
+    'https://veer-api.rahuljangir-works.workers.dev', // development
+    'https://api.veer.rahuljangir.com' // production (future)
+  ]
 } as const)
 
 export const PERSONAL_FORK_NETWORK_DISABLED_MESSAGE =
@@ -21,6 +26,18 @@ export function isLoopbackServiceUrl(value: string): boolean {
   try {
     const url = new URL(value)
     return ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname)
+  } catch {
+    return false
+  }
+}
+
+export function isVeerPlatformServiceUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return PERSONAL_FORK_POLICY.veerPlatformOrigins.some((origin) => {
+      const platformUrl = new URL(origin)
+      return platformUrl.origin === url.origin
+    })
   } catch {
     return false
   }

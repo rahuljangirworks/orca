@@ -16,7 +16,7 @@ describe('Orca cloud auth config', () => {
     expect(getOrcaCloudAuthConfig({})).toEqual({
       configured: false,
       setupMessage:
-        'This personal Orca build does not connect to Orca-operated services. Configure a loopback cloud service to enable this feature.'
+        'This personal Veer build does not connect to Orca-operated services. Configure a loopback cloud service to enable this feature.'
     })
   })
 
@@ -70,13 +70,56 @@ describe('Orca cloud auth config', () => {
     ).toMatchObject({ configured: true })
   })
 
-  it('rejects non-loopback API URLs even when they use HTTPS', () => {
+  it('rejects non-loopback, non-Veer-Platform API URLs even when they use HTTPS', () => {
     expect(
       getOrcaCloudAuthConfig({
         ORCA_CLOUD_API_URL: 'https://orca-cloud.example',
         ORCA_CLOUD_CLIENT_ID: 'desktop-client'
       })
     ).toMatchObject({ configured: false })
+  })
+
+  it('allows Veer Platform development API origin', () => {
+    const state = getOrcaCloudAuthConfig({
+      ORCA_CLOUD_API_URL: 'https://veer-api.rahuljangir-works.workers.dev',
+      ORCA_CLOUD_CLIENT_ID: 'desktop-client'
+    })
+
+    expect(state).toEqual({
+      configured: true,
+      config: {
+        apiBaseUrl: 'https://veer-api.rahuljangir-works.workers.dev',
+        authorizeEndpoint:
+          'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/authorize',
+        sessionEndpoint: 'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/session',
+        refreshEndpoint: 'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/refresh',
+        capabilitiesEndpoint:
+          'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/capabilities',
+        profileEndpoint: 'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/profile',
+        orgEndpoint: 'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/org',
+        logoutEndpoint: 'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/logout',
+        relayTokenEndpoint:
+          'https://veer-api.rahuljangir-works.workers.dev/v1/desktop/auth/relay-token',
+        relayDirectorUrl: 'https://veer-api.rahuljangir-works.workers.dev',
+        clientId: 'desktop-client',
+        scope: 'openid profile email offline_access'
+      }
+    })
+  })
+
+  it('allows Veer Platform production API origin', () => {
+    const state = getOrcaCloudAuthConfig({
+      ORCA_CLOUD_API_URL: 'https://api.veer.rahuljangir.com',
+      ORCA_CLOUD_CLIENT_ID: 'desktop-client'
+    })
+
+    expect(state).toMatchObject({
+      configured: true,
+      config: {
+        apiBaseUrl: 'https://api.veer.rahuljangir.com',
+        authorizeEndpoint: 'https://api.veer.rahuljangir.com/v1/desktop/auth/authorize'
+      }
+    })
   })
 
   it('allows dev plaintext sessions only outside production', () => {

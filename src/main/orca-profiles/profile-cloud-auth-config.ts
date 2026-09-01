@@ -2,7 +2,8 @@ import { app } from 'electron'
 import {
   PERSONAL_FORK_NETWORK_DISABLED_MESSAGE,
   PERSONAL_FORK_POLICY,
-  isLoopbackServiceUrl
+  isLoopbackServiceUrl,
+  isVeerPlatformServiceUrl
 } from '../../shared/personal-fork-policy'
 
 export type OrcaCloudAuthConfig = {
@@ -42,7 +43,12 @@ function cleanUrl(value: string | undefined, allowLoopbackHttp: boolean): string
       parsed.hostname === '127.0.0.1' ||
       parsed.hostname === 'localhost' ||
       parsed.hostname === '[::1]'
-    if (PERSONAL_FORK_POLICY.localServiceOverridesEnabled && !isLoopbackServiceUrl(trimmed)) {
+    // Allow: loopback services OR Veer Platform API origins
+    if (
+      PERSONAL_FORK_POLICY.localServiceOverridesEnabled &&
+      !isLoopbackServiceUrl(trimmed) &&
+      !isVeerPlatformServiceUrl(trimmed)
+    ) {
       return null
     }
     if (parsed.protocol !== 'https:' && !(loopbackHost && allowLoopbackHttp)) {
