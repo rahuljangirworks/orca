@@ -249,7 +249,7 @@ describe('electron-builder config', () => {
   })
 
   it('matches the Linux desktop entry to Electron window class', () => {
-    expect(electronBuilderConfig.linux.desktop.entry.StartupWMClass).toBe('orca')
+    expect(electronBuilderConfig.linux.desktop.entry.StartupWMClass).toBe('veer')
   })
 
   it('uses AppImage and deb as local Linux targets with veer-branded artifact names', () => {
@@ -257,7 +257,7 @@ describe('electron-builder config', () => {
     expect(electronBuilderConfig.appImage.artifactName).toBe('veer-linux.${ext}')
     expect(electronBuilderConfig.deb.artifactName).toBe('veer_${version}_${arch}.${ext}')
     expect(electronBuilderConfig.rpm).toMatchObject({
-      packageName: 'orca-ide',
+      packageName: 'veer-ide',
       artifactName: 'veer-${version}.${arch}.${ext}'
     })
   })
@@ -455,6 +455,8 @@ describe('electron-builder config', () => {
     try {
       const parcelDir = join(resourcesDir, 'node_modules', '@parcel')
       await mkdir(join(parcelDir, 'watcher'), { recursive: true })
+      await mkdir(join(parcelDir, 'watcher', 'build', 'Release'), { recursive: true })
+      await writeFile(join(parcelDir, 'watcher', 'build', 'Release', 'watcher.node'), 'host build')
       await mkdir(join(parcelDir, 'watcher-darwin-arm64'), { recursive: true })
       await mkdir(join(parcelDir, 'watcher-darwin-x64'), { recursive: true })
       await mkdir(join(parcelDir, 'watcher-linux-x64-glibc'), { recursive: true })
@@ -467,6 +469,7 @@ describe('electron-builder config', () => {
         'watcher',
         'watcher-linux-arm64-glibc'
       ])
+      await expect(readdir(join(parcelDir, 'watcher'))).resolves.toEqual([])
       expect(() => prunePackagedParcelWatcher(resourcesDir, 'linux', 'universal')).toThrow(
         'Unsupported packaged runtime architecture: universal'
       )
@@ -571,7 +574,7 @@ describe('electron-builder config', () => {
       const root = await mkdtemp(join(tmpdir(), 'orca-electron-builder-config-'))
       try {
         const resourcesDir = join(root, 'linux-unpacked', 'resources')
-        const launcherPath = join(resourcesDir, 'bin', 'orca-ide')
+        const launcherPath = join(resourcesDir, 'bin', 'veer-ide')
         await mkdir(join(resourcesDir, 'bin'), { recursive: true })
         await cp(
           join(process.cwd(), 'resources', 'plugins', 'launch'),
@@ -595,7 +598,7 @@ describe('electron-builder config', () => {
           join(unpackedCliDir, 'index.js'),
           [
             'const args = process.argv.slice(2)',
-            "if (args[1] === 'list') console.log(JSON.stringify({ topics: [{ name: 'orca-cli' }, { name: 'computer-use' }] }))",
+            "if (args[1] === 'list') console.log(JSON.stringify({ topics: [{ name: 'veer-cli' }, { name: 'computer-use' }] }))",
             "else if (args[1] === 'get') console.log(`---\\nname: ${args[2]}\\n---`)",
             'else console.log(JSON.stringify({ executed: false }))'
           ].join('\n'),

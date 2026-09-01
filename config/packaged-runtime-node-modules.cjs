@@ -410,6 +410,15 @@ function prunePackagedParcelWatcher(resourcesDir, electronPlatformName, electron
     return
   }
 
+  // Why: pnpm may run @parcel/watcher's install hook on the build host and leave a
+  // source-built fallback in build/Release (or build/Debug). The packaged runtime
+  // also carries the platform-specific optional prebuild, which is the supported
+  // Ubuntu 20.04-compatible binary. Keeping the host fallback makes the static ABI
+  // gate inspect a binary that is not needed at runtime and can fail on newer hosts.
+  // Remove only these generated native fallback directories; the core package's JS
+  // wrapper and matching optional subpackage remain intact.
+  rmSync(join(parcelDir, 'watcher', 'build'), { recursive: true, force: true })
+
   // Why: we package every installed @parcel/watcher-<platform> optional
   // subpackage (supportedArchitectures fetches all), but each build only needs
   // its own platform/architecture binaries. Keep the core package and matching

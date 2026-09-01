@@ -222,12 +222,6 @@ module.exports = {
     'node_modules/sherpa-onnx*/**'
   ],
   afterPack: async (context) => {
-    // Why: a Linux runner-image glibc bump silently shipped a node-pty pty.node
-    // requiring GLIBC_2.34, crashing the app on startup on Ubuntu 20.04 (#9902).
-    // Fail packaging if any bundled native binary exceeds the supported floor.
-    if (context.electronPlatformName === 'linux') {
-      verifyLinuxGlibcFloor(context.appOutDir)
-    }
     const resourcesDir =
       context.electronPlatformName === 'darwin'
         ? join(
@@ -260,6 +254,13 @@ module.exports = {
       writeMacBuildCompatibility(resourcesDir, { version, commit, architecture })
     }
     prunePackagedRuntimeNodeModules(resourcesDir, context.electronPlatformName, context.arch)
+    // Why: a Linux runner-image glibc bump silently shipped a node-pty pty.node
+    // requiring GLIBC_2.34, crashing the app on startup on Ubuntu 20.04 (#9902).
+    // Run the floor gate after packaging cleanup so it inspects exactly the native
+    // binaries that will ship, including the supported Parcel optional prebuild.
+    if (context.electronPlatformName === 'linux') {
+      verifyLinuxGlibcFloor(context.appOutDir)
+    }
     verifyPackagedMainRuntimeDeps(resourcesDir)
     // Why: boot the packaged daemon-entry under plain Node, but only for the
     // slice matching the packaging host's arch — daemon-entry.js is JS, yet it
