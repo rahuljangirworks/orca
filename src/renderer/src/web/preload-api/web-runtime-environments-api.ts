@@ -36,7 +36,7 @@ export function createRuntimeEnvironmentsApi(): NonNullable<
     addFromPairingCode: async ({ name, pairingCode }) => {
       const offer = parseWebPairingInput(pairingCode)
       if (!offer) {
-        throw new Error('Invalid Orca pairing code.')
+        throw new Error('Invalid Veer pairing code.')
       }
       const previousEnvironment = webRuntimeState.activeEnvironment
       closeActiveRuntimeClients()
