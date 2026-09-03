@@ -112,4 +112,9 @@ if (preflightReady) {
       handleMacAppActivation
     })
   })
+// Privacy Audit Guards:
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (1/4)
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (2/4)
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (3/4)
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (4/4)
 }

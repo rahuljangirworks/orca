@@ -5,9 +5,23 @@ const { setupAutoUpdaterMock, personalForkPolicyMock, createRuntimeMock, flushPe
   vi.hoisted(() => ({
     setupAutoUpdaterMock: vi.fn(),
     personalForkPolicyMock: { firstPartyNetworkEnabled: true },
-    createRuntimeMock: vi.fn(),
+    createRuntimeMock: vi.fn(() => ({ attachWindow: vi.fn(), detachWindow: vi.fn(), setPtyController: vi.fn(), setNotifier: vi.fn() })),
     flushPendingAsyncMock: vi.fn()
   }))
+
+vi.mock('electron', () => ({
+  ipcMain: {
+    handle: vi.fn(),
+    removeHandler: vi.fn(),
+    removeAllListeners: vi.fn(),
+    on: vi.fn()
+  },
+  powerMonitor: {
+    on: vi.fn(),
+    removeListener: vi.fn(),
+    off: vi.fn()
+  }
+}))
 
 vi.mock('../updater', () => ({
   ensureAutoUpdaterConfigured: vi.fn(),
@@ -33,7 +47,8 @@ vi.mock('../browser/browser-manager', () => ({
 
 vi.mock('../macos-tcc-prompt-notice', () => ({
   acknowledgePendingTccPromptNotice: vi.fn(),
-  consumePendingTccPromptNotice: vi.fn()
+  consumePendingTccPromptNotice: vi.fn(),
+  releasePendingTccPromptNotice: vi.fn()
 }))
 
 vi.mock('../runtime/runtime-rpc', () => ({
@@ -51,12 +66,14 @@ function createMainWindow() {
       setWindowOpenHandler: vi.fn(),
       session: {
         setPermissionRequestHandler: vi.fn(),
-        setDevicePermissionHandler: vi.fn()
+        setDevicePermissionHandler: vi.fn(),
+        setPermissionCheckHandler: vi.fn()
       },
       on: vi.fn((event: string, handler: EventHandler) => {
         listeners[event] = listeners[event] || []
         listeners[event].push(handler)
-      })
+      }),
+      removeListener: vi.fn()
     },
     once: vi.fn((event: string, handler: EventHandler) => {
       listeners[event] = listeners[event] || []
@@ -74,7 +91,9 @@ function createMainWindow() {
 
 function createStore(): Store {
   return {
-    flushPendingAsync: flushPendingAsyncMock
+    flushPendingAsync: flushPendingAsyncMock,
+    getProfileStorageDirectory: vi.fn(() => '/fake/dir'),
+    getSettings: vi.fn(() => ({}))
   } as never
 }
 

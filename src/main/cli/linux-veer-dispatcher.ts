@@ -2,8 +2,9 @@ import { existsSync } from 'node:fs'
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { buildAppImageCliWrapper, quoteShell } from './appimage-cli-wrapper'
-import { getBundledLauncherPath } from './cli-installer'
+import { buildLegacyAppImageCliWrapper } from './legacy-appimage-cli-wrapper'
+import { quoteShell } from './cli-install-path-format'
+import { getBundledLauncherPath } from './bundled-cli-launcher-path'
 
 // Why: marks a dispatcher this function wrote so repeat serve starts overwrite
 // our own file idempotently but never clobber a user's own ~/.local/bin/veer.
@@ -63,7 +64,7 @@ export function buildVeerCliScript(
     // Why: an AppImage mounts resources under an ephemeral FUSE path per launch,
     // so the script must exec the stable outer AppImage — reuse the same
     // wrapper CliInstaller installs for the AppImage command.
-    return { script: buildAppImageCliWrapper(appImagePath), target: appImagePath }
+    return { script: buildLegacyAppImageCliWrapper(appImagePath), target: appImagePath }
   }
 
   const launcher = getBundledLauncherPath('linux', resourcesPath)

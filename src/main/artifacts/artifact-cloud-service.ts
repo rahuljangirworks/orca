@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { veerPlatformClient } from '../veer/artifacts/platform-client'
 import type {
   ArtifactCloudOperation,
   ArtifactCloudOptions,
@@ -7,7 +8,8 @@ import type {
   ArtifactListItem,
   ArtifactPublishedLink,
   ArtifactPublishResult,
-  ArtifactWriteRequest
+  ArtifactWriteRequest,
+  ArtifactPlatformShareRequest
 } from '../../shared/artifacts'
 import { assertArtifactSharingAllowed } from '../../shared/artifact-sharing-gate'
 import { ensureActiveOrcaProfile } from '../orca-profiles/profile-index-store'
@@ -167,6 +169,28 @@ export class ArtifactCloudService {
       })
     )
   }
+
+  // --- Veer Platform Methods ---
+  publishArtifact(id: string, options: ArtifactCloudOptions) {
+    return veerPlatformClient.publishArtifact(id, options, this.withAuth.bind(this))
+  }
+
+  unpublishArtifact(id: string, options: ArtifactCloudOptions) {
+    return veerPlatformClient.unpublishArtifact(id, options, this.withAuth.bind(this))
+  }
+
+  shareArtifact(id: string, request: ArtifactPlatformShareRequest, options: ArtifactCloudOptions) {
+    return veerPlatformClient.shareArtifact(id, request, options, this.withAuth.bind(this))
+  }
+
+  listShares(id: string, options: ArtifactCloudOptions) {
+    return veerPlatformClient.listShares(id, options, this.withAuth.bind(this))
+  }
+
+  listSharedWithMe(options: ArtifactCloudOptions) {
+    return veerPlatformClient.listSharedWithMe(options, this.withAuth.bind(this))
+  }
+  // -----------------------------
 
   protected async withAuth<T>(
     options: ArtifactCloudOptions,

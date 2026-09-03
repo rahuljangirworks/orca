@@ -28,7 +28,7 @@ export class RuntimeArtifactController {
   }
 
   share(request: ArtifactWriteRequest): Promise<ArtifactCloudOperation<ArtifactListItem>> {
-    return this.requireService().share(request)
+    return this.requireService().shareLegacy(request)
   }
 
   publish(request: ArtifactWriteRequest): Promise<ArtifactCloudOperation<ArtifactPublishResult>> {
@@ -42,7 +42,7 @@ export class RuntimeArtifactController {
   unshare(
     request: ArtifactCloudOptions & { sourceKey: string }
   ): Promise<ArtifactCloudOperation<void>> {
-    return this.requireService().unshare(request)
+    return this.requireService().unshareLegacy(request)
   }
 
   delete(id: string, options: ArtifactCloudOptions): Promise<ArtifactCloudOperation<void>> {

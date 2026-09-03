@@ -2,6 +2,7 @@ import { app, ipcMain } from 'electron'
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron'
 import type { ReleaseBuildListResult, UpdateCheckOptions } from '../../shared/update-status-types'
 import { RELEASE_CHANNELS, type ReleaseChannel } from '../../shared/release-channel'
+import { PERSONAL_FORK_POLICY } from '../../shared/personal-fork-policy'
 import { isTrustedUIRenderer } from '../ipc/ui'
 import type { Store } from '../persistence'
 import { logStartupMilestone } from '../startup/startup-diagnostics'
@@ -43,6 +44,10 @@ export function scheduleMainWindowAutoUpdaterSetup(
       return
     }
     updaterSetupDone = true
+    if (!PERSONAL_FORK_POLICY.firstPartyNetworkEnabled) {
+      logStartupMilestone('updater-setup-done')
+      return
+    }
     setupAutoUpdater(mainWindow, {
       getLastUpdateCheckAt: () => store.getUI().lastUpdateCheckAt,
       onBeforeQuit: async () => {

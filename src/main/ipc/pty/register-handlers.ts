@@ -59,7 +59,7 @@ import {
   resolveCodexResumeLaunch,
   stripSequencedStartupResumeArgv
 } from './host-env/codex-resume'
-import { ensureLinuxTerminalOrcaCliShimDir } from '../../cli/linux-terminal-orca-cli-shim'
+import { ensureLinuxTerminalVeerCliShimDir } from '../../cli/linux-terminal-veer-cli-shim'
 
 export function registerPtyHandlers(
   mainWindow: BrowserWindow,
@@ -73,7 +73,7 @@ export function registerPtyHandlers(
   if (process.platform === 'linux') {
     const appEnvironment = getAppEnvironment()
     if (appEnvironment.isPackaged()) {
-      ensureLinuxTerminalOrcaCliShimDir({ userDataPath: appEnvironment.getPath('userData') })
+      ensureLinuxTerminalVeerCliShimDir({ userDataPath: appEnvironment.getPath('userData') })
     }
   }
   const ipcMain = getPtyIpc()

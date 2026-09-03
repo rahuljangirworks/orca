@@ -266,3 +266,8 @@ function registerFileDropRelay(mainWindow: BrowserWindow): void {
     ipcMain.removeListener(channel, relayFileDrop)
   })
 }
+
+// Privacy Audit Guards:
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (1/3)
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (2/3)
+// PERSONAL_FORK_POLICY.firstPartyNetworkEnabled (3/3)

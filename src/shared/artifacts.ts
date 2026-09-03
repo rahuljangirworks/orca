@@ -71,3 +71,27 @@ export type ArtifactCloudOperation<T> =
   | { status: 'ok'; value: T }
   | { status: 'reconnect-required' }
   | { status: 'unconfigured'; message: string }
+
+export type ArtifactPlatformShareRequest = {
+  sharedWithEmail: string
+  permission: 'view' | 'edit'
+}
+
+export type ArtifactShareRequest = ArtifactPlatformShareRequest & {
+  sourceKey: string
+}
+
+export type ArtifactShareRecord = {
+  shareId: string
+  sharedWithEmail: string
+  permission: 'view' | 'edit'
+  createdAt: string
+}
+
+export type ArtifactListSharesResult = {
+  shares: readonly ArtifactShareRecord[]
+}
+
+export type ArtifactSharedWithMeResult = {
+  artifacts: readonly ArtifactListItem[]
+}

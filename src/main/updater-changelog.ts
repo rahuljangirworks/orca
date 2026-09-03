@@ -1,6 +1,7 @@
 import { net } from 'electron'
 import type { ChangelogData } from '../shared/update-status-types'
 import { compareVersions } from './updater-fallback'
+import { PERSONAL_FORK_POLICY } from '../shared/personal-fork-policy'
 
 type ChangelogEntry = {
   version: string
@@ -10,7 +11,7 @@ type ChangelogEntry = {
   releaseNotesUrl: string
 }
 
-const CHANGELOG_URL = 'https://onorca.dev/changelog'
+const CHANGELOG_URL = 'https://veer.rahuljangir.work/changelog'
 
 function isValidEntry(entry: ChangelogEntry): boolean {
   return (
@@ -42,7 +43,8 @@ export async function fetchChangelog(
   incomingVersion: string,
   localVersion: string
 ): Promise<ChangelogData | null> {
-  const res = await net.fetch('https://onorca.dev/whats-new/changelog.json', {
+  const url = `${PERSONAL_FORK_POLICY.veerPlatformOrigins[0]}/whats-new/changelog.json`
+  const res = await net.fetch(url, {
     signal: AbortSignal.timeout(5000)
   })
   if (!res.ok) {

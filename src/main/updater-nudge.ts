@@ -1,5 +1,6 @@
 import { net } from 'electron'
 import { compareVersions, isValidVersion } from './updater-fallback'
+import { PERSONAL_FORK_POLICY } from '../shared/personal-fork-policy'
 
 export type NudgeConfig = {
   id: string
@@ -9,7 +10,8 @@ export type NudgeConfig = {
 
 export async function fetchNudge(): Promise<NudgeConfig | null> {
   try {
-    const res = await net.fetch('https://onorca.dev/whats-new/nudge.json', {
+    const url = `${PERSONAL_FORK_POLICY.veerPlatformOrigins[0]}/whats-new/nudge.json`
+    const res = await net.fetch(url, {
       signal: AbortSignal.timeout(5000)
     })
     if (!res.ok) {

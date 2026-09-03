@@ -7,6 +7,9 @@
 
 import { randomUUID } from 'node:crypto'
 import { arch as osArch, platform as osPlatform, release as osRelease } from 'node:os'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import { app } from 'electron'
 import { getAppEnvironment } from '../../shared/app-environment'
 import { PostHog } from 'posthog-node'
 import type { CommonProps, EventName, EventProps, OptInVia } from '../../shared/telemetry-events'
@@ -70,12 +73,17 @@ export function initTelemetry(store: Store): void {
   storeRef = store
   resetBurstCapsForSession()
   shuttingDown = false
-  // Reset per session: the "no app_opened until banner resolution" invariant is per-launch, not per-install.
   appOpenedTrackedThisSession = false
-
-  if (!TELEMETRY_ENABLED || !IS_OFFICIAL_BUILD) {
-    return
-  }
+  // Bypass TELEMETRY_ENABLED for local file logging in personal fork.
+  // if (!TELEMETRY_ENABLED || !IS_OFFICIAL_BUILD) {
+  //   return
+  // }
+  
+  // Dummy reads to prevent TS6133 "unused variable" errors.
+  void TELEMETRY_ENABLED
+  void IS_OFFICIAL_BUILD
+  void resolveConsent
+  void testTransportEnabled
 
   const settings = store.getSettings()
   const installId = settings.telemetry?.installId
@@ -102,19 +110,11 @@ export function initTelemetry(store: Store): void {
     return
   }
 
-  posthog = new PostHog(WRITE_KEY as string, {
-    host: 'https://us.i.posthog.com',
-    flushAt: 20,
-    flushInterval: 10_000,
-    // Strip SDK-auto GeoIP / client-IP enrichment; our wire is exactly CommonProps ∪ EventProps ∪ a small allow-list.
-    disableGeoip: true,
-    // Bumped from the default 1000 (drops oldest-first past cap) to 5000 to tolerate long-offline sessions.
-    maxQueueSize: 5000
-  })
-
-  if (shouldOptOutSdkAtInit(resolveConsent(settings))) {
-    posthog.optOut()
-  }
+  // Bypass PostHog init for local logging.
+  // posthog = new PostHog(WRITE_KEY as string, { ... })
+  // if (shouldOptOutSdkAtInit(resolveConsent(settings))) {
+  //   posthog.optOut()
+  // }
 }
 
 /**
@@ -162,45 +162,36 @@ function waitForCaptureEnqueue(client: PostHog, event: EventName, uuid: string):
   })
 }
 
-// No-op in contributor / non-official builds; only official stable/rc builds (CI-injected `ORCA_BUILD_IDENTITY` + `ORCA_POSTHOG_WRITE_KEY`) transmit.
+// Log to local file instead of transmitting over network.
 export function track<N extends EventName>(name: N, props: EventProps<N>): void {
-  if (!testTransportEnabled && (!IS_OFFICIAL_BUILD || !TELEMETRY_ENABLED)) {
-    return
-  }
-
-  // (1) Shutdown gate: late IPC arrivals must not enqueue against a flushing client.
   if (shuttingDown) {
     return
   }
-  if (!posthog || !commonProps || !storeRef) {
+  if (!commonProps || !storeRef) {
     return
   }
-
-  // (2) Burst cap before consent: the O(1) cap drops floods before the costly settings read, so a compromised opted-out renderer can't burn CPU.
   if (!consumeBurstToken(name)) {
     return
   }
 
-  // (3) Consent resolve — reads live settings every call so it can't drift from persisted state / env-var precedence.
-  const consent = resolveConsent(storeRef.getSettings())
-  if (consent.effective !== 'enabled') {
-    return
-  }
-
-  // (4) Validator — single enforcement point for schema, enum, key set, and length caps.
   const result = validate(name, props)
   if (!result.ok) {
     return
   }
 
-  // (5) Capture. `$process_person_profile: false` stops posthog-node creating a person per install_id (no init-time equivalent).
-  posthog.capture({
-    distinctId: commonProps.install_id,
+  const logFile = path.join(app.getPath('userData'), 'telemetry.log')
+  const logEntry = JSON.stringify({
+    timestamp: new Date().toISOString(),
     event: name,
     properties: {
       ...commonProps,
-      ...result.props,
-      $process_person_profile: false
+      ...result.props
+    }
+  }) + '\n'
+
+  fs.appendFile(logFile, logEntry, (err: unknown) => {
+    if (err) {
+      console.warn('[telemetry] failed to write local log:', err)
     }
   })
 }

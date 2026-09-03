@@ -6,8 +6,9 @@ import {
   type PluginKillListEntry
 } from '../../shared/plugins/plugin-kill-list'
 import { PluginKillListStore } from './plugin-kill-list-store'
+import { PERSONAL_FORK_POLICY } from '../../shared/personal-fork-policy'
 
-export const PLUGIN_KILL_LIST_URL = 'https://onorca.dev/plugins/kill-list.json'
+export const PLUGIN_KILL_LIST_URL = `${PERSONAL_FORK_POLICY.veerPlatformOrigins[0]}/plugins/kill-list.json`
 const PLUGIN_KILL_LIST_DOWNLOAD_LIMIT = 4 * 1024 * 1024
 
 type PluginKillListFetcher = () => Promise<PluginKillList>
