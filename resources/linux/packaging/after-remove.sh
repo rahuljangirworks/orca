@@ -1,15 +1,21 @@
 #!/bin/bash
 # Why: remove the PATH symlink that after-install.sh created, but only if it
 # still points into an Orca install dir — never delete an unrelated
-# /usr/bin/veer a user or other package may own.
+# /usr/bin/orca-ide a user or other package may own.
 set -e
 
-link="/usr/bin/veer"
+# RPM passes an instance count; dpkg passes the package lifecycle action.
+case "${1-}" in
+  0 | remove | purge) ;;
+  *) exit 0 ;;
+esac
+
+link="/usr/bin/orca-ide"
 
 if [ -L "$link" ]; then
   target="$(readlink "$link" || true)"
   case "$target" in
-    /opt/Veer/*|/opt/veer-ide/*|/opt/Orca/*|/opt/orca-ide/*|/opt/orca/*)
+    /opt/Orca/*|/opt/orca-ide/*|/opt/orca/*)
       rm -f "$link"
       ;;
   esac

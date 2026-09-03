@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { runWslProcessMock } = vi.hoisted(() => ({
-  runWslProcessMock: vi.fn()
-}))
+const { runWslProcessMock } = vi.hoisted(() => ({ runWslProcessMock: vi.fn() }))
 
 vi.mock('../wsl/wsl-runner', () => ({
   runWslProcess: runWslProcessMock
@@ -51,7 +49,6 @@ describe('legacy WSL runtime auth drain', () => {
       authContents: STALE_AUTH,
       linuxHomePath: '/home/alice/.local/share/orca/codex-accounts/account-1/home'
     }))
-
     await drainLegacyWslRuntimeAuth({
       distro: 'Ubuntu',
       guestHomeLinuxPath: '/home/alice',
@@ -67,15 +64,19 @@ describe('legacy WSL runtime auth drain', () => {
       expect.any(String),
       '1',
       '0',
-      'missing'
+      'missing',
+      'full'
     ])
     expect(runWslProcessMock.mock.calls[1]?.[0].script).toContain('readlink -f')
     expect(runWslProcessMock.mock.calls[1]?.[0].script).toContain('source_credentials=')
     expect(runWslProcessMock.mock.calls[1]?.[0].script).toContain('chmod 600')
+    expect(runWslProcessMock.mock.calls[1]?.[0].timeoutMs).toBe(30_000)
   })
 
-  it('does not write when freshness cannot be proven', async () => {
-    runWslProcessMock.mockResolvedValueOnce(result(0, inspection('{"tokens":{}}\n')))
+  it('bridges sessions without changing auth when freshness cannot be proven', async () => {
+    runWslProcessMock
+      .mockResolvedValueOnce(result(0, inspection('{"tokens":{}}\n')))
+      .mockResolvedValueOnce(result(0))
 
     await drainLegacyWslRuntimeAuth({
       distro: 'Ubuntu',
@@ -87,7 +88,13 @@ describe('legacy WSL runtime auth drain', () => {
       })
     })
 
-    expect(runWslProcessMock).toHaveBeenCalledTimes(1)
+    expect(runWslProcessMock).toHaveBeenCalledTimes(2)
+    expect(runWslProcessMock.mock.calls[1]?.[0].args.slice(-4)).toEqual([
+      '0',
+      '0',
+      'missing',
+      'full'
+    ])
   })
 
   it('refuses a source with no unique destination', async () => {
@@ -118,16 +125,71 @@ describe('legacy WSL runtime auth drain', () => {
       })
     })
 
-    expect(runWslProcessMock.mock.calls[1]?.[0].args.slice(-3)).toEqual(['0', '1', 'missing'])
+    expect(runWslProcessMock.mock.calls[1]?.[0].args.slice(-4)).toEqual([
+      '0',
+      '1',
+      'missing',
+      'full'
+    ])
+    expect(runWslProcessMock.mock.calls[1]?.[0].timeoutMs).toBe(30_000)
   })
 
-  it('keeps an absent source retryable while a legacy pane remains', async () => {
+  it('recovers a failed guest apply before resolving the drain as pending', async () => {
+    runWslProcessMock
+      .mockResolvedValueOnce(result(0, inspection(SOURCE_AUTH)))
+      .mockResolvedValueOnce(result(45))
+      .mockResolvedValueOnce(result(0, inspection(SOURCE_AUTH)))
+
+    await expect(
+      drainLegacyWslRuntimeAuth({
+        distro: 'Ubuntu',
+        guestHomeLinuxPath: '/home/alice',
+        legacyPanePresent: false,
+        resolveDestination: () => ({
+          authContents: NEWER_AUTH,
+          linuxHomePath: '/home/alice/.codex'
+        })
+      })
+    ).resolves.toBe('pending')
+
+    expect(runWslProcessMock).toHaveBeenCalledTimes(3)
+    expect(runWslProcessMock.mock.calls[2]?.[0]).toEqual(
+      expect.objectContaining({
+        script: _internals.inspectLegacyAuthScript,
+        timeoutMs: 5_000
+      })
+    )
+  })
+
+  it('rejects an awaited launch drain when guest recovery cannot finish', async () => {
+    runWslProcessMock
+      .mockResolvedValueOnce(result(0, inspection(SOURCE_AUTH)))
+      .mockResolvedValueOnce(result(45))
+      .mockResolvedValueOnce(result(46))
+
+    await expect(
+      startLegacyWslRuntimeAuthDrain(
+        {
+          distro: 'Ubuntu',
+          guestHomeLinuxPath: '/home/alice',
+          legacyPanePresent: false,
+          resolveDestination: () => ({
+            authContents: NEWER_AUTH,
+            linuxHomePath: '/home/alice/.codex'
+          })
+        },
+        { throwOnFailure: true }
+      )
+    ).rejects.toThrow('Legacy WSL auth drain recover failed')
+  })
+
+  it('keeps an absent source retryable while the legacy home remains', async () => {
     runWslProcessMock.mockResolvedValueOnce(result(21))
 
     await drainLegacyWslRuntimeAuth({
       distro: 'Ubuntu',
       guestHomeLinuxPath: '/home/alice',
-      legacyPanePresent: true,
+      legacyPanePresent: false,
       resolveDestination: vi.fn()
     })
 
@@ -149,8 +211,8 @@ describe('legacy WSL runtime auth drain', () => {
     expect(runWslProcessMock).toHaveBeenCalledTimes(1)
   })
 
-  it('marks an absent source complete after every legacy pane exits', async () => {
-    runWslProcessMock.mockResolvedValueOnce(result(21)).mockResolvedValueOnce(result(0))
+  it('marks an absent legacy home complete after every legacy pane exits', async () => {
+    runWslProcessMock.mockResolvedValueOnce(result(22)).mockResolvedValueOnce(result(0))
 
     await drainLegacyWslRuntimeAuth({
       distro: 'Ubuntu',
@@ -181,6 +243,39 @@ describe('legacy WSL runtime auth drain', () => {
     await Promise.resolve()
 
     expect(runWslProcessMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('bounds sequential pending launches to recent session dates', async () => {
+    runWslProcessMock.mockImplementation((options: { script: string }) =>
+      Promise.resolve(
+        options.script === _internals.inspectLegacyAuthScript
+          ? result(0, inspection(SOURCE_AUTH))
+          : result(0)
+      )
+    )
+    const options = {
+      distro: 'Ubuntu',
+      guestHomeLinuxPath: '/home/alice',
+      legacyPanePresent: true,
+      resolveDestination: () => ({
+        authContents: STALE_AUTH,
+        linuxHomePath: '/home/alice/.local/share/orca/codex-accounts/account-1/home'
+      })
+    }
+
+    await startLegacyWslRuntimeAuthDrain(options, { throwOnFailure: true })
+    await startLegacyWslRuntimeAuthDrain(options, { throwOnFailure: true })
+    await startLegacyWslRuntimeAuthDrain(
+      { ...options, legacyPanePresent: false },
+      { throwOnFailure: true }
+    )
+
+    const applyCalls = runWslProcessMock.mock.calls.filter(
+      ([call]) => call.script === _internals.applyLegacyAuthScript
+    )
+    expect(applyCalls).toHaveLength(3)
+    expect(applyCalls.map(([call]) => call.args.at(-1))).toEqual(['full', 'recent', 'full'])
+    expect(applyCalls.map(([call]) => call.timeoutMs)).toEqual([30_000, 5_000, 30_000])
   })
 
   it('reads every candidate home in one bounded guest process', async () => {

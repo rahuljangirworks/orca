@@ -1,13 +1,21 @@
 import { createHash } from 'node:crypto'
 import { posix as pathPosix } from 'node:path'
-import { WSL_CODEX_RUNTIME_HOME_SEGMENTS } from '../pty/codex-home-wsl-env'
+import { wslCodexRuntimeHomeForGuestHome } from '../pty/codex-home-wsl-env'
+import { WSL_SESSION_BRIDGE_TIMEOUT_MS } from '../codex/wsl-codex-session-bridge-script'
 import { runWslProcess } from '../wsl/wsl-runner'
 import { compareCodexAuthFreshness, codexAuthIsFresher } from './codex-auth-identity'
+import {
+  APPLY_LEGACY_AUTH_SCRIPT,
+  FINALIZE_ABSENT_AUTH_SCRIPT,
+  INSPECT_LEGACY_AUTH_SCRIPT,
+  LEGACY_HOME_ABSENT_EXIT,
+  LEGACY_HOME_STILL_PRESENT_EXIT,
+  MARKER_PRESENT_EXIT,
+  SOURCE_AUTH_ABSENT_EXIT
+} from './legacy-wsl-runtime-auth-drain-scripts'
 import { decodeWslBase64Payload } from './wsl-codex-auth-batch-reader'
 
 const DRAIN_MARKER_NAME = 'direct-home-auth-drain-v1.json'
-const MARKER_PRESENT_EXIT = 20
-const SOURCE_AUTH_ABSENT_EXIT = 21
 
 export type LegacyWslRuntimeAuthDestination = {
   authContents: string
@@ -30,38 +38,48 @@ type LegacyWslRuntimeAuthDrainOptions = {
 
 const drainQueueByDistro = new Map<string, Promise<void>>()
 const completedDistroKeys = new Set<string>()
+const pendingSessionBridgeRouteByDistro = new Map<string, string>()
 
-export function startLegacyWslRuntimeAuthDrain(options: LegacyWslRuntimeAuthDrainOptions): void {
+export function startLegacyWslRuntimeAuthDrain(
+  options: LegacyWslRuntimeAuthDrainOptions,
+  startOptions: { throwOnFailure?: boolean } = {}
+): Promise<void> {
   const key = options.distro.trim().toLowerCase()
   if (completedDistroKeys.has(key)) {
-    return
+    return Promise.resolve()
   }
   // Coalesce launch/rate-limit callers while a drain is in flight. Queuing a
   // new pass for every poll can otherwise build an unbounded promise chain
   // while a legacy pane keeps the migration pending.
-  if (drainQueueByDistro.has(key)) {
-    return
+  const inFlight = drainQueueByDistro.get(key)
+  if (inFlight) {
+    return startOptions.throwOnFailure ? inFlight : logDrainFailure(inFlight)
   }
-  const next = drainLegacyWslRuntimeAuth(options)
-    .then((status) => {
-      if (status === 'complete') {
-        completedDistroKeys.add(key)
-      }
-    })
-    .catch((error) => {
-      console.warn('[codex-wsl-auth-drain] Failed to drain legacy runtime auth:', error)
-    })
+  const next = drainLegacyWslRuntimeAuth(options).then((status) => {
+    if (status === 'complete') {
+      completedDistroKeys.add(key)
+    }
+  })
   drainQueueByDistro.set(key, next)
-  void next.finally(() => {
+  const clearQueue = (): void => {
     if (drainQueueByDistro.get(key) === next) {
       drainQueueByDistro.delete(key)
     }
+  }
+  void next.then(clearQueue, clearQueue)
+  return startOptions.throwOnFailure ? next : logDrainFailure(next)
+}
+
+function logDrainFailure(task: Promise<void>): Promise<void> {
+  return task.catch((error) => {
+    console.warn('[codex-wsl-auth-drain] Failed to drain legacy runtime auth:', error)
   })
 }
 
 export async function drainLegacyWslRuntimeAuth(
   options: LegacyWslRuntimeAuthDrainOptions
 ): Promise<'complete' | 'pending'> {
+  const distroKey = options.distro.trim().toLowerCase()
   const paths = resolveLegacyRuntimePaths(options.guestHomeLinuxPath)
   const inspection = await runWslProcess({
     distro: options.distro,
@@ -74,11 +92,13 @@ export async function drainLegacyWslRuntimeAuth(
   if (inspection.code === MARKER_PRESENT_EXIT) {
     return 'complete'
   }
-  if (inspection.code === SOURCE_AUTH_ABSENT_EXIT) {
+  if (inspection.code === LEGACY_HOME_ABSENT_EXIT) {
     if (!options.legacyPanePresent) {
-      await finalizeAbsentLegacyAuth(options.distro, paths)
-      return 'complete'
+      return finalizeAbsentLegacyAuth(options.distro, paths)
     }
+    return 'pending'
+  }
+  if (inspection.code === SOURCE_AUTH_ABSENT_EXIT) {
     return 'pending'
   }
   assertSuccessfulDrainStep('inspect', inspection)
@@ -92,10 +112,16 @@ export async function drainLegacyWslRuntimeAuth(
     return 'pending'
   }
   const freshness = compareCodexAuthFreshness(inspected.authContents, destination.authContents)
-  if (freshness === null) {
-    return 'pending'
-  }
-  const promoteAuth = codexAuthIsFresher(inspected.authContents, destination.authContents)
+  const promoteAuth =
+    freshness !== null && codexAuthIsFresher(inspected.authContents, destination.authContents)
+  const deleteSource = !options.legacyPanePresent && freshness !== null
+  const sessionBridgeRoute = [
+    paths.runtimeHome,
+    destination.linuxHomePath,
+    options.legacyPanePresent ? 'retained' : 'released'
+  ].join('\0')
+  const bridgeAllSessions =
+    deleteSource || pendingSessionBridgeRouteByDistro.get(distroKey) !== sessionBridgeRoute
   const result = await runWslProcess({
     distro: options.distro,
     loginPath: 'none',
@@ -108,14 +134,49 @@ export async function drainLegacyWslRuntimeAuth(
       sha256(inspected.authContents),
       sha256(destination.authContents),
       promoteAuth ? '1' : '0',
-      options.legacyPanePresent ? '0' : '1',
-      inspected.credentials.kind === 'present' ? sha256(inspected.credentials.contents) : 'missing'
+      deleteSource ? '1' : '0',
+      inspected.credentials.kind === 'present' ? sha256(inspected.credentials.contents) : 'missing',
+      bridgeAllSessions ? 'full' : 'recent'
     ],
-    timeoutMs: 5_000,
+    timeoutMs: bridgeAllSessions ? WSL_SESSION_BRIDGE_TIMEOUT_MS : 5_000,
     maxOutputBytes: 16 * 1024
   })
-  assertSuccessfulDrainStep('apply', result)
-  return options.legacyPanePresent ? 'pending' : 'complete'
+  try {
+    assertSuccessfulDrainStep('apply', result)
+  } catch {
+    return recoverAfterFailedApply(options.distro, paths)
+  }
+  if (!deleteSource) {
+    pendingSessionBridgeRouteByDistro.set(distroKey, sessionBridgeRoute)
+  }
+  return deleteSource ? 'complete' : 'pending'
+}
+
+async function recoverAfterFailedApply(
+  distro: string,
+  paths: ReturnType<typeof resolveLegacyRuntimePaths>
+): Promise<'complete' | 'pending'> {
+  const recovery = await runWslProcess({
+    distro,
+    loginPath: 'none',
+    script: INSPECT_LEGACY_AUTH_SCRIPT,
+    args: [paths.runtimeHome, paths.activeHome, paths.marker],
+    timeoutMs: 5_000,
+    maxOutputBytes: 2 * 1024 * 1024
+  })
+  if (recovery.code === MARKER_PRESENT_EXIT) {
+    return 'complete'
+  }
+  if (
+    !recovery.timedOut &&
+    (recovery.code === 0 ||
+      recovery.code === SOURCE_AUTH_ABSENT_EXIT ||
+      recovery.code === LEGACY_HOME_ABSENT_EXIT)
+  ) {
+    return 'pending'
+  }
+  assertSuccessfulDrainStep('recover', recovery)
+  return 'pending'
 }
 
 function parseLegacyRuntimeInspection(stdout: string): LegacyWslRuntimeInspection | null {
@@ -151,7 +212,7 @@ function resolveLegacyRuntimePaths(guestHomeLinuxPath: string): {
   marker: string
   runtimeHome: string
 } {
-  const runtimeHome = pathPosix.join(guestHomeLinuxPath, ...WSL_CODEX_RUNTIME_HOME_SEGMENTS)
+  const runtimeHome = wslCodexRuntimeHomeForGuestHome(guestHomeLinuxPath)
   const runtimeRoot = pathPosix.dirname(runtimeHome)
   return {
     activeHome: pathPosix.join(runtimeRoot, 'active', 'wsl', 'home'),
@@ -163,7 +224,7 @@ function resolveLegacyRuntimePaths(guestHomeLinuxPath: string): {
 async function finalizeAbsentLegacyAuth(
   distro: string,
   paths: ReturnType<typeof resolveLegacyRuntimePaths>
-): Promise<void> {
+): Promise<'complete' | 'pending'> {
   const result = await runWslProcess({
     distro,
     loginPath: 'none',
@@ -172,7 +233,11 @@ async function finalizeAbsentLegacyAuth(
     timeoutMs: 5_000,
     maxOutputBytes: 16 * 1024
   })
+  if (result.code === LEGACY_HOME_STILL_PRESENT_EXIT) {
+    return 'pending'
+  }
   assertSuccessfulDrainStep('finalize', result)
+  return 'complete'
 }
 
 function assertSuccessfulDrainStep(
@@ -192,124 +257,13 @@ function sha256(contents: string): string {
   return createHash('sha256').update(contents).digest('hex')
 }
 
-const RESOLVE_LEGACY_HOME_SCRIPT = `
-legacy_home="$1"
-legacy_home_resolved=0
-if [ -e "$1" ] || [ -L "$1" ]; then
-  legacy_home=$(readlink -f -- "$1") || exit 30
-  legacy_home_resolved=1
-fi
-if [ -e "$2" ] || [ -L "$2" ]; then
-  active_home=$(readlink -f -- "$2") || exit 31
-  if [ "$legacy_home_resolved" = 1 ]; then
-    [ "$active_home" = "$legacy_home" ] || exit 32
-  else
-    legacy_home="$active_home"
-  fi
-fi
-`
-
-const INSPECT_LEGACY_AUTH_SCRIPT = `
-set -eu
-[ ! -f "$3" ] || exit ${MARKER_PRESENT_EXIT}
-${RESOLVE_LEGACY_HOME_SCRIPT}
-source_auth="$legacy_home/auth.json"
-[ -f "$source_auth" ] || exit ${SOURCE_AUTH_ABSENT_EXIT}
-encode_file() {
-  encoded=$(base64 < "$1") || return 1
-  printf '%s' "$encoded" | tr -d '\n'
-}
-encode_file "$source_auth"
-printf '\n'
-source_credentials="$legacy_home/.credentials.json"
-if [ -f "$source_credentials" ]; then
-  printf 'present\n'
-  encode_file "$source_credentials"
-  printf '\n'
-elif [ ! -e "$source_credentials" ] && [ ! -L "$source_credentials" ]; then
-  printf 'missing\n\n'
-else
-  exit 44
-fi
-`
-
-const APPLY_LEGACY_AUTH_SCRIPT = `
-set -eu
-[ ! -f "$3" ] || exit 0
-${RESOLVE_LEGACY_HOME_SCRIPT}
-target_home=$(readlink -f -- "$4") || exit 33
-[ "$legacy_home" != "$target_home" ] || exit 34
-source_auth="$legacy_home/auth.json"
-target_auth="$target_home/auth.json"
-[ -f "$source_auth" ] || exit 35
-[ -f "$target_auth" ] || exit 36
-hash_file() { sha256sum -- "$1" | cut -d ' ' -f 1; }
-[ "$(hash_file "$source_auth")" = "$5" ] || exit 37
-[ "$(hash_file "$target_auth")" = "$6" ] || exit 38
-umask 077
-temporary_auth="$target_auth.orca-drain-$$"
-temporary_credentials="$target_home/.credentials.json.orca-drain-$$"
-temporary_previous_auth="$target_auth.orca-drain-previous-$$"
-temporary_marker="$3.orca-drain-$$"
-cleanup() { rm -f -- "$temporary_auth" "$temporary_credentials" "$temporary_previous_auth" "$temporary_marker"; }
-trap cleanup EXIT HUP INT TERM
-source_credentials="$legacy_home/.credentials.json"
-target_credentials="$target_home/.credentials.json"
-if [ -f "$source_credentials" ] && [ ! -e "$target_credentials" ] && [ ! -L "$target_credentials" ]; then
-  [ "$9" != missing ] || exit 43
-  [ "$(hash_file "$source_credentials")" = "$9" ] || exit 43
-  cp -- "$source_credentials" "$temporary_credentials"
-  chmod 600 "$temporary_credentials"
-  [ "$(hash_file "$temporary_credentials")" = "$9" ] || exit 43
-  [ "$(hash_file "$source_credentials")" = "$9" ] || exit 43
-  mv -n -- "$temporary_credentials" "$target_credentials"
-elif [ "$9" = missing ] && [ ! -e "$target_credentials" ] && [ ! -L "$target_credentials" ]; then
-  [ ! -e "$source_credentials" ] && [ ! -L "$source_credentials" ] || exit 43
-fi
-if [ "$7" = 1 ]; then
-  cp -- "$source_auth" "$temporary_auth"
-  chmod 600 "$temporary_auth"
-  # Codex rewrites auth.json in place, so this copy is a second read: verify the
-  # bytes being promoted, not the ones freshness was judged on.
-  [ "$(hash_file "$temporary_auth")" = "$5" ] || exit 42
-  [ "$(hash_file "$target_auth")" = "$6" ] || exit 39
-  # The hard link keeps the destination inode observable without creating a
-  # missing-path crash window. In-place writers update both names.
-  ln -- "$target_auth" "$temporary_previous_auth"
-  [ "$(hash_file "$temporary_previous_auth")" = "$6" ] || exit 39
-  mv -f -- "$temporary_auth" "$target_auth"
-  if [ "$(hash_file "$temporary_previous_auth")" != "$6" ]; then
-    mv -f -- "$temporary_previous_auth" "$target_auth"
-    exit 39
-  fi
-  rm -- "$temporary_previous_auth"
-fi
-if [ "$8" = 1 ]; then
-  [ "$(hash_file "$source_auth")" = "$5" ] || exit 40
-  rm -- "$source_auth"
-  printf '%s\n' '{"completed":true}' > "$temporary_marker"
-  chmod 600 "$temporary_marker"
-  mv -f -- "$temporary_marker" "$3"
-fi
-`
-
-const FINALIZE_ABSENT_AUTH_SCRIPT = `
-set -eu
-[ ! -f "$3" ] || exit 0
-${RESOLVE_LEGACY_HOME_SCRIPT}
-[ ! -e "$legacy_home/auth.json" ] && [ ! -L "$legacy_home/auth.json" ] || exit 41
-umask 077
-temporary_marker="$3.orca-drain-$$"
-trap 'rm -f -- "$temporary_marker"' EXIT HUP INT TERM
-printf '%s\n' '{"completed":true}' > "$temporary_marker"
-chmod 600 "$temporary_marker"
-mv -f -- "$temporary_marker" "$3"
-`
-
 export const _internals = {
   applyLegacyAuthScript: APPLY_LEGACY_AUTH_SCRIPT,
+  finalizeAbsentAuthScript: FINALIZE_ABSENT_AUTH_SCRIPT,
+  inspectLegacyAuthScript: INSPECT_LEGACY_AUTH_SCRIPT,
   resetDrainQueue: (): void => {
     drainQueueByDistro.clear()
     completedDistroKeys.clear()
+    pendingSessionBridgeRouteByDistro.clear()
   }
 }

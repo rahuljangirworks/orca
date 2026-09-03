@@ -8,7 +8,7 @@ export const ORCA_SKILLS_REPOSITORY_URL = 'https://github.com/rahuljangirworks/v
 export const VEER_CLI_SKILL_NAME = 'veer-cli'
 export const COMPUTER_USE_SKILL_NAME = 'computer-use'
 export const ORCHESTRATION_SKILL_NAME = 'orchestration'
-export const VEER_PER_WORKSPACE_ENV_SKILL_NAME = 'veer-per-workspace-env'
+export const VEER_PER_WORKSPACE_ENV_SKILL_NAME = 'proxmox-lxc-setup'
 export const VEER_LINEAR_SKILL_NAME = 'veer-linear'
 export const ORCA_LINEAR_LEGACY_SKILL_NAME = 'orca-linear'
 /** @deprecated Use VEER_CLI_SKILL_NAME. */

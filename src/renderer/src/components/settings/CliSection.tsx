@@ -33,6 +33,7 @@ import {
   getWslCliDistroRequest
 } from './CliSkillRuntimeSetup'
 import { WslCliRegistration } from './WslCliRegistration'
+import { useCliRegistrationActions } from './use-cli-registration-actions'
 import { useLocalCliSkillFreshnessName } from './use-local-cli-skill-freshness-name'
 import { translate } from '@/i18n/i18n'
 
@@ -56,19 +57,19 @@ function getRevealLabel(platform: string): string {
 
 function getInstallDescription(platform: string): string {
   if (platform === 'darwin') {
-    return 'Register `veer` in /usr/local/bin.'
+    return 'Register `orca` in /usr/local/bin.'
   }
   if (platform === 'linux') {
-    return 'Register `veer` in ~/.local/bin.'
+    return 'Register `orca-ide` in ~/.local/bin.'
   }
   if (platform === 'win32') {
-    return 'Register `veer` in your user PATH.'
+    return 'Register `orca` in your user PATH.'
   }
   return 'CLI registration is not yet available on this platform.'
 }
 
-function getFallbackCommandName(): string {
-  return 'veer'
+function getFallbackCommandName(platform: string): string {
+  return platform === 'linux' ? 'orca-ide' : 'orca'
 }
 
 export function CliSection({
@@ -81,7 +82,6 @@ export function CliSection({
   const [status, setStatus] = useState<CliInstallStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [busyAction, setBusyAction] = useState<'install' | 'remove' | null>(null)
   const mountedRef = useMountedRef()
   const agentRuntime = useMemo(
     () =>
@@ -132,8 +132,19 @@ export function CliSection({
     [mountedRef]
   )
 
+  const closeDialog = useCallback((): void => setDialogOpen(false), [])
+  const commandName = status?.commandName ?? getFallbackCommandName(currentPlatform)
+  const { busyAction, installFailure, clearInstallFailure, install, remove } =
+    useCliRegistrationActions({
+      commandName,
+      mountedRef,
+      onStatusChange: handleStatusChange,
+      onSettled: closeDialog
+    })
+
   const refreshStatus = useCallback(async (): Promise<void> => {
     setLoading(true)
+    clearInstallFailure()
     try {
       handleStatusChange(await window.api.cli.getInstallStatus())
     } catch (error) {
@@ -152,7 +163,7 @@ export function CliSection({
         setLoading(false)
       }
     }
-  }, [handleStatusChange, mountedRef])
+  }, [clearInstallFailure, handleStatusChange, mountedRef])
 
   useEffect(() => {
     void refreshStatus()
@@ -163,88 +174,19 @@ export function CliSection({
   const isSupported = status?.supported ?? false
   const isBrowserManaged = status?.unsupportedReason === 'launch_mode_unavailable'
   const revealLabel = getRevealLabel(currentPlatform)
-  const commandName = status?.commandName ?? getFallbackCommandName()
   const canRevealCommandPath =
     status?.commandPath != null && ['installed', 'stale', 'conflict'].includes(status.state)
-
-  const handleInstall = async (): Promise<void> => {
-    setBusyAction('install')
-    try {
-      const next = await window.api.cli.install()
-      if (mountedRef.current) {
-        setStatus(next)
-        setDialogOpen(false)
-        toast.success(
-          translate(
-            'auto.components.settings.CliSection.9cbcd31338',
-            'Registered `{{value0}}` in PATH.',
-            { value0: next.commandName }
-          )
-        )
-      }
-    } catch (error) {
-      if (mountedRef.current) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : translate(
-                'auto.components.settings.CliSection.a2b13efa94',
-                'Failed to register `{{value0}}` in PATH.',
-                { value0: commandName }
-              )
-        )
-      }
-    } finally {
-      if (mountedRef.current) {
-        setBusyAction(null)
-      }
-    }
-  }
-
-  const handleRemove = async (): Promise<void> => {
-    setBusyAction('remove')
-    try {
-      const next = await window.api.cli.remove()
-      if (mountedRef.current) {
-        setStatus(next)
-        setDialogOpen(false)
-        toast.success(
-          translate(
-            'auto.components.settings.CliSection.af5540930c',
-            'Removed `{{value0}}` from PATH.',
-            { value0: next.commandName }
-          )
-        )
-      }
-    } catch (error) {
-      if (mountedRef.current) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : translate(
-                'auto.components.settings.CliSection.d77352f2df',
-                'Failed to remove `{{value0}}` from PATH.',
-                { value0: commandName }
-              )
-        )
-      }
-    } finally {
-      if (mountedRef.current) {
-        setBusyAction(null)
-      }
-    }
-  }
 
   return (
     <section className="space-y-4" data-settings-section="cli">
       <div className="space-y-1">
         <h2 className="text-sm font-semibold">
-          {translate('auto.components.settings.CliSection.c5c0f2641d', 'Veer CLI')}
+          {translate('auto.components.settings.CliSection.c5c0f2641d', 'Orca CLI')}
         </h2>
         <p className="text-xs text-muted-foreground">
           {translate(
             'auto.components.settings.CliSection.6930feda9e',
-            'Use Veer from your terminal to open the app, manage worktrees, and interact with Veer terminals.'
+            'Use Orca from your terminal to open the app, manage worktrees, and interact with Orca terminals.'
           )}
         </p>
       </div>
@@ -336,6 +278,31 @@ export function CliSection({
           <p className="text-xs text-muted-foreground">{status.detail}</p>
         ) : null}
 
+        {installFailure ? (
+          <div
+            role="alert"
+            className="space-y-1 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
+          >
+            <p className="font-medium">
+              {translate(
+                'auto.components.settings.CliSection.a2b13efa94',
+                'Failed to register `{{value0}}` in PATH.',
+                { value0: commandName }
+              )}
+            </p>
+            <p className="leading-snug">{installFailure.reason}</p>
+            {installFailure.conflictCommandPath ? (
+              <p className="leading-snug">
+                {translate(
+                  'auto.components.settings.CliSection.installFailureConflictRemedy',
+                  'Remove {{value0}} and register again if it is no longer needed.',
+                  { value0: installFailure.conflictCommandPath }
+                )}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         <div className="flex items-center gap-2">
           {status?.commandPath ? (
             <Button
@@ -360,7 +327,7 @@ export function CliSection({
               <p className="text-xs text-muted-foreground">
                 {translate(
                   'auto.components.settings.CliSection.36a6f919ba',
-                  'Give agents Veer-aware workspace, terminal, and progress workflows.'
+                  'Give agents Orca-aware workspace, terminal, and progress workflows.'
                 )}
               </p>
             </div>
@@ -371,7 +338,7 @@ export function CliSection({
               title={translate('auto.components.settings.CliSection.6053cf736c', 'CLI skill')}
               description={translate(
                 'auto.components.settings.CliSection.e8012c03a1',
-                'Enables agents to use Veer workspace, terminal, and progress commands.'
+                'Enables agents to use Orca workspace, terminal, and progress commands.'
               )}
               command={cliSkillInstallCommand}
               installedCommand={cliSkillUpdateCommand}
@@ -408,9 +375,9 @@ export function CliSection({
         commandPath={status?.commandPath}
         isEnabled={isEnabled}
         isSupported={isSupported}
-        onInstall={handleInstall}
+        onInstall={install}
         onOpenChange={setDialogOpen}
-        onRemove={handleRemove}
+        onRemove={remove}
         open={dialogOpen}
       />
     </section>

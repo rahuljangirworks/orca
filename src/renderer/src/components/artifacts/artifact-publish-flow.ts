@@ -5,7 +5,9 @@ import type {
   ArtifactWriteRequest
 } from '../../../../shared/artifacts'
 import {
-  ARTIFACT_CLI_MAX_RPC_BYTES,
+  ARTIFACT_MAX_CONTENT_BYTES,
+  ARTIFACT_MAX_REQUEST_BYTES,
+  artifactContentByteLength,
   artifactWriteRequestByteLength
 } from '../../../../shared/artifacts'
 import { translate } from '@/i18n/i18n'
@@ -33,7 +35,10 @@ export function validateArtifactPublishRequest(
   if (!request.content) {
     throw new ArtifactPublishPreparationError('empty')
   }
-  if (artifactWriteRequestByteLength(request) > ARTIFACT_CLI_MAX_RPC_BYTES) {
+  if (
+    artifactContentByteLength(request.content) > ARTIFACT_MAX_CONTENT_BYTES ||
+    artifactWriteRequestByteLength(request) > ARTIFACT_MAX_REQUEST_BYTES
+  ) {
     throw new ArtifactPublishPreparationError('too-large')
   }
   return request
@@ -73,7 +78,7 @@ export async function publishArtifactFromSurface(
       toast.error(
         translate(
           'auto.components.artifacts.artifact-publish-flow.bba20daa6d',
-          'Sign in to Veer and try again.'
+          'Sign in to Orca and try again.'
         )
       )
       return null
@@ -123,12 +128,12 @@ function artifactPreparationErrorDescription(code: ArtifactPublishPreparationErr
     case 'too-large':
       return translate(
         'auto.components.artifacts.artifact-publish-flow.6112db5a1c',
-        'Artifacts shared from Veer must be smaller than 800 KB.'
+        'This artifact is too large to share.'
       )
     case 'unreadable':
       return translate(
         'auto.components.artifacts.artifact-publish-flow.e2ed5acd8c',
-        "Veer couldn't read this file. Open it from a workspace and try again."
+        "Orca couldn't read this file. Open it from a workspace and try again."
       )
     case 'unsupported':
       return translate(

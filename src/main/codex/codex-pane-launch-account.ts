@@ -88,12 +88,9 @@ function resolveCodexPaneHomeRoute(args: {
   ) {
     return 'real-home'
   }
-  const launchHome = normalizeRuntimePathForComparison(args.launchCodexHomePath)
-  const accountOwnsHome = args.settings.codexManagedAccounts?.some(
-    (account) =>
-      getCodexSelectionLaneKey(getCodexSelectionTargetForAccount(account)) ===
-        getCodexSelectionLaneKey(args.target) &&
-      normalizeRuntimePathForComparison(account.managedHomePath) === launchHome
+  const launchHomePath = args.launchCodexHomePath
+  const accountOwnsHome = args.settings.codexManagedAccounts?.some((account) =>
+    accountOwnsCodexHome(account, args.target, launchHomePath)
   )
   if (accountOwnsHome) {
     return 'account-home'
@@ -117,17 +114,15 @@ function resolveCodexHomeOwnerAccountId(args: {
   if (!args.launchCodexHomePath) {
     return null
   }
-  const launchHome = normalizeRuntimePathForComparison(args.launchCodexHomePath)
-  if (launchHome === normalizeRuntimePathForComparison(args.systemCodexHomePath)) {
+  if (
+    normalizeRuntimePathForComparison(args.launchCodexHomePath) ===
+    normalizeRuntimePathForComparison(args.systemCodexHomePath)
+  ) {
     return null
   }
-  const laneKey = getCodexSelectionLaneKey(args.target)
-  const owner = args.settings.codexManagedAccounts?.find(
-    (account) =>
-      // Why: a WSL pane resolves its account from its own per-distro lane, so a
-      // host account's home must never answer for it (and vice versa).
-      getCodexSelectionLaneKey(getCodexSelectionTargetForAccount(account)) === laneKey &&
-      normalizeRuntimePathForComparison(account.managedHomePath) === launchHome
+  const launchHomePath = args.launchCodexHomePath
+  const owner = args.settings.codexManagedAccounts?.find((account) =>
+    accountOwnsCodexHome(account, args.target, launchHomePath)
   )
   // Why: an unowned home cannot be named, and naming the account a pane is stuck
   // on is the prompt's whole job — so decline rather than guess. A wrong notice
@@ -136,4 +131,35 @@ function resolveCodexHomeOwnerAccountId(args: {
   // a pane resumed into it after the per-account rollout is genuinely stale but
   // still unnameable, so that cohort stays unreported.
   return owner ? owner.id : undefined
+}
+
+function accountOwnsCodexHome(
+  account: NonNullable<CodexPaneLaunchAccountSettings['codexManagedAccounts']>[number],
+  target: CodexAccountSelectionTarget,
+  launchHomePath: string
+): boolean {
+  // Why: a WSL pane resolves its account from its own per-distro lane, so a
+  // host account's home must never answer for it (and vice versa).
+  if (
+    getCodexSelectionLaneKey(getCodexSelectionTargetForAccount(account)) !==
+    getCodexSelectionLaneKey(target)
+  ) {
+    return false
+  }
+  if (
+    normalizeRuntimePathForComparison(account.managedHomePath) ===
+    normalizeRuntimePathForComparison(launchHomePath)
+  ) {
+    return true
+  }
+  const launchWslHome = target.runtime === 'wsl' ? parseWslUncPath(launchHomePath) : null
+  const accountDistro = account.wslDistro?.trim()
+  const accountLinuxHome = account.wslLinuxHomePath?.trim()
+  return Boolean(
+    launchWslHome &&
+    accountDistro &&
+    accountLinuxHome &&
+    launchWslHome.distro.toLowerCase() === accountDistro.toLowerCase() &&
+    launchWslHome.linuxPath === accountLinuxHome
+  )
 }

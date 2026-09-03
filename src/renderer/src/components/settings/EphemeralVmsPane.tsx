@@ -5,6 +5,8 @@ import { toast } from 'sonner'
 import { useMountedRef } from '@/hooks/useMountedRef'
 import { useAppStore } from '@/store'
 import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Label } from '../ui/label'
 import { AgentSkillSetupPanel } from './AgentSkillSetupPanel'
 import { EphemeralVmRecipeRow } from './EphemeralVmRecipeRow'
 import { translate } from '@/i18n/i18n'
@@ -35,7 +37,71 @@ type RecipeCatalogEntry = Awaited<
 // Why: the pane leans on the skill, so the nudge is one line — the skill carries
 // provider choice, prerequisites, the snapshot build, agent auth, and validation.
 const AGENT_PROMPT =
-  'Use the veer-per-workspace-env skill to set up a per-workspace environment for this repo.'
+  'Use the proxmox-lxc-setup skill to set up a per-workspace environment for this repo on Proxmox.'
+
+function ProxmoxSettingsPanel(): React.JSX.Element {
+  const proxmoxLxcSettings = useAppStore((state) => state.settings?.proxmoxLxcSettings) || {
+    hostUrl: '',
+    node: '',
+    apiTokenId: '',
+    apiTokenSecret: '',
+    baseTemplateId: ''
+  }
+  const updateSettings = useAppStore((state) => state.updateSettings)
+
+  const handleChange = (field: keyof typeof proxmoxLxcSettings, value: string) => {
+    updateSettings({ proxmoxLxcSettings: { ...proxmoxLxcSettings, [field]: value } })
+  }
+
+  return (
+    <div className="space-y-4 rounded-lg border border-border/60 bg-card/30 p-4">
+      <div className="text-sm font-medium">Proxmox API Configuration</div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-1">
+          <Label>Host URL</Label>
+          <Input 
+            placeholder="https://192.168.1.100:8006" 
+            value={proxmoxLxcSettings.hostUrl} 
+            onChange={(e) => handleChange('hostUrl', e.target.value)} 
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>Node Name</Label>
+          <Input 
+            placeholder="pve" 
+            value={proxmoxLxcSettings.node} 
+            onChange={(e) => handleChange('node', e.target.value)} 
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>API Token ID</Label>
+          <Input 
+            placeholder="root@pam!agent" 
+            value={proxmoxLxcSettings.apiTokenId} 
+            onChange={(e) => handleChange('apiTokenId', e.target.value)} 
+          />
+        </div>
+        <div className="space-y-1">
+          <Label>API Token Secret</Label>
+          <Input 
+            type="password"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 
+            value={proxmoxLxcSettings.apiTokenSecret} 
+            onChange={(e) => handleChange('apiTokenSecret', e.target.value)} 
+          />
+        </div>
+        <div className="space-y-1 md:col-span-2">
+          <Label>Base Template ID / Name</Label>
+          <Input 
+            placeholder="9000 (Ubuntu 22.04 Template)" 
+            value={proxmoxLxcSettings.baseTemplateId} 
+            onChange={(e) => handleChange('baseTemplateId', e.target.value)} 
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function EphemeralVmsPane(): React.JSX.Element {
   const openModal = useAppStore((state) => state.openModal)
@@ -145,21 +211,21 @@ export function EphemeralVmsPane(): React.JSX.Element {
       <AgentSkillSetupPanel
         title={translate(
           'auto.components.settings.EphemeralVmsPane.cloudVmSkillTitle',
-          'Cloud VM setup skill'
+          'Proxmox LXC setup skill'
         )}
         description={translate(
           'auto.components.settings.EphemeralVmsPane.skillDescription',
-          'Sets up, builds, authenticates, and validates repo-owned environment recipes.'
+          'Sets up, builds, authenticates, and validates Proxmox LXC environments using your Proxmox API.'
         )}
         command={installCommand}
         installedCommand={updateCommand}
         terminalTitle={translate(
           'auto.components.settings.EphemeralVmsPane.cloudVmTerminalTitle',
-          'Cloud VM setup'
+          'Proxmox LXC setup'
         )}
         terminalAriaLabel={translate(
           'auto.components.settings.EphemeralVmsPane.cloudVmTerminalAriaLabel',
-          'Cloud VM skill install terminal'
+          'Proxmox LXC skill install terminal'
         )}
         terminalWorktreeId="settings-ephemeral-vms-skill-terminal"
         terminalShellOverride={activeSkillRuntime.terminalShellOverride}
@@ -187,6 +253,7 @@ export function EphemeralVmsPane(): React.JSX.Element {
           activeSkillRuntime.canUseLocalSkillFreshness ? EPHEMERAL_VMS_SKILL_NAME : undefined
         }
       />
+      <ProxmoxSettingsPanel />
 
       <div className="space-y-3 rounded-lg border border-border/60 bg-card/30 p-4">
         <div className="text-sm font-medium">

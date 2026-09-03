@@ -51,6 +51,14 @@ export type WorktreeVisibilityDefaults = {
   sourcePreferences?: WorktreeVisibilitySourcePreferences
 }
 
+export type ProxmoxLxcSettings = {
+  hostUrl: string
+  node: string
+  apiTokenId: string
+  apiTokenSecret: string
+  baseTemplateId: string
+}
+
 export type GlobalSettings = {
   workspaceDir: string
   /** Host-owned defaults used when a repository has no explicit visibility override. */
@@ -60,6 +68,7 @@ export type GlobalSettings = {
   hostSettingOverrides?: Partial<Record<ExecutionHostId, HostSettingOverrides>>
   nestWorkspaces: boolean
   workspaceDirHistory?: OrcaWorkspaceLayout[]
+  proxmoxLxcSettings?: ProxmoxLxcSettings
   refreshLocalBaseRefOnWorktreeCreate: boolean
   /** Set once the user dismisses the "local main is behind" suggestion toast, so
    *  the nudge to enable refreshLocalBaseRefOnWorktreeCreate never shows again. */
@@ -205,6 +214,8 @@ export type GlobalSettings = {
   openAgentTabsInChatByDefault?: boolean
   /** Experimental native chat surface for Claude/Codex sessions; off by default. */
   experimentalNativeChat?: boolean
+  /** Opt-in updated structured runtime; off keeps the existing PTY-backed native chat path. */
+  experimentalStructuredNativeChat?: boolean
   /** Last explicit native-chat model + option selections; live panes need an applied/dispatched record before showing a value. */
   nativeChatSessionOptions?: PersistedNativeChatSessionOptions
   /** Extra launcher rows for the worktree "Open in" submenu. VS Code is always shown first. */
@@ -270,6 +281,7 @@ export type GlobalSettings = {
   keybindings?: KeybindingOverrides
   diffDefaultView: 'inline' | 'side-by-side'
   diffWordWrap: boolean
+  diffShowWhitespace: boolean
   combinedDiffFileTreeVisibleByDefault: boolean
   /** Bot-marked comment-author logins (stored lowercased); escape hatch for review bots on regular accounts that defeat provider metadata/heuristics. */
   prBotAuthorOverrides: string[]
@@ -424,6 +436,10 @@ export type GlobalSettings = {
   experimentalActivity: boolean
   /** Experimental: pop-out Kanban dashboard for monitoring and opening agent terminals across worktrees. */
   experimentalAgentDashboardPopout?: boolean
+  /** Set after the one-time legacy Agents tab introduction has been acknowledged. */
+  agentsSidebarIntroShown?: boolean
+  /** True when the profile previously opted into the legacy Agents view. */
+  agentsSidebarMigratedFromExperimental?: boolean
   /** How the Agent Dashboard opens: an in-window companion board or a separate pop-out window. Defaults to in-window. */
   experimentalAgentDashboardMode?: AgentDashboardMode
   /** Includes stale quiet agents as a fourth Agent Dashboard column. */

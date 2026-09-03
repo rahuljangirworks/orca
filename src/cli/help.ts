@@ -1,371 +1,10 @@
-/* eslint-disable max-lines -- Why: root and generated command help text live together so CLI discovery stays greppable. */
 import type { CommandSpec } from './args'
 import { findCommandSpec, isCommandGroup, supportsBrowserPageFlag } from './args'
 import { unknownCommandData } from './command-suggestion'
+import { ROOT_HELP_TEXT_PRIMARY } from './root-help-text-primary'
+import { ROOT_HELP_TEXT_SECONDARY } from './root-help-text-secondary'
 
-const ROOT_HELP_TEXT = `veer
-
-Usage: veer <command> [options]
-
-Startup:
-  open                      Launch Veer and wait for the runtime to be reachable
-  serve                     Start a headless Veer runtime server
-  status                    Show app/runtime/graph readiness
-
-Diagnostics:
-  diagnostics memory        Collect a memory snapshot for Veer and managed terminals
-
-Agent Discovery:
-  agent-context             Print the machine-readable command schema for agents
-
-Accounts:
-  account add               Add a managed Claude or Codex account on this Veer host
-  account list              List managed Claude and Codex accounts on this Veer host
-
-Skills:
-  skills installed          List installed skill selectors
-  skills share              Publish selected skills behind one unlisted link
-  skills list               List version-matched skill guides bundled with this Veer CLI
-  skills get                Print a version-matched skill guide as Markdown
-  skills install            Install bundled Veer skills globally via the community skills CLI
-  skills update             Update already-installed Veer skills via the community skills CLI
-
-Hosts:
-  host list                 List targetable machines and how to name each one
-
-Environments:
-  environment add           Save a remote Veer runtime from a pairing code
-  environment list          List saved remote Veer runtimes
-  environment show          Show one saved remote Veer runtime
-  environment rm            Remove a saved remote Veer runtime
-
-Environment Recipes:
-  vm recipe doctor          Validate a per-workspace environment recipe
-
-Automations:
-  automations list          List scheduled Veer automations
-  automations show          Show one Veer automation
-  automations create        Create a scheduled Veer automation
-  automations edit          Edit an Veer automation
-  automations remove        Remove an Veer automation and its run history
-  automations run           Run an Veer automation now
-  automations runs          List automation run history
-
-Projects:
-  project list              List durable projects known to Veer
-  project setups            List project host setups
-  project setup-existing-folder Make a project available on a host by importing an existing folder
-  project setup-clone       Make a project available on a host by cloning a repository
-  project setup-create      Create independent project host setup metadata
-  project setup-update      Update project host setup metadata
-  project setup-delete      Remove a project host setup
-
-Repos:
-  repo list                 List repos registered in Veer
-  repo add                  Add a project to Veer by filesystem path
-  repo show                 Show one registered repo
-  repo set-base-ref         Set the repo's default base ref for future worktrees
-  repo search-refs          Search branch/tag refs within a repo
-
-Worktrees:
-  worktree list             List Veer-managed worktrees
-  worktree show             Show one worktree
-  worktree current          Show the Veer-managed worktree for the current directory
-  worktree create           Create a new Veer-managed worktree
-  worktree set              Update Veer metadata for a worktree
-  worktree rm               Remove a worktree from Veer and git
-  worktree ps               Show a compact orchestration summary across worktrees
-
-Files:
-  file open                 Open a workspace file in the Veer editor
-  file diff                 Open a workspace file diff in the Veer editor
-  file open-changed         Open all git-changed files for a workspace
-
-Terminals:
-  terminal list             List live Veer-managed terminals
-  terminal show             Show terminal metadata and preview
-  terminal read             Read bounded terminal output
-  terminal send             Send input to a live terminal
-  terminal wait             Wait for a terminal condition (exit, tui-idle)
-  terminal stop             Stop terminals for a worktree
-  terminal create           Create a terminal session in a worktree
-  terminal rename           Set or clear the title of a terminal tab
-  terminal split            Split an existing terminal pane
-  terminal switch           Bring a terminal tab to the foreground
-  terminal focus            Alias for terminal switch
-  terminal close            Close a terminal pane/session, or its whole tab with --tab
-
-Orchestration:
-  orchestration run-create  Create and bind a lightweight orchestration Run
-  orchestration run-use     Bind this coordinator terminal to an existing Run
-  orchestration run-current Show this terminal's bound Run
-  orchestration run-list    List lightweight orchestration Runs
-  orchestration run-show    Show one lightweight orchestration Run
-  orchestration send        Send an inter-agent message
-  orchestration check       Check the bound Run mailbox
-  orchestration ask         Ask the coordinator a blocking question
-  orchestration reply       Reply to a message
-  orchestration inbox       Show all messages across recipients
-  orchestration task-create Create an orchestration task
-  orchestration task-list   List orchestration tasks
-  orchestration task-update Update a task status
-  orchestration dispatch    Dispatch a task to a terminal
-  orchestration dispatch-show Show dispatch context for a task
-  orchestration worker-start Start a supervised worker locally or on a connected Veer server
-  orchestration worker-show Inspect one supervised worker
-  orchestration worker-read Read bounded output from one supervised worker
-  orchestration worker-stop Fence one Dispatch; stop only its supervised worker
-  orchestration worker-abandon Fence an uncertain worker without claiming it stopped
-  orchestration worker-release Release a settled worker's terminal after archiving its output
-  orchestration worker-retain Keep a worker terminal live for debugging
-  orchestration worker-list Report worker terminal resource accounting
-  orchestration coordinator-start Start the legacy automatic coordinator loop
-  orchestration coordinator-stop Stop the legacy automatic coordinator loop
-  orchestration gate-create Create a decision gate blocking a task
-  orchestration gate-resolve Resolve a pending decision gate
-  orchestration gate-list   List decision gates
-  orchestration reset       Reset orchestration state
-
-Computer Use:
-  computer capabilities     Show computer-use provider capabilities
-  computer permissions      Show or open computer-use permission setup
-  computer list-apps        List running apps available to computer-use
-  computer list-windows     List visible windows for a target app
-  computer get-app-state    Capture a compact accessibility snapshot of an app
-  computer click            Click an app element or window coordinate
-  computer perform-secondary-action Run an advertised accessibility action
-  computer scroll           Scroll an app element
-  computer drag             Drag between app elements or window coordinates
-  computer type-text        Type literal text at the current app focus
-  computer press-key        Press a single key such as Return or Escape
-  computer hotkey           Press a shortcut combination such as CmdOrCtrl+A
-  computer paste-text       Paste text through the native clipboard path
-  computer set-value        Set the value of a settable app element
-
-Linear:
-  linear                    Read Linear ticket context for agents
-
-Mobile Emulator (iOS Simulator):
-  emulator list             List available/running emulators (Veer-managed + raw serve-sim)
-  emulator attach <device>  Attach/start helper and make active for the worktree
-  emulator tap <x> <y>      Tap at normalized 0..1 coords (preferred for single taps)
-  emulator type <text>      Type text (US ASCII only)
-  emulator gesture <json>   Send begin/move/end touch points
-  emulator button <name>    Hardware button (home, side_button, etc.)
-  emulator rotate <o>       Rotate device (portrait|landscape_left|...)
-  emulator exec --command   Raw serve-sim subcommand passthrough (no "serve-sim" prefix)
-  emulator kill             Stop helper for device
-
-Browser Automation:
-  tab create                Create a new browser tab (navigates to --url)
-  tab list                  List open browser tabs
-  tab show                  Show one browser tab by page id
-  tab current               Show the current browser tab
-  tab profile list          List browser session profiles
-  tab profile create        Create a browser session profile
-  tab profile delete        Delete a browser session profile
-  tab profile set           Switch a browser tab to a different profile
-  tab profile show          Show the profile bound to a browser tab
-  tab profile use-default   Switch a browser tab back to the default profile
-  tab profile clone         Clone a browser tab into another profile
-  tab switch                Switch the active browser tab by --index or --page
-  tab close                 Close a browser tab by --index/--page or the current tab
-  snapshot                  Accessibility snapshot with element refs (e.g. @e1, @e2)
-  goto                      Navigate the active tab to --url
-  click                     Click element by --element ref
-  fill                      Clear and fill input by --element ref with --value
-  type                      Type --input text at the current focus (no element needed)
-  select                    Select dropdown option by --element ref and --value
-  hover                     Hover element by --element ref
-  keypress                  Press a key (e.g. --key Enter, --key Tab)
-  scroll                    Scroll --direction (up/down) by --amount pixels
-  back                      Navigate back in browser history
-  reload                    Reload the active browser tab
-  screenshot                Capture viewport screenshot (--format png|jpeg)
-  eval                      Evaluate --expression JavaScript in the page context
-  wait                      Wait for page idle or --timeout ms
-  check                     Check a checkbox by --element ref
-  uncheck                   Uncheck a checkbox by --element ref
-  focus                     Focus an element by --element ref
-  clear                     Clear an input by --element ref
-  drag                      Drag --from ref to --to ref
-  upload                    Upload --files to a file input by --element ref
-  dblclick                  Double-click element by --element ref
-  forward                   Navigate forward in browser history
-  scrollintoview            Scroll --element into view
-  get                       Get element property (--what: text, html, value, url, title)
-  is                        Check element state (--what: visible, enabled, checked)
-  inserttext                Insert text without key events
-  mouse move                Move mouse to --x --y coordinates
-  mouse down                Press mouse button
-  mouse up                  Release mouse button
-  mouse wheel               Scroll wheel --dy [--dx]
-  find                      Find element by locator (--locator role|text|label --value <v>)
-  set device                Emulate device (--name "iPhone 12")
-  set offline               Toggle offline mode (--state on|off)
-  set headers               Set HTTP headers (--headers '{"key":"val"}')
-  set credentials           Set HTTP auth (--user <u> --pass <p>)
-  set media                 Set color scheme (--color-scheme dark|light)
-  clipboard read            Read clipboard contents
-  clipboard write           Write --text to clipboard
-  dialog accept             Accept browser dialog (--text for prompt response)
-  dialog dismiss            Dismiss browser dialog
-  storage local get         Get localStorage value by --key
-  storage local set         Set localStorage --key --value
-  storage local clear       Clear localStorage
-  storage session get       Get sessionStorage value by --key
-  storage session set       Set sessionStorage --key --value
-  storage session clear     Clear sessionStorage
-  download                  Download file via --selector to --path
-  highlight                 Highlight --selector on page
-  exec                      Run any agent-browser command (--command "...")
-
-Common Commands:
-  veer open [--json]
-  veer serve [--port <port>] [--pairing-address <host>] [--mobile-pairing] [--no-pairing] [--project-root <path>] [--recipe-json] [--json]
-  veer status [--json]
-  veer diagnostics memory [--json]
-  veer agent-context [--json]
-  veer account add [--agent claude|codex] [--json]
-  veer account list [--json]
-  veer host list [--json]
-  veer environment add --name <name> --pairing-code <code> [--json]
-  veer environment list [--json]
-  veer environment show --environment <selector> [--json]
-  veer environment rm --environment <selector> [--json]
-  veer worktree list [--repo <selector>] [--limit <n>] [--json]
-  veer worktree create --name <name> [--repo <selector>|--project <id> [--host <host-id>]|--project-host-setup <id>] [--agent <id>] [--prompt <text>] [--setup run|skip|inherit] [--base-branch <ref>] [--issue <number>] [--linear-issue <identifier-or-url>] [--comment <text>] [--parent-worktree <selector>] [--no-parent] [--run-hooks] [--activate] [--json]
-  veer worktree show --worktree <selector> [--json]
-  veer worktree current [--json]
-  veer worktree set --worktree <selector> [--display-name <name>] [--issue <number|null>] [--linear-issue <identifier-or-url|null>] [--comment <text>] [--workspace-status <id>] [--parent-worktree <selector>|--no-parent] [--json]
-  veer worktree rm --worktree <selector> [--force] [--run-hooks] [--json]
-  veer worktree ps [--limit <n>] [--json]
-  veer file open <path> [--worktree <selector>] [--json]
-  veer file diff <path> [--staged] [--worktree <selector>] [--json]
-  veer file open-changed [--mode edit|diff|both] [--worktree <selector>] [--json]
-  veer terminal list [--worktree <selector>] [--limit <n>] [--include-visual-layouts] [--json]
-  veer terminal show [--terminal <handle>] [--json]
-  veer terminal read [--terminal <handle>] [--cursor <n>] [--limit <n>] [--json]
-  veer terminal send [--terminal <handle>] [--text <text>] [--enter] [--interrupt] [--json]
-  veer terminal wait [--terminal <handle>] --for exit|tui-idle [--timeout-ms <ms>] [--json]
-  veer terminal stop --worktree <selector> [--json]
-  veer terminal create [--worktree <selector>] [--title <name>] [--command <text>] [--focus] [--json]
-  veer terminal split [--terminal <handle>] [--direction horizontal|vertical] [--json]
-  veer terminal switch [--terminal <handle>] [--json]
-  veer terminal close [--terminal <handle>] [--tab] [--json]
-  veer project list [--json]
-  veer project setups [--project <id>] [--host <host-id>] [--json]
-  veer project setup-existing-folder --project <id> --host <host-id> --path <path> [--kind git|folder] [--display-name <name>] [--json]
-  veer project setup-clone --project <id> --host <host-id> --url <clone-url> --destination <path> [--display-name <name>] [--json]
-  veer project setup-create --project <id> --host <host-id> [--setup-id <id>] [--path <path>] [--kind git|folder] [--display-name <name>] [--worktree-base-path <path>] [--git-username <name>] [--state ready|not-set-up|setting-up|error|unsupported] [--method imported-existing-folder|cloned|provisioned] [--json]
-  veer project setup-update --setup <setup-id> [--display-name <name>] [--path <path>] [--worktree-base-path <path>] [--git-username <name>] [--kind git|folder] [--state ready|not-set-up|setting-up|error|unsupported] [--method legacy-repo|imported-existing-folder|cloned|provisioned] [--json]
-  veer project setup-delete --setup <setup-id> [--json]
-  veer repo list [--json]
-  veer repo add --path <path> [--json]
-  veer repo show --repo <selector> [--json]
-  veer repo set-base-ref --repo <selector> --ref <ref> [--json]
-  veer repo search-refs --repo <selector> --query <text> [--limit <n>] [--json]
-
-Selectors:
-  --repo <selector>         Registered repo selector such as id:<id>, name:<name>, or path:<path>
-  --worktree <selector>     Worktree selector such as id:<repo-id>::<path>, name:<displayName>, branch:<branch>, issue:<number>, path:<path>, or active/current
-  --terminal <handle>       Runtime-issued terminal handle returned by \`veer terminal list --json\`
-  --parent-worktree <selector> Parent worktree selector such as id:<repo-id>::<path>, branch:<branch>, issue:<number>, path:<path>, or active/current
-  --no-parent               Force no parent lineage for unrelated worktree creation/update
-
-Terminal Send Options:
-  --text <text>             Text to send to the terminal
-  --enter                   Append Enter after sending text
-  --interrupt               Send as an interrupt-style input when supported
-
-Terminal List Options:
-  --include-visual-layouts  Include tab and pane topology in JSON output
-
-Wait Options:
-  --for exit                Wait until the target terminal exits
-  --timeout-ms <ms>         Maximum wait time before timing out
-
-Output Options:
-  --json                    Emit machine-readable JSON instead of human text
-  --pairing-code <code>      Connect to a remote Veer runtime using an orca://pair?... code
-  --environment <selector>   Connect using a saved environment id or name
-  --help                    Show this help message
-
-Behavior:
-  Most commands require a running Veer runtime. If Veer is not open yet, run \`veer open\` first.
-  Remote runtime access can also be supplied with ORCA_PAIRING_CODE or ORCA_ENVIRONMENT.
-  Use selectors for discovery and handles for repeated live terminal operations.
-
-Agent Sessions And Worktrees:
-  \`worktree create --agent\` creates a new checkout with an agent.
-  To start a fresh agent in the current worktree, use:
-    veer terminal create --worktree active --command "codex"
-
-Browser Workflow:
-  1. Create or navigate:  veer tab create --url https://example.com
-                          veer goto --url https://example.com
-  2. Inspect the page:    veer snapshot
-     (Returns an accessibility tree with element refs like e1, e2, e3)
-     For concurrent workflows, prefer: veer tab list --json
-     then reuse tabs[].browserPageId with --page <id> on later commands.
-  3. Interact:            veer click --element e2
-                          veer fill --element e5 --value "search query"
-                          veer keypress --key Enter
-  4. Re-inspect:          veer snapshot
-     (Element refs change after navigation — always re-snapshot before interacting)
-
-Browser Options:
-  --element <ref>           Element ref from snapshot (e.g. @e3)
-  --url <url>               URL to navigate to
-  --value <text>            Value to fill or select
-  --input <text>            Text to type at current focus (no element needed)
-  --expression <js>         JavaScript expression to evaluate
-  --key <key>               Key to press (Enter, Tab, Escape, Control+a, etc.)
-  --direction <dir>         Scroll direction: up or down
-  --amount <pixels>         Scroll distance in pixels (default: viewport height)
-  --index <n>               Tab index (from \`tab list\`)
-  --page <id>               Stable browser page id (preferred for concurrent workflows)
-  --profile <id>            Browser profile id
-  --show-profile            Include the tab's browser profile in text output
-  --no-ua-spoof             Keep Electron's native user agent for a new profile
-  --format <png|jpeg>       Screenshot image format
-  --from <ref>              Drag source element ref
-  --to <ref>                Drag target element ref
-  --files <path,...>        Comma-separated file paths for upload
-  --timeout <ms>            Wait timeout in milliseconds
-  --worktree <selector>     Scope commands to a specific worktree's browser tabs
-
-Examples:
-  $ veer open
-  $ veer status --json
-  $ veer diagnostics memory --json
-  $ veer repo list
-  $ veer worktree create --name agent-task --agent codex --prompt "hi"
-  $ veer worktree create --repo name:veer --name cli-test-1 --issue 273
-  $ veer worktree create --repo name:veer --name linear-task --linear-issue https://linear.app/stably/issue/STA-335/test-issue
-  $ veer worktree create --name linear-task --linear-issue STA-335
-  $ veer worktree show --worktree branch:Jinwoo-H/cli
-  $ veer worktree current
-  $ veer worktree set --worktree active --comment "waiting on review"
-  $ veer worktree set --worktree active --linear-issue null
-  $ veer worktree ps --limit 10
-  $ veer file open-changed --mode diff
-  $ veer file open src/App.tsx
-  $ veer terminal create --worktree active --command "codex"
-  $ veer terminal list --worktree path:/Users/me/veer/workspaces/veer/cli-test-1 --json
-  $ veer terminal send --terminal term_123 --text "hi" --enter
-  $ veer terminal wait --terminal term_123 --for exit --timeout-ms 60000 --json
-  $ veer tab current --json
-  $ veer tab show --page page_123 --json
-  $ veer tab create --url https://example.com --profile work
-  $ veer tab profile clone --page page_123 --profile work --json
-  $ veer snapshot
-  $ veer click --element e3
-  $ veer fill --element e5 --value "hello"
-  $ veer goto --url https://example.com/login
-  $ veer keypress --key Enter
-  $ veer eval --expression "document.title"
-  $ veer tab list --json`
+const ROOT_HELP_TEXT = [ROOT_HELP_TEXT_PRIMARY, ROOT_HELP_TEXT_SECONDARY].join('\n')
 
 export function printHelp(specs: CommandSpec[], commandPath: string[] = []): void {
   const exactSpec = findCommandSpec(specs, commandPath)
@@ -389,7 +28,7 @@ export function printHelp(specs: CommandSpec[], commandPath: string[] = []): voi
 }
 
 export function formatCommandHelp(spec: CommandSpec): string {
-  const lines = [`veer ${spec.path.join(' ')}`, '', `Usage: ${spec.usage}`, '', spec.summary]
+  const lines = [`orca ${spec.path.join(' ')}`, '', `Usage: ${spec.usage}`, '', spec.summary]
   const displayedFlags =
     spec.argumentMode === 'passthrough'
       ? []
@@ -423,11 +62,11 @@ export function formatCommandHelp(spec: CommandSpec): string {
 
 export function formatGroupHelp(specs: CommandSpec[], group: string): string {
   const groupSpecs = specs.filter((spec) => spec.path[0] === group)
-  const lines = [`veer ${group}`, '', `Usage: veer ${group} <command> [options]`, '', 'Commands:']
+  const lines = [`orca ${group}`, '', `Usage: orca ${group} <command> [options]`, '', 'Commands:']
   for (const spec of groupSpecs) {
     lines.push(`  ${spec.path.slice(1).join(' ').padEnd(18)} ${spec.summary}`)
   }
-  lines.push('', `Run \`veer ${group} <command> --help\` for command-specific usage.`)
+  lines.push('', `Run \`orca ${group} <command> --help\` for command-specific usage.`)
   return lines.join('\n')
 }
 
@@ -509,7 +148,7 @@ function formatCommandFlagHelp(flag: string, commandPath: string[]): string {
     return '--parent-current      Use the current linked issue as parent'
   }
   if (command === 'worktree create' && flag === 'parent-worktree') {
-    return '--parent-worktree <selector> Parent selector such as active/current, id:<repo-id>::<path>, branch:<branch>, issue:<number>, path:<path>, folder:<id>, or worktree:<worktreeId>'
+    return '--parent-worktree <selector> Parent selector such as identity:<identity>, active/current, id:<repo-id>::<path>, branch:<branch>, issue:<number>, path:<path>, folder:<id>, or worktree:<worktreeId>'
   }
   if (command === 'orchestration task-create' && flag === 'task-title') {
     return '--task-title <text>  Concise title for the orchestration task'
@@ -536,20 +175,20 @@ export function formatFlagHelp(flag: string): string {
     agent: '--agent <id>          Launch a known TUI agent in the first terminal',
     'base-branch': '--base-branch <ref>    Base branch/ref to create the worktree from',
     command: '--command <text>       Command to run in the terminal on startup',
-    comment: '--comment <text>       Comment stored in Veer metadata',
+    comment: '--comment <text>       Comment stored in Orca metadata',
     cursor: '--cursor <n>           Line cursor from a previous read (returns only new output)',
     action: '--action <name>       Secondary accessibility action name',
-    activate: '--activate             Reveal the new worktree in the Veer app',
+    activate: '--activate             Reveal the new worktree in the Orca app',
     app: '--app <app>            App name, bundle ID, or pid:N',
     direction:
       '--direction <dir>      Direction: up|down|left|right for scroll, horizontal|vertical for split',
-    'display-name': '--display-name <name>  Override the Veer display name',
+    'display-name': '--display-name <name>  Override the Orca display name',
     'element-index': '--element-index <n>   Element index from get-app-state',
     title: '--title <text>         Custom title for the terminal tab (omit to reset)',
     enter: '--enter                Append Enter after sending text',
     force:
       '--force                Force worktree removal when supported; does not force branch deletion',
-    focus: '--focus                Reveal the created terminal session in Veer',
+    focus: '--focus                Reveal the created terminal session in Orca',
     for: '--for exit|tui-idle    Wait condition to satisfy',
     'from-element-index': '--from-element-index <n> Source element index from get-app-state',
     'from-x': '--from-x <x>           Source window-local x coordinate',
@@ -577,7 +216,7 @@ export function formatFlagHelp(flag: string): string {
     'no-screenshot': '--no-screenshot       Skip screenshot capture after the operation',
     pages: '--pages <n>           Number of scroll pages',
     'parent-worktree':
-      '--parent-worktree <selector> Parent worktree selector such as id:<repo-id>::<path>, branch:<branch>, issue:<number>, path:<path>, or active/current',
+      '--parent-worktree <selector> Parent worktree selector such as identity:<identity>, id:<repo-id>::<path>, branch:<branch>, issue:<number>, path:<path>, or active/current',
     path: '--path <path>          Path argument for the command',
     prompt: '--prompt <text>        Prompt text for agent-backed commands',
     query: '--query <text>        Search text for matching refs',
@@ -601,7 +240,7 @@ export function formatFlagHelp(flag: string): string {
     'to-x': '--to-x <x>             Destination window-local x coordinate',
     'to-y': '--to-y <y>             Destination window-local y coordinate',
     worktree:
-      '--worktree <selector>  Worktree selector such as id:<repo-id>::<path>, name:<displayName>, branch:<branch>, issue:<number>, path:<path>, or active/current',
+      '--worktree <selector>  Worktree selector such as identity:<identity>, id:<repo-id>::<path>, name:<displayName>, branch:<branch>, issue:<number>, path:<path>, or active/current',
     workspace: '--workspace <selector> Existing worktree selector for automation runs',
     'workspace-status':
       '--workspace-status <id> Board status id (defaults: todo, in-progress, in-review, completed)',
@@ -632,7 +271,7 @@ export function formatFlagHelp(flag: string): string {
     expression: '--expression <js>     JavaScript expression to evaluate',
     amount: '--amount <pixels>      Scroll distance in pixels',
     index: '--index <n>            Tab index to switch to',
-    page: '--page <id>            Stable browser page id from `veer tab list --json`',
+    page: '--page <id>            Stable browser page id from `orca tab list --json`',
     profile: '--profile <id>        Browser profile id',
     'show-profile': '--show-profile        Include tab profile in text output',
     'no-ua-spoof': "--no-ua-spoof         Keep Electron's native user agent",
@@ -640,7 +279,7 @@ export function formatFlagHelp(flag: string): string {
   }
 
   if (flag === 'current') {
-    return '--current              Use the current Veer worktree linked Linear issue'
+    return '--current              Use the current Orca worktree linked Linear issue'
   }
   if (flag === 'comments') {
     return '--comments             Include threaded Linear comments'

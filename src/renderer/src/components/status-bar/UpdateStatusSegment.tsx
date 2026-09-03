@@ -21,6 +21,10 @@ export function UpdateStatusSegment({
     return null
   }
 
+  const linuxPackageRecovery =
+    status.state === 'error' && status.recovery?.kind === 'linux-package-install'
+      ? status.recovery
+      : null
   const segment = (() => {
     if (status.state === 'downloading') {
       const pct = Math.max(0, Math.min(100, Math.round(status.percent)))
@@ -29,7 +33,7 @@ export function UpdateStatusSegment({
         label: `${pct}%`,
         tooltip: translate(
           'auto.components.status.bar.UpdateStatusSegment.248ee5d8ef',
-          'Veer v{{value0}} downloading… {{value1}}%',
+          'Orca v{{value0}} downloading… {{value1}}%',
           { value0: status.version, value1: pct }
         ),
         ariaLabel: translate(
@@ -39,7 +43,9 @@ export function UpdateStatusSegment({
         )
       }
     }
-    if (status.state === 'downloaded') {
+    const readyVersion =
+      status.state === 'downloaded' ? status.version : linuxPackageRecovery?.version
+    if (readyVersion !== undefined) {
       return {
         icon: <CheckCircle2 className="size-3 text-emerald-500" />,
         label: translate(
@@ -48,8 +54,8 @@ export function UpdateStatusSegment({
         ),
         tooltip: translate(
           'auto.components.status.bar.UpdateStatusSegment.9d13213a56',
-          'Veer v{{value0}} ready to install',
-          { value0: status.version }
+          'Orca v{{value0}} ready to install',
+          { value0: readyVersion }
         ),
         ariaLabel: translate(
           'auto.components.status.bar.UpdateStatusSegment.962404f68e',

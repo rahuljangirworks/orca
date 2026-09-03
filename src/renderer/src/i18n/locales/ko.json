@@ -56,7 +56,7 @@
     "showStatusBar": "상태 표시줄 표시",
     "showTasksButton": "작업 버튼 표시",
     "showAutomationsButton": "자동화 버튼 표시",
-    "showMobileButton": "Veer 모바일 버튼 표시",
+    "showMobileButton": "Orca 모바일 버튼 표시",
     "showTitlebarAppName": "제목 표시줄 앱 이름 표시",
     "view": "보기",
     "reload": "새로고침",
@@ -113,7 +113,7 @@
       "df1d56bf87": "워크스페이스 셸에 오류가 발생했습니다.",
       "9e0b441a91": "오른쪽 사이드바 표시/숨기기",
       "e81217c1b7": "앱 이름 숨기기",
-      "5096cbbc86": "Veer",
+      "5096cbbc86": "Orca",
       "8b0b8eb54f": "애플리케이션 메뉴",
       "caea5b51b9": "지금 재시작",
       "0a9e810705": "다시 시작할 때까지 변경사항이 저장되지 않습니다. 이전 탭은 디스크에 안전합니다.",
@@ -266,7 +266,10 @@
           "3b57982bf6": "\"{{value1}}\" 워크스페이스를 삭제한 후 Git이 \"{{value0}}\" 브랜치를 안전하게 삭제할 수 없어 Orca가 로컬 커밋 손실을 방지하기 위해 유지했습니다.",
           "81f13f48d2": "\"{{value1}}\" 워크트리를 삭제한 후 Git이 \"{{value0}}\" 브랜치를 안전하게 삭제할 수 없어 Orca가 로컬 커밋 손실을 방지하기 위해 유지했습니다.",
           "runtimeScopeForbiddenTitle": "이 연결은 제한된(모바일) 액세스입니다",
-          "runtimeScopeForbiddenDescription": "모바일 범위 페어링에서는 워크스페이스를 사용할 수 없습니다. 설정 → 원격 Orca 서버 → 이 Orca 서버 공유에서 브라우저 액세스 링크로 다시 연결하세요."
+          "runtimeScopeForbiddenDescription": "모바일 범위 페어링에서는 워크스페이스를 사용할 수 없습니다. 설정 → 원격 Orca 서버 → 이 Orca 서버 공유에서 브라우저 액세스 링크로 다시 연결하세요.",
+          "createdWithoutParentNesting": "\"{{value0}}\" 아래에 중첩하지 않고 생성했습니다",
+          "createdWithoutParentNestingUnnamed": "선택한 상위 워크트리 아래에 중첩하지 않고 생성했습니다",
+          "createdWithoutParentNestingDetail": "상위 워크스페이스를 더 이상 사용할 수 없습니다. 워크스페이스 메뉴에서 설정할 수 있습니다."
         },
         "repos": {
           "2975400634": "이 런타임에서 Git이 아닌 폴더를 열려면 Orca 서버를 업데이트하세요.",
@@ -1160,7 +1163,7 @@
         "76a95f7f47": "생성",
         "f05d237049": "먼저 프로젝트를 추가하세요.",
         "f9eaa9e12d": "프로젝트 추가",
-        "6ca6ff404e": "VEER",
+        "6ca6ff404e": "Orca",
         "520304a067": "Orca 로고",
         "ce44fad849": "종속성 누락",
         "c1cf168479": "숨기기",
@@ -2743,7 +2746,8 @@
             "e4aa243f8c": "데몬 재시작",
             "a7e2fd2699": "이슈 등록",
             "5c8ce20be6": "문제가 계속되면",
-            "cc6d997c65": "오래된 데몬 상태를 지우려면 여기에서 terminal 데몬을 다시 시작하세요."
+            "cc6d997c65": "오래된 데몬 상태를 지우려면 여기에서 terminal 데몬을 다시 시작하세요.",
+            "remoteTerminalClosed": "원격 터미널이 종료되었습니다."
           },
           "TerminalProcessExitOverlay": {
             "capacityTitle": "Git Bash 콘솔 한도에 도달했습니다",
@@ -2882,7 +2886,7 @@
           "TerminalRemoteRuntimeReconnectBanner": {
             "retryingTitle": "원격 런타임에 다시 연결 중",
             "disconnectedTitle": "원격 런타임 연결 끊김",
-            "retryingBody": "Orca는 최대 1분간 재시도합니다. 연결이 복원되면 이 터미널이 재개됩니다.",
+            "retryingBody": "Orca가 자동으로 재시도합니다. 연결이 복원되면 이 터미널이 재개됩니다.",
             "disconnectedBody": "자동 재시도가 중지되었습니다. 이 터미널 세션을 재개하려면 다시 연결하세요.",
             "reconnectButton": "다시 연결"
           }
@@ -3014,7 +3018,8 @@
             "25dc1cd653": "파일 열기",
             "7cdf8ee0c8": "URL 열기",
             "b27864279e": "agent 실행",
-            "0e5b7a3f16": "열린 탭, 파일, URL, agent 검색…",
+            "omniboxPlaceholderWithHistory": "열린 탭, 방문 기록, 파일, URL, agent 검색…",
+            "openPage": "페이지 열기",
             "8f0a1c4d92": "탭으로 전환",
             "2c38630a01": "워크스페이스가 더 이상 존재하지 않습니다",
             "4f0d9a71c2": "탭이 더 이상 존재하지 않습니다",
@@ -3060,7 +3065,6 @@
                 "classifier": {
                   "42e6262ae9": "사용할 수 있는 작업이 없습니다.",
                   "097a982ee0": "파일 로드 중...",
-                  "c41f8d20b7": "열린 탭, 파일, URL, agent 검색…",
                   "90eb94dc48": "http:// 또는 https:// URL을 입력하세요.",
                   "5553b283ce": "URL 또는 파일 경로를 입력하세요.",
                   "queryTooLarge": "검색 텍스트가 너무 큽니다.",
@@ -3908,7 +3912,9 @@
           "searchLinks": "링크 검색",
           "deleteSkills": "스킬 삭제…"
         },
-        "SkillShareSelectionControls": { "01c5a15e02": "스킬 공유" },
+        "SkillShareSelectionControls": {
+          "01c5a15e02": "스킬 공유"
+        },
         "SkillRow": {
           "updatedUnknown": "날짜 없음",
           "pathCopied": "경로 복사됨",
@@ -3918,13 +3924,17 @@
           "viewDetails": "세부 정보 보기",
           "deleteSkill": "삭제…"
         },
-        "SkillsList": { "listLabel": "스킬" },
+        "SkillsList": {
+          "listLabel": "스킬"
+        },
         "sourceStatus": {
           "missing": "폴더를 찾을 수 없음",
           "remoteRepo": "원격 리포지토리 — 검색 안 됨",
           "unavailable": "검색 안 됨"
         },
-        "sources": { "heading": "스킬 폴더" },
+        "sources": {
+          "heading": "스킬 폴더"
+        },
         "sourceKind": {
           "home": "홈",
           "workspace": "워크스페이스",
@@ -3946,7 +3956,10 @@
           "linkOne": "링크 {{count}}개",
           "linkOther": "링크 {{count}}개"
         },
-        "filter": { "allAgents": "모든 에이전트", "sharedAgent": "공유됨 (.agents)" },
+        "filter": {
+          "allAgents": "모든 에이전트",
+          "sharedAgent": "공유됨 (.agents)"
+        },
         "SkillsSelectionHeader": {
           "exit": "선택 나가기",
           "exitTooltip": "선택 나가기 · Esc",
@@ -3955,7 +3968,11 @@
           "clear": "지우기",
           "deleteTitle": "삭제할 스킬 선택"
         },
-        "SkillDetailDialog": { "agents": "에이전트", "updated": "업데이트됨", "copy": "복사" },
+        "SkillDetailDialog": {
+          "agents": "에이전트",
+          "updated": "업데이트됨",
+          "copy": "복사"
+        },
         "SkillFreshnessNudge": {
           "titleOne": "설치된 Orca 스킬이 오래되었습니다",
           "titleMany": "설치된 Orca 스킬 {{value0}}개가 오래되었습니다",
@@ -4373,18 +4390,21 @@
           "keepDefaultBranchAria": "슬립 중인 워크스페이스를 숨겨도 기본 브랜치는 계속 표시"
         },
         "SidebarHeader": {
+          "projects": "프로젝트",
           "92154beb7e": "새로운 워크스페이스",
           "49f62c5665": "워크스페이스 보드",
           "5c9c7c16aa": "워크스페이스를 만들려면 프로젝트를 추가하세요.",
           "ca6f729da2": "새 워크스페이스({{value0}})",
           "a30e34eb5c": "워크스페이스 보드 닫기",
-          "25a95899c9": "프로젝트 추가"
+          "25a95899c9": "프로젝트 추가",
+          "spaces": "스페이스",
+          "views": "사이드바 보기"
         },
         "SidebarNav": {
           "80611a8b10": "검색",
           "0c3395fd32": "작업 트리 및 브라우저 탭 검색",
           "c86d83b5c3": "신규",
-          "1b5c41caee": "Veer 모바일",
+          "1b5c41caee": "Orca 모바일",
           "9c95e1ce91": "에이전트",
           "f323383e9a": "자동화",
           "e7ad3c540d": "Jira 작업 열기",
@@ -5539,9 +5559,9 @@
           "b707773a0d": "활성화하면 창을 닫아도 Orca가 종료되지 않고 시스템 트레이에서 계속 실행됩니다.",
           "0cd9b8228f": "Dock 및 창 전환기에 표시된 앱 아이콘을 선택합니다.",
           "ca1590d42f": "앱 아이콘",
-          "61d842eca0": "사이드바에 Veer Mobile 바로가기를 표시합니다. 도구 상자에서는 계속 사용할 수 있습니다.",
-          "9da1020447": "Veer 모바일 버튼 표시",
-          "5db6ba961f": "왼쪽 사이드바 상단에 Veer Mobile 버튼을 표시합니다.",
+          "61d842eca0": "사이드바에 Orca Mobile 바로가기를 표시합니다. 도구 상자에서는 계속 사용할 수 있습니다.",
+          "9da1020447": "Orca 모바일 버튼 표시",
+          "5db6ba961f": "왼쪽 사이드바 상단에 Orca Mobile 버튼을 표시합니다.",
           "fa882a3e6b": "왼쪽 사이드바 상단에 자동화 버튼을 표시합니다.",
           "511f270ebb": "자동화 버튼 표시",
           "661942ab7f": "왼쪽 사이드바 상단에 작업 버튼을 표시합니다.",
@@ -6148,10 +6168,9 @@
           "compareBaseBranchUpstream": "브랜치 업스트림"
         },
         "HiddenExperimentalGroup": {
-          "d0f914a528": "자리 표시자 토글",
-          "1014ddbfaf": "오늘은 아무것도 하지 않습니다. 숨겨진 실험 옵션을 위한 첫 번째 슬롯으로 예약되어 있습니다.",
-          "232cf83de8": "내부 테스트를 위한 비공개 토글입니다. 여기에는 아무것도 지원되지 않습니다.",
-          "3e9e827ca5": "숨겨진 실험"
+          "7c4e18d2f6": "이 컴퓨터에서 굵게 표시 결함 캡처 제스처를 활성화합니다. {{samplingShortcut}}하면 샘플링 버스트가 시작되고, {{captureShortcut}}하면 창 증거를 디스크에 캡처합니다.",
+          "b09f24a51d": "터미널 렌더링 진단",
+          "f2c81d904a": "숨겨진 실험 설정"
         },
         "InputPane": {
           "db15068196": "Linux 및 macOS에서는 기본적으로 활성화되어 있습니다. Linux는 시스템 선택 클립보드를 사용합니다. 다른 플랫폼은 개인 버퍼를 사용합니다.",
@@ -6350,13 +6369,13 @@
           "b2fd62ea75": "새 에뮬레이터 탭 및 agent 연결 명령을 위한 기본 장치입니다. 자동 선택은 이미 실행 중인 장치를 선호합니다."
         },
         "MobileNetworkInterfaceSection": {
-          "63d5e4ae1e": "QR 코드를 재생성하고 Veer 모바일 앱에서 스캔하세요.",
+          "63d5e4ae1e": "QR 코드를 재생성하고 Orca 모바일 앱에서 스캔하세요.",
           "87985ba6f5": "이 네트워크 인터페이스 메뉴에서 Tailscale 주소(일반적으로 100.x.y.z IP)를 선택합니다.",
           "1f7c26d36a": "두 장치 모두에서 동일한 tailnet에 로그인합니다.",
           "668016be7a": "컴퓨터와 휴대폰에서.",
           "1dc87a7fbc": "Tailscale",
           "51d29927eb": "설치",
-          "9fc5d203ff": "Veer Mobile은 이 컴퓨터에 직접 연결됩니다. 동일한 LAN이 아닌 곳에서 사용하려면 컴퓨터와 휴대폰을 동일한 개인 오버레이 네트워크에 놓은 다음 해당 네트워크 주소를 선택하여 QR 코드를 생성하세요.",
+          "9fc5d203ff": "Orca Mobile은 이 컴퓨터에 직접 연결됩니다. 동일한 LAN이 아닌 곳에서 사용하려면 컴퓨터와 휴대폰을 동일한 개인 오버레이 네트워크에 놓은 다음 해당 네트워크 주소를 선택하여 QR 코드를 생성하세요.",
           "39fad211d9": "tailnet을 사용하여 Wi-Fi 외부에서 연결",
           "a9db5d771d": "네트워크 인터페이스 새로 고침",
           "b2c384cfd6": "인터페이스를 찾을 수 없습니다.",
@@ -6366,14 +6385,14 @@
           "1e64659126": "재생성"
         },
         "MobilePane": {
-          "dd3cd78d04": "Veer 모바일로 스캔",
+          "dd3cd78d04": "Orca 모바일로 스캔",
           "35100bca5d": "휴대폰에서 terminals을 사용하는 동안 Orca는 휴대폰 화면에 맞게 terminals을 축소합니다. 앱을 닫거나 다른 곳으로 전환하면 terminals이 휴대폰 크기로 유지되는지(대화형 CLI 도구가 리플로우되지 않음) 또는 데스크탑으로 다시 크기가 조정되는지 여부가 제어됩니다. 배너에서 '이 terminals 복원' 또는 '모든 terminals 복원'을 사용해 언제든지 수동으로 크기를 조정할 수 있습니다.",
           "ee56f1c7e4": "모바일 앱을 나갈 때",
           "3939fd062c": "장치를 취소하면 즉시 연결이 끊어집니다.",
           "254a6d09e4": "페어링됨",
           "d7ce676270": "페어링된 장치",
           "e778ecb209": "또는 모바일 앱에 다음 코드를 붙여넣으세요.",
-          "310924ad2c": "Veer 모바일 앱으로 이 코드를 스캔하세요. 각 코드는 고유한 장치 토큰을 생성합니다.",
+          "310924ad2c": "Orca 모바일 앱으로 이 코드를 스캔하세요. 각 코드는 고유한 장치 토큰을 생성합니다.",
           "870e1b5ca5": "기기를 취소하지 못했습니다.",
           "2e3dd0bc29": "기기가 취소되었습니다.",
           "711231348f": "페어링 코드를 복사하지 못했습니다.",
@@ -6386,9 +6405,9 @@
           "aa1263e881": "휴대폰 크기로 유지(기본값)",
           "6436e56546": "모바일 페어링을 위한 QR 코드",
           "1b1b70279a": "아직 페어링된 기기가 없습니다.",
-          "1592afcc7a": "아직 페어링된 기기가 없습니다. Veer 모바일 앱으로 QR 코드를 스캔하세요.",
+          "1592afcc7a": "아직 페어링된 기기가 없습니다. Orca 모바일 앱으로 QR 코드를 스캔하세요.",
           "relayDegradedNotice": "Relay에 연결할 수 없습니다 — 이 코드는 LAN 또는 Tailscale에서만 작동합니다. 다시 생성해 보세요.",
-          "pairingQrError": "이 페어링 코드를 QR 코드로 표시할 수 없습니다. 대신 Veer Mobile에 복사하세요."
+          "pairingQrError": "이 페어링 코드를 QR 코드로 표시할 수 없습니다. 대신 Orca Mobile에 복사하세요."
         },
         "MobileSettingsPane": {
           "9a3c280e49": "GitHub 릴리스",
@@ -6397,10 +6416,10 @@
           "c8491c17ef": "QR 코드를 스캔하여 휴대폰에서 Orca를 제어하세요. 베타/초기 미리보기 - 버그 및 주요 변경 사항이 예상됩니다. 다음에서 iOS 앱을 받으세요.",
           "e7a3ae8c4e": "모바일",
           "174f4a3c6d": "휴대폰에서 terminals과 agents를 제어하세요.",
-          "1de96ec8a6": "Veer Mobile 버튼 표시",
-          "682293cadf": "왼쪽 사이드바 상단에 Veer Mobile 버튼을 표시합니다.",
-          "d4f2b65f30": "사이드바에 Veer Mobile 바로가기를 표시합니다.",
-          "installIntro": "다음 스토어에서 Veer Mobile 설치",
+          "1de96ec8a6": "Orca Mobile 버튼 표시",
+          "682293cadf": "왼쪽 사이드바 상단에 Orca Mobile 버튼을 표시합니다.",
+          "d4f2b65f30": "사이드바에 Orca Mobile 바로가기를 표시합니다.",
+          "installIntro": "다음 스토어에서 Orca Mobile 설치",
           "installOutro": "하고 아래에서 페어링하세요.",
           "androidApkLabel": "Android APK"
         },
@@ -7625,7 +7644,7 @@
           "e49688f67f": "WSL에 `{{value0}}`을(를) 등록하시겠습니까?",
           "61ac55278e": "WSL에서 `{{value0}}`을(를) 제거하시겠습니까?",
           "e2b0ee267f": "오래됨",
-          "7aa456a460": "WSL 내부의 ~/.local/bin에 `veer-ide`를 등록합니다.",
+          "7aa456a460": "WSL 내부의 ~/.local/bin에 `orca-ide`를 등록합니다.",
           "0307677bb9": "WSL CLI 등록 확인 중..."
         },
         "accounts": {
@@ -7781,8 +7800,8 @@
             "5bff6a2ef0": "사이드바",
             "5e5b8878bf": "핸드폰",
             "74618577c7": "모바일",
-            "682293cadf": "왼쪽 사이드바 상단에 Veer Mobile 버튼을 표시합니다.",
-            "1de96ec8a6": "Veer 모바일 버튼 표시",
+            "682293cadf": "왼쪽 사이드바 상단에 Orca Mobile 버튼을 표시합니다.",
+            "1de96ec8a6": "Orca 모바일 버튼 표시",
             "4c920ab2d1": "일정",
             "58f4e22fa2": "오토메이션",
             "b186f3cefb": "자동화",
@@ -8019,7 +8038,7 @@
               "cee44fb442": "오토메이션",
               "a57c2172dc": "agent-browser",
               "6ea88e5206": "npx",
-              "f5b8fdddf5": "veer-cli",
+              "f5b8fdddf5": "orca-cli",
               "e5a784bc54": "설치",
               "9d97446873": "agent",
               "a2d489263e": "스킬",
@@ -8205,7 +8224,8 @@
             },
             "agentDashboard": {
               "title": "에이전트 대시보드",
-              "description": "워크트리 전반에 걸친 에이전트를 모니터링하는 칸반 보드. 윈도우 내 또는 팝업으로 표시됩니다."
+              "description": "워크트리 전반에 걸친 에이전트를 모니터링하는 칸반 보드. 윈도우 내 또는 팝업으로 표시됩니다.",
+              "dashboard": "대시보드"
             }
           }
         },
@@ -8619,8 +8639,8 @@
               "f213400800": "모바일",
               "671eb4173c": "휴대폰에서 terminals과 agents를 제어하세요.",
               "ffd52a96e4": "모바일",
-              "1de96ec8a6": "Veer Mobile 버튼 표시",
-              "682293cadf": "왼쪽 사이드바 상단에 Veer Mobile 버튼을 표시합니다.",
+              "1de96ec8a6": "Orca Mobile 버튼 표시",
+              "682293cadf": "왼쪽 사이드바 상단에 Orca Mobile 버튼을 표시합니다.",
               "e4f4daea0e": "릴레이",
               "5d5af8e041": "iPhone"
             }
@@ -9806,7 +9826,7 @@
           "regenerate": "다시 생성",
           "generate": "QR 코드 생성",
           "refresh": "네트워크 인터페이스 새로 고침",
-          "overview": "QR 코드를 생성한 후 Veer Mobile의 Pair Desktop에서 스캔하세요.",
+          "overview": "QR 코드를 생성한 후 Orca Mobile의 Pair Desktop에서 스캔하세요.",
           "step1Title": "연결 방식",
           "step2Title": "이 컴퓨터의 주소",
           "step2LocalDescription": "휴대폰이 Tailscale 또는 Wi‑Fi를 통해 이 주소에 접근할 수 있어야 합니다.",
@@ -9829,7 +9849,7 @@
         },
         "LinearAgentSkillPane": {
           "title": "Linear",
-          "description": "Orca에서 Linear 이슈를 탐색하고 연결된 워크스페이스를 시작하며 /veer-linear로 에이전트가 이슈를 업데이트할 수 있습니다.",
+          "description": "Orca에서 Linear 이슈를 탐색하고 연결된 워크스페이스를 시작하며 /orca-linear로 에이전트가 이슈를 업데이트할 수 있습니다.",
           "skillTitle": "Linear 스킬",
           "howToUse": "프롬프트 예시",
           "howToUseDescription": "카드를 클릭해 프롬프트를 복사하세요. 스킬을 설치한 후 Linear에 연결된 워크스페이스에서 사용하세요.",
@@ -10163,7 +10183,7 @@
           "manageKeys": "키 관리",
           "addAccess": "액세스 추가",
           "setupSkillTitle": "2. 에이전트 스킬 설치",
-          "setupSkillBody": "에이전트가 /veer-linear로 이슈 읽기, 업데이트, 분류, 풀 또는 머지 리퀘스트 첨부를 할 수 있게 합니다.",
+          "setupSkillBody": "에이전트가 /orca-linear로 이슈 읽기, 업데이트, 분류, 풀 또는 머지 리퀘스트 첨부를 할 수 있게 합니다.",
           "setupVisibleTitle": "3. 작업에 Linear 표시",
           "setupVisibleBody": "작업 소스 선택기와 사이드바 바로 가기에 Linear를 표시합니다.",
           "openTaskSources": "작업 소스",
@@ -10175,8 +10195,8 @@
           "notesIntro": "Linear를 연결하고 스킬을 설치한 후 참고할 내용입니다.",
           "noteLinkedTitle": "Linear 이슈에서 시작",
           "noteLinkedBody": "작업에서 만든 워크스페이스는 이슈가 컨텍스트로 연결되어 있어 이슈 작업이 가장 원활합니다.",
-          "noteSlashTitle": "/veer-linear 언급",
-          "noteSlashBody": "채팅에서 /veer-linear를 사용하거나 자연어로 요청하면 해당 턴에 에이전트가 스킬을 불러옵니다.",
+          "noteSlashTitle": "/orca-linear 언급",
+          "noteSlashBody": "채팅에서 /orca-linear를 사용하거나 자연어로 요청하면 해당 턴에 에이전트가 스킬을 불러옵니다.",
           "noteKeysTitle": "키는 런타임별로 저장",
           "noteKeysBody": "API 키와 워크스페이스는 활성 런타임에 저장됩니다.",
           "noteVisibilityTitle": "숨겨도 연결은 유지",
@@ -10191,7 +10211,7 @@
           "connectedHint": "워크스페이스와 키는 활성 런타임에 저장됩니다. 언제든 액세스를 더 추가할 수 있습니다.",
           "recheck": "연결 다시 확인",
           "skillTitle": "Linear 에이전트 스킬 설치",
-          "skillDescription": "에이전트가 /veer-linear로 이슈 읽기, 업데이트 게시, 상태 변경, 풀 또는 머지 리퀘스트 첨부를 할 수 있게 합니다.",
+          "skillDescription": "에이전트가 /orca-linear로 이슈 읽기, 업데이트 게시, 상태 변경, 풀 또는 머지 리퀘스트 첨부를 할 수 있게 합니다.",
           "skillBlocked": "먼저 Linear를 연결한 다음 에이전트용 스킬을 설치하세요.",
           "skillPanelTitle": "Linear 스킬",
           "terminalTitle": "Linear 스킬 설정",
@@ -10791,7 +10811,6 @@
             "a4e93c21d7": "현재 브랜치: {{value0}}",
             "c7d4e2f801": "베이스 ref 변경: {{value0}}",
             "f3a1b8c204": "upstream",
-            "createPrIntentEmptyGeneratedBody": "생성된 검토 세부 정보에 설명이 포함되지 않았습니다. PR 생성을 다시 시도하세요.",
             "createPrIntentGenerateDetailsFailed": "검토 세부 정보를 생성할 수 없습니다. PR 생성을 다시 시도하세요."
           },
           "SourceControlAgentActionDialog": {
@@ -11731,7 +11750,7 @@
           "2c47f5465f": "시스템 설정에서 Orca에 대한 알림 허용을 켜세요. 활성화되면 이 단계가 자동으로 업데이트됩니다."
         },
         "OnboardingFlow": {
-          "1b5e182e9f": "Veer에 오신 것을 환영합니다",
+          "1b5e182e9f": "Orca에 오신 것을 환영합니다",
           "4db04f2f57": "/",
           "adaa0aa627": "온보딩 단계 {{value0}}: {{value1}}로 이동",
           "a249f81538": "Orca",
@@ -11924,26 +11943,26 @@
           "dfd2aa9d5d": "네트워크",
           "2f077ef4eb": "을 클릭하고 코드를 스캔하세요.",
           "3aa7bb2d8b": "데스크탑 페어링",
-          "d1495e5e64": "Veer Mobile을 열고",
+          "d1495e5e64": "Orca Mobile을 열고",
           "3960f5c339": "2/2단계",
           "3241f3c26a": "QR 설치",
           "7af266b80d": "QR코드 설치",
           "aa97420ba4": "설치 링크 복사",
           "ac1eb64952": "Android",
           "711e6f4b47": "iOS",
-          "e75647ace0": "휴대폰으로 QR을 스캔하거나 설치 링크를 열어 Veer Mobile을 다운로드하세요.",
+          "e75647ace0": "휴대폰으로 QR을 스캔하거나 설치 링크를 열어 Orca Mobile을 다운로드하세요.",
           "0d9b33299e": "앱을 받으세요.",
           "92ddfdfa1f": "2단계 중 1단계",
           "ff48d9d520": "다른 장치와 페어링",
           "f9cbf4bb53": "기기 취소",
           "34f878d04f": "{{value0}} 취소",
           "94829abdb1": "페어링됨",
-          "266c18c105": "Veer Mobile을 열어 중단한 부분부터 다시 시작하거나 다른 장치를 페어링하세요.",
-          "5410d55d79": "Veer 모바일",
+          "266c18c105": "Orca Mobile을 열어 중단한 부분부터 다시 시작하거나 다른 장치를 페어링하세요.",
+          "5410d55d79": "Orca 모바일",
           "10d27b4cba": "시작하기",
           "da1d5e5ed0": "지원 플랫폼",
           "ec0607bf66": "지원되는 모바일 플랫폼",
-          "b4ccce5cb7": "휴대폰에서 Veer를 제어하세요. 자리를 비운 동안 agents를 확인하고, 변경 사항을 리뷰하고, 작업을 시작하세요.",
+          "b4ccce5cb7": "휴대폰에서 Orca를 제어하세요. 자리를 비운 동안 agents를 확인하고, 변경 사항을 리뷰하고, 작업을 시작하세요.",
           "cd4e5e816f": "주머니 속의 워크스페이스.",
           "a6cffbbb0b": "코드 생성",
           "e59a252eca": "코드 재생성",
@@ -11955,7 +11974,7 @@
             "stable": "안정 버전"
           },
           "relayDegradedNotice": "Relay에 연결할 수 없습니다 — 이 코드는 LAN 또는 Tailscale에서만 작동합니다.",
-          "pairingQrError": "이 페어링 코드를 QR 코드로 표시할 수 없습니다. 대신 Veer Mobile에 복사하세요.",
+          "pairingQrError": "이 페어링 코드를 QR 코드로 표시할 수 없습니다. 대신 Orca Mobile에 복사하세요.",
           "directAddressDisclosure": "더 빠른 로컬 경로도 사용",
           "directAddressHint": "선택 사항. 근처에 있을 때(같은 Wi‑Fi 또는 Tailscale) 휴대폰이 사용할 주소를 고르세요. 보통 Relay보다 빠릅니다. 외부에 있을 때는 여전히 Relay를 사용합니다."
         },
@@ -11974,18 +11993,18 @@
         },
         "MobilePageToolbar": {
           "ad2284a9e2": "닫기 · Esc",
-          "9883b58693": "Veer 모바일 닫기",
+          "9883b58693": "Orca 모바일 닫기",
           "fb5f28330e": "사이드바에 표시",
           "c669abcf8f": "사이드바에서 숨기기",
           "e1c7b4a92d": "설정 > 모바일에서 구성하세요.",
-          "a4f8c2d91e": "왼쪽 사이드바에서 Veer Mobile 제거",
-          "b7e3d1c84a": "왼쪽 사이드바에 Veer Mobile 표시",
+          "a4f8c2d91e": "왼쪽 사이드바에서 Orca Mobile 제거",
+          "b7e3d1c84a": "왼쪽 사이드바에 Orca Mobile 표시",
           "f3d8e5b71a": "단축키를 왼쪽 사이드바에 다시 추가합니다."
         },
         "PhoneCarousel": {
           "96d651cb87": "Terminal 세션",
           "93217b41c1": "워크트리 목록",
-          "89c7713645": "Veer 모바일 홈 화면"
+          "89c7713645": "Orca 모바일 홈 화면"
         },
         "mobile": {
           "platform": {
@@ -12025,7 +12044,7 @@
             "00a6903322": "시작된 Agents",
             "c0e2e9dcd9": "다시 오신 것을 환영합니다",
             "af761a0c0d": "설정",
-            "5d94e8ddcc": "Veer"
+            "5d94e8ddcc": "Orca"
           },
           "TerminalSlide": {
             "0bb39f8fe6": "보내기",
@@ -12088,18 +12107,18 @@
           "add-custom": "사용자 지정 주소 추가…"
         },
         "WindowsFirewallNotice": {
-          "repair-success": "이제 Windows 방화벽이 개인 네트워크에서 Veer Mobile을 허용합니다",
+          "repair-success": "이제 Windows 방화벽이 개인 네트워크에서 Orca Mobile을 허용합니다",
           "repair-failed": "Windows 방화벽 규칙을 업데이트할 수 없습니다",
           "public-title": "Windows가 이 네트워크를 공용으로 표시합니다",
           "missing-title": "Windows 방화벽에서 휴대폰 연결 허용",
-          "public-description": "Veer Mobile 연결을 허용하기 전에 이 신뢰할 수 있는 Wi-Fi 네트워크를 개인으로 변경하세요.",
-          "missing-description": "Windows가 페어링 서버를 차단할 수 있습니다. 개인 네트워크에서 이 Veer 앱과 TCP 포트 {{port}}에 대한 규칙을 추가하세요.",
+          "public-description": "Orca Mobile 연결을 허용하기 전에 이 신뢰할 수 있는 Wi-Fi 네트워크를 개인으로 변경하세요.",
+          "missing-description": "Windows가 페어링 서버를 차단할 수 있습니다. 개인 네트워크에서 이 Orca 앱과 TCP 포트 {{port}}에 대한 규칙을 추가하세요.",
           "open-settings": "네트워크 설정 열기",
           "waiting": "Windows 대기 중…",
           "allow": "휴대폰 연결 허용",
           "repair-unverified": "Windows 방화벽 액세스를 확인할 수 없습니다",
-          "blocked-title": "Windows가 Veer Mobile을 차단하고 있을 수 있습니다",
-          "blocked-description": "기존 인바운드 차단 규칙이 페어링 예외보다 우선할 수 있습니다. 복구를 실행하면 이 Veer 앱의 충돌하는 TCP 규칙을 제거한 다음 개인 네트워크에서 포트 {{port}}을(를) 허용합니다.",
+          "blocked-title": "Windows가 Orca Mobile을 차단하고 있을 수 있습니다",
+          "blocked-description": "기존 인바운드 차단 규칙이 페어링 예외보다 우선할 수 있습니다. 복구를 실행하면 이 Orca 앱의 충돌하는 TCP 규칙을 제거한 다음 개인 네트워크에서 포트 {{port}}을(를) 허용합니다.",
           "repair": "방화벽 액세스 복구",
           "relay-note": "페어링은 Orca Relay를 통해 계속 작동합니다. 허용하면 더 빠른 로컬 연결이 추가될 뿐입니다."
         }
@@ -12410,6 +12429,30 @@
           },
           "feature": {
             "wall": {
+              "setup": {
+                "checklist": {
+                  "localized": {
+                    "copy": {
+                      "ec0a363633": "동시 작업",
+                      "62bac8f43c": "동시에 2개의 서로 다른 워크트리에서 작업하세요. 같은 프로젝트 내에서도 각각 완벽히 격리되어 있어 2개의 기능을 동시에 작업하기에 적합합니다.",
+                      "908898c3ee": "Orca 브라우저 사용",
+                      "43781563c3": "Orca를 벗어나지 않고 웹 앱을 탐색하세요. 원하는 요소를 선택하고 클릭 한 번으로 정확한 소스와 스타일을 에이전트에 전달할 수 있습니다.",
+                      "29aa2c2077": "알림 켜기",
+                      "71bd9a8c95": "에이전트가 작업을 완료했거나, 확인이 필요하거나, 차단된 순간을 즉시 알 수 있습니다.",
+                      "46db810da8": "기본 에이전트 선택",
+                      "b8e5bae17f": "선호하는 에이전트를 미리 선택하여 새로운 작업을 더 빠르게 시작하세요.",
+                      "fee5557b02": "Orca CLI 활성화",
+                      "7bcb4097fa": "Orca 셸 명령을 등록하고 브라우저, 컴퓨터 및 오케스트레이션 워크플로를 위한 에이전트 스킬을 설치하세요.",
+                      "ad342dd4c6": "서비스 연동",
+                      "06fe30fdb0": "클릭 한 번으로 작업에서 에이전트를 시작하고 PR 상태를 한눈에 확인하세요.",
+                      "eddc532e58": "워크스페이스 설정 자동화",
+                      "56049b74c2": "설치 및 설정 명령을 자동으로 실행하여 모든 새 워크트리가 에이전트 작업을 바로 수행할 수 있도록 준비합니다.",
+                      "2cf795433b": "여러 저장소에서 작업 시작",
+                      "42525ba8a4": "주요 저장소를 Orca로 가져와 폴더를 일일이 찾을 필요 없이 에이전트 작업을 시작하세요."
+                    }
+                  }
+                }
+              },
               "usage": {
                 "tracking": {
                   "b94ec70eda": "추적이 설정되지 않았습니다.",
@@ -12774,8 +12817,9 @@
           "7e7ca60816": "변경된 파일",
           "b6c3b84476": "파일 트리 표시",
           "39f8007549": "충돌 리뷰",
-          "39e73e7181": "이 차이점 보기에서 제외되었습니다.",
-          "689b99f8ad": "미해결 충돌",
+          "skippedConflictsExcluded": "미해결 충돌 {{count}}개가 이 차이점 보기에서 제외되었습니다.",
+          "skippedConflictsExcluded_one": "미해결 충돌 {{count}}개가 이 차이점 보기에서 제외되었습니다.",
+          "skippedConflictsExcluded_other": "미해결 충돌 {{count}}개가 이 차이점 보기에서 제외되었습니다.",
           "820ec01f24": "충돌하는 파일은 별도로 리뷰됩니다.",
           "fd8892b120": "표시할 변경사항이 없습니다.",
           "eb5f40e49c": "일반적인 양방향 diff 파이프라인은 충돌로부터 안전하지 않기 때문에 이 diff 보기는 해결되지 않은 충돌을 제외합니다.",
@@ -13731,6 +13775,35 @@
         }
       },
       "automations": {
+        "AutomationListToolbar": {
+          "runs": "실행"
+        },
+        "AutomationRunsDashboard": {
+          "search": "실행 검색…",
+          "filters": "필터",
+          "host": "호스트",
+          "status": "상태",
+          "refresh": "실행 새로 고침",
+          "successful24h": "성공 · 24시간",
+          "failed24h": "실패 · 24시간",
+          "successful7d": "성공 · 7일",
+          "failed7d": "실패 · 7일",
+          "historyUnavailableOne": "자동화 1개의 실행 기록을 사용할 수 없습니다. 집계에는 사용 가능한 기록만 포함됩니다.",
+          "historyUnavailableMany": "자동화 {{count}}개의 실행 기록을 사용할 수 없습니다. 집계에는 사용 가능한 기록만 포함됩니다.",
+          "automation": "자동화",
+          "triggered": "트리거됨",
+          "trigger": "트리거",
+          "loading": "실행 로드 중…",
+          "noRuns": "아직 실행이 없습니다",
+          "emptyDescription": "자동화를 트리거하면 여기에 실행이 표시됩니다.",
+          "runs": "실행",
+          "local": "로컬",
+          "remote": "원격"
+        },
+        "AutomationsPageBreadcrumb": {
+          "ariaLabel": "자동화 탐색경로",
+          "runDetails": "실행 세부정보"
+        },
         "AutomationCustomCronPanel": {
           "3e3b2c369f": "Cron 식",
           "e81a02d61b": "저장하기 전에 유효한 5개 필드 크론을 입력하세요.",
@@ -13748,6 +13821,7 @@
           "showMore": "더 보기"
         },
         "AutomationDetail": {
+          "host": "호스트",
           "007c8ad874": "프롬프트",
           "a1d52c2189": "사용 범위",
           "449fc83bf7": "토큰",
@@ -13911,6 +13985,9 @@
           "b11170a008": "자동화를 저장하지 못했습니다.",
           "2a20596d6b": "자동화가 저장되었습니다.",
           "244727e655": "자동화가 업데이트되었습니다.",
+          "moved": "자동화를 {host}(으)로 이동했습니다.",
+          "moveOriginalKept": "{host}에 생성했지만 원본을 삭제하지 못했습니다. 이전 호스트에서 삭제하세요.",
+          "moveOriginalUnverified": "{host}에 생성했지만 원본 삭제를 확인할 수 없습니다. 다시 시도하기 전에 이전 호스트를 확인하세요.",
           "77b81bc4ac": "Hermes 자동화가 생성되었습니다.",
           "08efc3ae12": "Hermes 자동화가 업데이트되었습니다.",
           "e431bb85d4": "이 Hermes 자동화와 동일한 호스트에서 워크스페이스를 선택하세요.",
@@ -14107,6 +14184,19 @@
           "filters": "필터",
           "clear": "필터 지우기",
           "removeFilter": "{{value0}} 필터 제거"
+        },
+        "createDestination": {
+          "label": "호스트",
+          "placeholder": "호스트 선택",
+          "storedOn": "{authority}에서 저장하고 예약합니다.",
+          "unselected": "이 자동화를 저장하고 예약할 호스트를 선택하세요.",
+          "orphan": "호스트가 없는 자동화는 새 자동화를 보유할 수 없습니다. 이 자동화를 만들 호스트를 선택하세요.",
+          "unavailable": "해당 호스트는 아직 새 자동화를 보유할 수 없습니다. 이 자동화를 만들 다른 호스트를 선택하세요.",
+          "stale": "이 양식이 열려 있는 동안 {host}이(가) 변경되었습니다. 저장하기 전에 다시 선택하세요.",
+          "projectMismatch": "해당 프로젝트는 {host}에 없습니다. 그 호스트의 프로젝트를 선택하거나 다른 호스트를 선택하세요.",
+          "noProjects": "{host}에 설정된 프로젝트가 없습니다. 거기에 추가하거나 다른 호스트를 선택하세요.",
+          "updateRequired": "{hosts}의 Orca 서버를 업데이트하면 거기에 자동화를 저장할 수 있습니다.",
+          "move": "저장하면 이 자동화가 {host}에 생성되고 원본과 실행 기록은 삭제됩니다."
         }
       },
       "agent": {
@@ -14142,9 +14232,10 @@
           "b29191b3e0": "워크트리",
           "8c3b621ddf": "프로젝트",
           "4a3986b200": "상태",
-          "770d458144": "agent 활동 그룹화 기준",
+          "770d458144": "그룹화 기준",
           "795cbf26e2": "필터...",
           "4616ea39fd": "워크스페이스로 이동",
+          "markThreadRead": "스레드를 읽은 것으로 표시",
           "59b131fbd9": "스레드를 읽지 않은 것으로 표시",
           "beb2c19173": "읽지 않음",
           "5651b216c6": "알 수 없는 프로젝트",
@@ -14457,6 +14548,13 @@
           "deleteDescription": "“{{name}}”은(는) 공개 링크에서 더 이상 사용할 수 없습니다.",
           "delete": "삭제"
         }
+      },
+      "ComposerParentWorktreePicker": {
+        "label": "상위 워크트리",
+        "noParent": "상위 워크트리 없음",
+        "description": "이 워크스페이스를 사이드바의 다른 워크스페이스 아래에 중첩합니다. 기준 브랜치는 변경되지 않습니다.",
+        "searchPlaceholder": "워크스페이스 검색...",
+        "noMatches": "일치하는 항목이 없습니다."
       }
     },
     "i18n": {
@@ -14654,28 +14752,15 @@
     "workspace": {
       "cleanup": {
         "browse": {
-          "selectionWithheldOne": "선택한 워크스페이스 1개가 현재 필터에 의해 숨겨져 선택이 해제되었습니다.",
-          "selectionWithheld": "선택한 워크스페이스 {{value0}}개가 현재 필터에 의해 숨겨져 선택이 해제되었습니다.",
-          "selectAllCountOne": "안전 검사를 통과한 워크스페이스 1개 선택",
-          "selectAllCount": "안전 검사를 통과한 워크스페이스 {{value0}}개 모두 선택"
-        },
-        "scan": {
-          "readyOne": "워크스페이스 1개를 찾았습니다.",
-          "readyMany": "워크스페이스 {{value0}}개를 찾았습니다."
-        },
-        "presentationFixtures": {
-          "reviewAlphaCleanup": "알파 정리 검토"
-        },
-        "presentation": {
-          "gitlabMergeRequestNumber": "MR #{{value0}}",
-          "githubPullRequestNumber": "PR #{{value0}}"
-        },
-        "browse": {
           "gitStatusCheckFailed": "Git 상태 확인 실패",
           "gitStatusUnverified": "Git 상태를 확인할 수 없음",
           "deleteAnyway": "그래도 삭제",
           "forceDeleteProjectionOne": "현재 워크스페이스 {{count}}개에 위험 요소가 표시되며 강제 삭제가 필요할 수 있습니다",
           "forceDeleteProjectionMany": "현재 워크스페이스 {{count}}개에 위험 요소가 표시되며 강제 삭제가 필요할 수 있습니다",
+          "selectionWithheldOne": "선택한 워크스페이스 1개가 현재 필터에 의해 숨겨져 선택이 해제되었습니다.",
+          "selectionWithheld": "선택한 워크스페이스 {{value0}}개가 현재 필터에 의해 숨겨져 선택이 해제되었습니다.",
+          "selectAllCountOne": "안전 검사를 통과한 워크스페이스 1개 선택",
+          "selectAllCount": "안전 검사를 통과한 워크스페이스 {{value0}}개 모두 선택",
           "appliedFilters": "적용된 필터",
           "removeFilter": "{{value0}} 필터 제거",
           "chip": {
@@ -14722,6 +14807,17 @@
               "retainedAgents": "완료된 에이전트"
             }
           }
+        },
+        "scan": {
+          "readyOne": "워크스페이스 1개를 찾았습니다.",
+          "readyMany": "워크스페이스 {{value0}}개를 찾았습니다."
+        },
+        "presentationFixtures": {
+          "reviewAlphaCleanup": "알파 정리 검토"
+        },
+        "presentation": {
+          "gitlabMergeRequestNumber": "MR #{{value0}}",
+          "githubPullRequestNumber": "PR #{{value0}}"
         }
       }
     },
@@ -14750,6 +14846,13 @@
       "sent": "세션 컨텍스트를 새 {{agent}} 세션으로 보냈습니다.",
       "deliveryFailed": "새 {{agent}} 세션은 시작되었지만 컨텍스트를 보내지 못했습니다.",
       "launchFailed": "새 {{agent}} 세션을 시작할 수 없습니다."
+    },
+    "terminalPane": {
+      "TerminalContextMenu": {
+        "copySessionId": "세션 ID 복사",
+        "copySessionIdSuccess": "세션 ID를 복사했습니다",
+        "copySessionIdError": "세션 ID를 복사하지 못했습니다"
+      }
     }
   },
   "dashboardPopout": {
@@ -14775,24 +14878,24 @@
       "agentCount": "에이전트 {{count}}개"
     },
     "placeholder": {
-      "title": "Agent dashboard",
-      "description": "This is where all your agents will show up at a glance. The board is coming soon."
+      "title": "에이전트 대시보드",
+      "description": "모든 에이전트를 한눈에 볼 수 있는 곳입니다. 보드는 곧 제공됩니다."
     },
     "recoverableError": {
-      "title": "Orca dashboard hit an error.",
-      "description": "The dashboard could not finish rendering. Retry to remount it, or reopen it."
+      "title": "Orca 대시보드에서 오류가 발생했습니다.",
+      "description": "대시보드 렌더링을 완료하지 못했습니다. 다시 시도해 다시 마운트하거나 다시 열어 보세요."
     },
     "bucket": {
-      "attention": "Needs You",
-      "working": "Working",
-      "idle": "Idle",
-      "empty": "None",
+      "attention": "확인 필요",
+      "working": "작업 중",
+      "idle": "유휴",
+      "empty": "없음",
       "done": "완료"
     },
-    "title": "Agents",
-    "total": "{{count}} total",
+    "title": "에이전트",
+    "total": "총 {{count}}개",
     "card": {
-      "you": "You",
+      "you": "나",
       "time": {
         "justNow": "방금",
         "minutes": "{{count}}분",
@@ -14809,11 +14912,11 @@
       "subagents_other": "서브에이전트 {{count}}개"
     },
     "terminal": {
-      "closed": "No live terminal — this agent's pane has closed.",
-      "focusWorktree": "Open worktree",
-      "close": "Close"
+      "closed": "실시간 터미널이 없습니다 — 이 에이전트의 창이 닫혔습니다.",
+      "focusWorktree": "워크트리 열기",
+      "close": "닫기"
     },
-    "close": "Close dashboard",
+    "close": "대시보드 닫기",
     "settingsTooltip": "보드 설정",
     "filters": {
       "remove": "{{label}} 필터 제거",
@@ -14847,7 +14950,8 @@
   },
   "dashboard": {
     "sidebar": {
-      "label": "에이전트 대시보드"
+      "label": "에이전트",
+      "dashboardLabel": "에이전트 대시보드"
     }
   },
   "browser": {
@@ -14887,6 +14991,21 @@
         "addressInUse": "Another process may be holding the port. Restart Orca to try again.",
         "unknown": "Restart Orca to try again."
       }
+    }
+  },
+  "agentsSidebarIntro": {
+    "migrated": {
+      "title": "에이전트를 더 쉽게 찾을 수 있습니다",
+      "description": "에이전트 보기가 이제 사이드바 전용 탭이 되었습니다. 활동과 필터는 그대로 유지됩니다.",
+      "dismiss": "확인",
+      "action": "에이전트 열기"
+    },
+    "new": {
+      "title": "에이전트 탭을 만나보세요",
+      "description": "에이전트가 무엇을 작업 중인지, 무엇이 완료되었는지, 어디에 개입이 필요한지 확인하세요.",
+      "hide": "에이전트 숨기기",
+      "action": "에이전트 사용해 보기",
+      "hiddenToast": "에이전트 탭이 숨겨졌습니다. 설정 → 실험 기능에서 다시 활성화하세요."
     }
   }
 }
