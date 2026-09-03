@@ -66,6 +66,7 @@ export class SkillCloudService {
           path: '/v1/skill-packages/uploads',
           method: 'POST',
           body: {
+            packageId: request.packageId,
             expectedArchiveSha256: request.archiveSha256,
             expectedCompressedBytes: request.compressedBytes
           },

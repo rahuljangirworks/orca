@@ -8,6 +8,7 @@ import {
 } from './profile-cloud-session-store'
 import { OrcaCloudRequestError, refreshOrcaCloudSession } from './profile-cloud-client'
 import { linkOrcaProfileToCloud } from './profile-cloud-index'
+import { SkillCloudRequestError } from '../skills/skill-cloud-request'
 import {
   captureCloudSessionMutation,
   cloudSessionIdentity,
@@ -29,9 +30,13 @@ function shouldRefreshCloudSession(session: OrcaCloudSession, now = Date.now()):
 }
 
 export function isOrcaCloudAuthFailure(error: unknown): boolean {
-  return (
-    error instanceof OrcaCloudRequestError && (error.statusCode === 401 || error.statusCode === 403)
-  )
+  if (error instanceof OrcaCloudRequestError) {
+    return error.statusCode === 401 || error.statusCode === 403
+  }
+  if (error instanceof SkillCloudRequestError) {
+    return error.statusCode === 401 || error.statusCode === 403
+  }
+  return false
 }
 
 const inflightCloudSessionRefreshes = new Map<string, Promise<OrcaCloudSession>>()
@@ -203,7 +208,11 @@ export async function runWithFreshOrcaCloudSession<T>(
       // rejected. A 403 is an authorization (permission) failure — signing
       // the user out for it would destroy a valid session, so let it surface
       // as a failed operation instead.
-      if (retryError instanceof OrcaCloudRequestError && retryError.statusCode === 401) {
+      if (
+        (retryError instanceof OrcaCloudRequestError ||
+          retryError instanceof SkillCloudRequestError) &&
+        retryError.statusCode === 401
+      ) {
         clearCloudSessionIfUnchanged(active.profile.id, userDataPath, refreshed.session, active)
         return { status: 'reconnect-required' }
       }

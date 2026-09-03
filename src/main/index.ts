@@ -99,7 +99,7 @@ import { initOnboardingCohortClassifier } from './telemetry/onboarding-cohort-cl
 import { resolveConsent } from './telemetry/consent'
 import { triggerStartupNotificationRegistration } from './ipc/startup-notification-registration'
 import { OrcaRuntimeService, type RuntimeWorktreeLifecycleEvent } from './runtime/orca-runtime'
-import { ArtifactCloudService } from './artifacts/artifact-cloud-service'
+import { VeerArtifactCloudService } from './veer/artifacts/veer-artifact-cloud-service'
 import { SkillCloudService } from './skills/skill-cloud-service'
 import { recoverPendingSkillTransactions } from './skills/skill-transaction-startup-recovery'
 import { isArtifactSharingEnabled } from '../shared/artifact-sharing-gate'
@@ -2928,7 +2928,7 @@ void app.whenReady().then(async () => {
   })
   runtimeService.setAutomationService(automations)
   runtimeService.setArtifactService(
-    new ArtifactCloudService(app.getPath('userData'), () =>
+    new VeerArtifactCloudService(app.getPath('userData'), () =>
       isArtifactSharingEnabled(store?.getSettings())
     )
   )

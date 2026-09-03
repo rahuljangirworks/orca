@@ -82,11 +82,13 @@ export function getOrcaCloudAuthConfig(
   const allowLoopbackHttp = PERSONAL_FORK_POLICY.localServiceOverridesEnabled || !packaged
   const cleanEndpointUrl = (value: string | undefined): string | null =>
     cleanUrl(value, allowLoopbackHttp)
-  const configuredApiBaseUrl = env.VEER_PLATFORM_API_URL?.trim()
-  // Personal builds never fall back to Orca Cloud. A self-hosted service must
-  // be explicitly configured and must resolve to this machine.
+  const configuredApiBaseUrl =
+    env.VEER_PLATFORM_API_URL?.trim() || PERSONAL_FORK_POLICY.veerPlatformOrigins[0]
   const apiBaseUrl = configuredApiBaseUrl ? cleanEndpointUrl(configuredApiBaseUrl) : null
-  const clientId = env.VEER_GOOGLE_DESKTOP_CLIENT_ID?.trim()
+  // Google OAuth client ID for the Veer desktop app (not a secret — public OAuth client).
+  const VEER_DEFAULT_GOOGLE_CLIENT_ID =
+    '288898406266-cqbnkb97oh38sgbvq3p3kg6mjm67qd5u.apps.googleusercontent.com'
+  const clientId = env.VEER_GOOGLE_DESKTOP_CLIENT_ID?.trim() || VEER_DEFAULT_GOOGLE_CLIENT_ID
   const hasUsableClientId = !!clientId && !/^<[^>]+>$/.test(clientId)
   if (!apiBaseUrl || !hasUsableClientId) {
     return {

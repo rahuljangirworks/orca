@@ -71,8 +71,8 @@ describe('ArtifactCloudService same-source races', () => {
       .mockResolvedValueOnce(createResponse('artifact-b'))
     vi.stubGlobal('fetch', fetchMock)
 
-    const failedShare = service.share(writeRequest)
-    const nextShare = service.share(writeRequest)
+    const failedShare = service.shareLegacy(writeRequest)
+    const nextShare = service.shareLegacy(writeRequest)
 
     await expect(failedShare).rejects.toMatchObject({ statusCode: 500 })
     await expect(nextShare).resolves.toMatchObject({
@@ -98,10 +98,10 @@ describe('ArtifactCloudService same-source races', () => {
       .mockResolvedValueOnce(createResponse('artifact-b'))
     vi.stubGlobal('fetch', fetchMock)
 
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
     const oldUpdate = service.update(writeRequest)
     await vi.waitFor(() => expect(resolveUpdate).toBeTypeOf('function'))
-    const newerShare = service.share(writeRequest)
+    const newerShare = service.shareLegacy(writeRequest)
     expect(fetchMock).toHaveBeenCalledTimes(2)
     resolveUpdate?.(createResponse('artifact-a'))
     await oldUpdate
@@ -127,14 +127,14 @@ describe('ArtifactCloudService same-source races', () => {
       .mockResolvedValueOnce(createResponse('artifact-b'))
     vi.stubGlobal('fetch', fetchMock)
 
-    await service.share(writeRequest)
-    const oldUnshare = service.unshare({
+    await service.shareLegacy(writeRequest)
+    const oldUnshare = service.unshareLegacy({
       sourceKey: writeRequest.sourceKey,
       apiUrl,
       authToken: 'token-a'
     })
     await vi.waitFor(() => expect(resolveDelete).toBeTypeOf('function'))
-    const newerShare = service.share(writeRequest)
+    const newerShare = service.shareLegacy(writeRequest)
     expect(fetchMock).toHaveBeenCalledTimes(2)
     resolveDelete?.(new Response(null, { status: 204 }))
     await oldUnshare

@@ -54,7 +54,10 @@ export function ArtifactPublishButton({
   const lookupKey = accountKey ? JSON.stringify([accountKey, sourceKey]) : null
   const currentLookup = linkLookup?.key === lookupKey ? linkLookup : null
   const checkingLink =
-    signedIn && currentLookup?.status !== 'loaded' && currentLookup?.status !== 'error'
+    signedIn &&
+    sharingEnabled &&
+    currentLookup?.status !== 'loaded' &&
+    currentLookup?.status !== 'error'
   const publishedLink = currentLookup?.status === 'loaded' ? currentLookup.shareUrl : null
   const busy = publishing || connecting
   const blocked = disabled || busy
@@ -112,7 +115,7 @@ export function ArtifactPublishButton({
   )
   return (
     <Popover open={open} onOpenChange={(nextOpen) => !busy && setOpen(nextOpen)}>
-      <Tooltip>
+      <Tooltip open={open ? false : undefined}>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <Button

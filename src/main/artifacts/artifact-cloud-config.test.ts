@@ -5,8 +5,10 @@ import {
 } from './artifact-cloud-config'
 
 describe('resolveArtifactCloudApiUrl', () => {
-  it('has no first-party production fallback', () => {
-    expect(() => resolveArtifactCloudApiUrl(undefined, {}, true)).toThrow(/explicitly configured/)
+  it('defaults to the Veer Platform origin when no env var is set', () => {
+    expect(resolveArtifactCloudApiUrl(undefined, {}, true)).toBe(
+      'https://api.veer.rahuljangir.work'
+    )
   })
 
   it('allows loopback HTTP in development and packaged personal builds', () => {

@@ -73,9 +73,9 @@ describe('ArtifactCloudService committed response loss recovery', () => {
     server.loseNextCreateResponse = true
     vi.stubGlobal('fetch', server.fetch)
 
-    await expect(service(userDataPath).share(writeRequest)).rejects.toThrow('response lost')
+    await expect(service(userDataPath).shareLegacy(writeRequest)).rejects.toThrow('response lost')
     await expect(
-      service(userDataPath).share({ ...writeRequest, content: '<h1>Changed share</h1>' })
+      service(userDataPath).shareLegacy({ ...writeRequest, content: '<h1>Changed share</h1>' })
     ).resolves.toMatchObject({
       status: 'ok',
       value: { artifact: { slug: 'artifact-1' } }
@@ -90,11 +90,13 @@ describe('ArtifactCloudService committed response loss recovery', () => {
     server.loseNextCreateResponse = true
     vi.stubGlobal('fetch', server.fetch)
 
-    await expect(service(userDataPath).share(writeRequest)).rejects.toThrow('response lost')
+    await expect(service(userDataPath).shareLegacy(writeRequest)).rejects.toThrow('response lost')
     server.rejectNextUpdateStatus = 503
     const changed = { ...writeRequest, content: '<h1>Changed after update failure</h1>' }
-    await expect(service(userDataPath).share(changed)).rejects.toMatchObject({ statusCode: 503 })
-    await expect(service(userDataPath).share(changed)).resolves.toMatchObject({
+    await expect(service(userDataPath).shareLegacy(changed)).rejects.toMatchObject({
+      statusCode: 503
+    })
+    await expect(service(userDataPath).shareLegacy(changed)).resolves.toMatchObject({
       status: 'ok',
       value: { artifact: { slug: 'artifact-1' } }
     })
@@ -111,7 +113,7 @@ describe('ArtifactCloudService committed response loss recovery', () => {
 
     server.loseNextDeleteResponse = true
     await expect(
-      service(userDataPath).unshare({
+      service(userDataPath).unshareLegacy({
         sourceKey: writeRequest.sourceKey,
         apiUrl,
         authToken: 'token-a'
@@ -122,7 +124,7 @@ describe('ArtifactCloudService committed response loss recovery', () => {
     await expect(publishedLink(userDataPath)).resolves.toBe('https://share.onorca.dev/a/artifact-1')
 
     await expect(
-      service(userDataPath).unshare({
+      service(userDataPath).unshareLegacy({
         sourceKey: writeRequest.sourceKey,
         apiUrl,
         authToken: 'token-a'
@@ -141,7 +143,7 @@ describe('ArtifactCloudService committed response loss recovery', () => {
 
     server.rejectNextDeleteCode = 'not_found'
     await expect(
-      service(userDataPath).unshare({
+      service(userDataPath).unshareLegacy({
         sourceKey: writeRequest.sourceKey,
         apiUrl,
         authToken: 'token-a'

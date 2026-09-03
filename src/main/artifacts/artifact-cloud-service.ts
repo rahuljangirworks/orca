@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto'
+import { randomUUID } from 'node:crypto'
 import type {
   ArtifactCloudOperation,
   ArtifactCloudOptions,
@@ -19,123 +19,18 @@ import {
   resolveArtifactCloudApiUrl
 } from './artifact-cloud-config'
 import {
-  type ArtifactShareScope,
-  captureArtifactShareLifecycle,
   getArtifactShareRecord,
-  isArtifactShareLifecycleCurrent,
   refreshArtifactShareRecordExpiration,
   removeArtifactShareRecords
 } from './artifact-share-record-store'
-import type { ActiveOrcaProfileState } from '../orca-profiles/profile-index-store'
 import { artifactRequest, artifactWriteBody } from './artifact-cloud-request'
 import { ArtifactPublisher } from './artifact-publisher'
-import { OrcaCloudRequestError } from '../orca-profiles/profile-cloud-client'
-
-type ArtifactAuthContext = {
-  profileId: string
-  scope: ArtifactShareScope
-  assertCurrent: () => void
-}
-
-async function deleteArtifactRequest(
-  apiUrl: string,
-  token: string,
-  path: string,
-  editToken?: string
-): Promise<void> {
-  try {
-    await artifactRequest<void>(apiUrl, token, path, {
-      method: 'DELETE',
-      ...(editToken ? { editToken } : {})
-    })
-  } catch (error) {
-    if (
-      !(error instanceof OrcaCloudRequestError) ||
-      error.statusCode !== 404 ||
-      error.errorCode !== 'artifact_not_found'
-    ) {
-      throw error
-    }
-  }
-}
-
-function tokenFingerprint(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
-}
-
-function authContext(
-  active: ActiveOrcaProfileState,
-  scope: ArtifactShareScope,
-  userDataPath: string,
-  expectedCloud?: { userId: string; profileId: string; organizationId: string }
-): ArtifactAuthContext {
-  const lifecycleGeneration = captureArtifactShareLifecycle(active.profile.id, userDataPath)
-  return {
-    profileId: active.profile.id,
-    scope,
-    assertCurrent: () => {
-      const current = ensureActiveOrcaProfile(userDataPath)
-      const cloudCurrent =
-        !expectedCloud ||
-        (current.profile.cloud?.userId === expectedCloud.userId &&
-          current.profile.cloud.cloudProfileId === expectedCloud.profileId &&
-          (current.profile.cloud.activeOrgId ?? '') === expectedCloud.organizationId)
-      if (
-        current.profile.id !== active.profile.id ||
-        !cloudCurrent ||
-        !isArtifactShareLifecycleCurrent(active.profile.id, userDataPath, lifecycleGeneration)
-      ) {
-        throw new Error(
-          'The signed-in Orca account changed while the artifact request was running.'
-        )
-      }
-    }
-  }
-}
-
-function storedSessionAuthContext(
-  active: ActiveOrcaProfileState,
-  apiOrigin: string,
-  userDataPath: string
-): ArtifactAuthContext {
-  if (!active.profile.cloud) {
-    throw new Error('The active Orca profile is not linked to a cloud account.')
-  }
-  return authContext(
-    active,
-    {
-      cloudUserId: active.profile.cloud.userId,
-      cloudProfileId: active.profile.cloud.cloudProfileId,
-      cloudOrganizationId: active.profile.cloud.activeOrgId ?? '',
-      apiOrigin
-    },
-    userDataPath,
-    {
-      userId: active.profile.cloud.userId,
-      profileId: active.profile.cloud.cloudProfileId,
-      organizationId: active.profile.cloud.activeOrgId ?? ''
-    }
-  )
-}
-
-function explicitTokenAuthContext(
-  active: ActiveOrcaProfileState,
-  apiOrigin: string,
-  token: string,
-  userDataPath: string
-): ArtifactAuthContext {
-  const fingerprint = tokenFingerprint(token)
-  return authContext(
-    active,
-    {
-      cloudUserId: `token:${fingerprint}`,
-      cloudProfileId: `token:${fingerprint}`,
-      cloudOrganizationId: `token:${fingerprint}`,
-      apiOrigin
-    },
-    userDataPath
-  )
-}
+import {
+  type ArtifactAuthContext,
+  deleteArtifactRequest,
+  storedSessionAuthContext,
+  explicitTokenAuthContext
+} from './artifact-cloud-auth-helpers'
 
 export class ArtifactCloudService {
   private readonly publisher: ArtifactPublisher
@@ -173,9 +68,9 @@ export class ArtifactCloudService {
     })
   }
 
-  // Why async: the gate must surface as a rejection, not a synchronous throw, so every caller's
-  // promise chain handles it the same way.
-  async share(request: ArtifactWriteRequest): Promise<ArtifactCloudOperation<ArtifactListItem>> {
+  async shareLegacy(
+    request: ArtifactWriteRequest
+  ): Promise<ArtifactCloudOperation<ArtifactListItem>> {
     assertArtifactSharingAllowed(this.isSharingEnabled)
     const idempotencyKey = randomUUID()
     return this.withAuth(request, (token, apiUrl, auth) =>
@@ -234,7 +129,7 @@ export class ArtifactCloudService {
     )
   }
 
-  unshare(
+  unshareLegacy(
     request: ArtifactCloudOptions & { sourceKey: string }
   ): Promise<ArtifactCloudOperation<void>> {
     return this.withAuth(request, (token, apiUrl, auth) =>
@@ -273,7 +168,7 @@ export class ArtifactCloudService {
     )
   }
 
-  private async withAuth<T>(
+  protected async withAuth<T>(
     options: ArtifactCloudOptions,
     operation: (token: string, apiUrl: string, auth: ArtifactAuthContext) => Promise<T>
   ): Promise<ArtifactCloudOperation<T>> {
@@ -298,6 +193,9 @@ export class ArtifactCloudService {
     const config = getOrcaCloudAuthConfig()
     if (!config.configured) {
       return { status: 'unconfigured', message: config.setupMessage }
+    }
+    if (!active.profile.cloud) {
+      return { status: 'reconnect-required' }
     }
     const result = await runWithFreshOrcaCloudSession(
       config.config,

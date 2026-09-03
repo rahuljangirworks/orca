@@ -158,9 +158,14 @@ import type {
   ArtifactListItem,
   ArtifactPublishedLink,
   ArtifactPublishResult,
-  ArtifactWriteRequest
+  ArtifactWriteRequest,
+  ArtifactShareRequest,
+  ArtifactShareRecord,
+  ArtifactListSharesResult,
+  ArtifactSharedWithMeResult,
+  ArtifactPlatformShareRequest
 } from '../../shared/artifacts'
-import type { ArtifactCloudService } from '../artifacts/artifact-cloud-service'
+import type { VeerArtifactCloudService } from '../veer/artifacts/veer-artifact-cloud-service'
 import type {
   SkillCloudDownloadGrant,
   SkillCloudOperation,
@@ -3810,7 +3815,7 @@ export class OrcaRuntimeService {
   private accountServices: RuntimeAccountServices | null = null
   private commitMessageAgentEnv: CommitMessageAgentEnvironmentResolvers | null = null
   private automationService: AutomationService | null = null
-  private artifactService: ArtifactCloudService | null = null
+  private artifactService: VeerArtifactCloudService | null = null
   private skillCloudService: SkillCloudService | null = null
   private agentSkillShareInProgress = false
   private skillUploadSessions: SkillUploadSessionService | null = null
@@ -5307,7 +5312,7 @@ export class OrcaRuntimeService {
     this.automationService = service
   }
 
-  setArtifactService(service: ArtifactCloudService): void {
+  setArtifactService(service: VeerArtifactCloudService): void {
     this.artifactService = service
   }
 
@@ -6017,7 +6022,65 @@ export class OrcaRuntimeService {
   }
 
   shareArtifact(request: ArtifactWriteRequest): Promise<ArtifactCloudOperation<ArtifactListItem>> {
-    return this.requireArtifactService().share(request)
+    return this.requireArtifactService().shareLegacy(request)
+  }
+
+  /** Platform: publish an existing artifact by its slug/id */
+  publishArtifactShare(
+    id: string,
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<{ shareUrl: string }>> {
+    return this.requireArtifactService().publishArtifact(id, options)
+  }
+
+  /** Platform: unpublish an artifact by its slug/id */
+  unpublishArtifactShare(
+    id: string,
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<void>> {
+    return this.requireArtifactService().unpublishArtifact(id, options)
+  }
+
+  /** Platform: share an artifact with specific grantees (user/machine/team) */
+  shareArtifactWith(
+    id: string,
+    request: ArtifactPlatformShareRequest,
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<ArtifactShareRecord>> {
+    return this.requireArtifactService().shareArtifact(id, request, options)
+  }
+
+  /** Platform: share an artifact using the generic share request */
+  shareArtifactLink(
+    id: string,
+    request: ArtifactShareRequest,
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<ArtifactShareRecord>> {
+    return this.requireArtifactService().share(id, request, options)
+  }
+
+  /** Platform: revoke a specific share by its ID */
+  revokeArtifactShare(
+    id: string,
+    shareId: string,
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<void>> {
+    return this.requireArtifactService().unshare(id, shareId, options)
+  }
+
+  /** Platform: list all shares for an artifact */
+  listArtifactShares(
+    id: string,
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<ArtifactListSharesResult>> {
+    return this.requireArtifactService().listShares(id, options)
+  }
+
+  /** Platform: list artifacts shared with the current user */
+  listSharedWithMeArtifacts(
+    options: ArtifactCloudOptions
+  ): Promise<ArtifactCloudOperation<ArtifactSharedWithMeResult>> {
+    return this.requireArtifactService().listSharedWithMe(options)
   }
 
   publishArtifact(
@@ -6033,14 +6096,14 @@ export class OrcaRuntimeService {
   unshareArtifact(
     request: ArtifactCloudOptions & { sourceKey: string }
   ): Promise<ArtifactCloudOperation<void>> {
-    return this.requireArtifactService().unshare(request)
+    return this.requireArtifactService().unshareLegacy(request)
   }
 
   deleteArtifact(id: string, options: ArtifactCloudOptions): Promise<ArtifactCloudOperation<void>> {
     return this.requireArtifactService().delete(id, options)
   }
 
-  private requireArtifactService(): ArtifactCloudService {
+  private requireArtifactService(): VeerArtifactCloudService {
     if (!this.artifactService) {
       throw new Error('Artifact service is unavailable.')
     }

@@ -204,8 +204,16 @@ export const test = base.extend<OrcaTestFixtures, OrcaWorkerFixtures>({
     // Orca's own agent runtime) set it so Electron behaves as a plain Node
     // binary. Playwright's _electron.launch passes --remote-debugging-port,
     // which Node rejects with "bad option" and the process exits immediately.
-    const { ELECTRON_RUN_AS_NODE: _unused, ...cleanEnv } = process.env
+    // Why: strip ELECTRON_RENDERER_URL so a stale dev-server URL from a prior
+    // `pnpm dev` session cannot bleed through and redirect the Electron main
+    // process to load from localhost instead of the built out/renderer/ files.
+    const {
+      ELECTRON_RUN_AS_NODE: _unused,
+      ELECTRON_RENDERER_URL: _unusedRendererUrl,
+      ...cleanEnv
+    } = process.env
     void _unused
+    void _unusedRendererUrl
     const homeIsolation = createElectronHomeIsolation({
       inheritedEnv: cleanEnv,
       launchEnv,

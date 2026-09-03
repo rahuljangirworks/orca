@@ -180,9 +180,7 @@ function resolveInstalledElectronExecutable() {
         )
       }
     }
-    const electronPath = process.env.ELECTRON_OVERRIDE_DIST_PATH
-      ? resolve(process.env.ELECTRON_OVERRIDE_DIST_PATH, platformPath)
-      : resolve(electronPackageDir, 'dist', platformPath)
+    const electronPath = resolve(electronPackageDir, 'dist', platformPath)
     if (!existsSync(electronPath)) {
       return { ok: false, error: new Error(`Electron executable is missing at ${electronPath}.`) }
     }
@@ -281,7 +279,7 @@ function loadNodePtyNativeModule() {
   assertNodePtyJobOwnership({ nativeName, native })
   if (requiresPatchedNodePtySourceBuild() && !isNodePtyReleaseBuildDir(native?.dir)) {
     throw new Error(
-      `node-pty resolved to ${native.dir}; expected build/Release so Orca's node-pty patch is active`
+      `node-pty resolved to ${native.dir}; expected build/Release so Veer's node-pty patch is active`
     )
   }
 }
@@ -312,7 +310,7 @@ function getPatchedNodePtyRebuildReason() {
     return null
   }
 
-  // Why: a loadable upstream node-pty prebuild is not enough; Orca's Unix
+  // Why: a loadable upstream node-pty prebuild is not enough; Veer's Unix
   // patch only lands in the source-built build/Release artifacts.
   const nodePtyDir = resolve(projectDir, 'node_modules', 'node-pty')
   const artifactPaths = [resolve(nodePtyDir, 'build', 'Release', 'pty.node')]

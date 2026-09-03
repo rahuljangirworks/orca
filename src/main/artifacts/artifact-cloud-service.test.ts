@@ -133,8 +133,8 @@ describe('ArtifactCloudService record authorization', () => {
       .mockResolvedValueOnce(createResponse('artifact-b'))
     vi.stubGlobal('fetch', fetchMock)
 
-    await service.share(writeRequest)
-    await service.share({ ...writeRequest, sourceKey: '/repo/other.html' })
+    await service.shareLegacy(writeRequest)
+    await service.shareLegacy({ ...writeRequest, sourceKey: '/repo/other.html' })
 
     const firstKey = requestHeader(fetchMock, 0, 'idempotency-key')
     const secondKey = requestHeader(fetchMock, 1, 'idempotency-key')
@@ -230,7 +230,7 @@ describe('ArtifactCloudService record authorization', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const publish = service.publish(writeRequest)
-    const share = service.share(writeRequest)
+    const share = service.shareLegacy(writeRequest)
     await vi.waitFor(() => expect(resolvePublish).toBeTypeOf('function'))
     expect(fetchMock).toHaveBeenCalledOnce()
     resolvePublish?.(createResponse('artifact-a'))
@@ -256,7 +256,7 @@ describe('ArtifactCloudService record authorization', () => {
       )
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
 
     const update = service.update(writeRequest)
     await vi.waitFor(() => expect(resolveUpdate).toBeTypeOf('function'))
@@ -341,7 +341,9 @@ describe('ArtifactCloudService record authorization', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(service.share({ ...writeRequest, authToken: undefined })).resolves.toMatchObject({
+    await expect(
+      service.shareLegacy({ ...writeRequest, authToken: undefined })
+    ).resolves.toMatchObject({
       status: 'ok'
     })
 
@@ -355,7 +357,7 @@ describe('ArtifactCloudService record authorization', () => {
   it('refuses account B update and unshare after account A signs out', async () => {
     const { userDataPath, profileId, service } = await setup()
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(createResponse()))
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
 
     tombstoneCloudSession(cloudSessionIdentity(profileId, cloudA), userDataPath)
     unlinkOrcaProfileFromCloud(profileId, userDataPath)
@@ -366,7 +368,7 @@ describe('ArtifactCloudService record authorization', () => {
       /has not been shared/
     )
     await expect(
-      service.unshare({ sourceKey: writeRequest.sourceKey, apiUrl, authToken: 'token-b' })
+      service.unshareLegacy({ sourceKey: writeRequest.sourceKey, apiUrl, authToken: 'token-b' })
     ).rejects.toThrow(/has not been shared/)
   })
 
@@ -382,7 +384,7 @@ describe('ArtifactCloudService record authorization', () => {
           })
       )
     )
-    const pending = service.share(writeRequest)
+    const pending = service.shareLegacy(writeRequest)
     await vi.waitFor(() => expect(resolvePost).toBeTypeOf('function'))
 
     tombstoneCloudSession(cloudSessionIdentity(profileId, cloudA), userDataPath)
@@ -409,7 +411,7 @@ describe('ArtifactCloudService record authorization', () => {
           })
       )
     )
-    const pending = service.share(writeRequest)
+    const pending = service.shareLegacy(writeRequest)
     await vi.waitFor(() => expect(resolvePost).toBeTypeOf('function'))
 
     linkOrcaProfileToCloud(
@@ -426,7 +428,7 @@ describe('ArtifactCloudService record authorization', () => {
     const { service } = await setup()
     const fetchMock = vi.fn().mockResolvedValue(createResponse())
     vi.stubGlobal('fetch', fetchMock)
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
 
     await expect(service.update({ ...writeRequest, authToken: 'token-b' })).rejects.toThrow(
       /has not been shared/
@@ -441,7 +443,7 @@ describe('ArtifactCloudService record authorization', () => {
       .mockResolvedValueOnce(createResponse())
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
     await service.delete('artifact-a', { apiUrl, authToken: 'token-a' })
 
     await expect(service.update(writeRequest)).rejects.toThrow(/has not been shared/)
@@ -465,7 +467,7 @@ describe('ArtifactCloudService record authorization', () => {
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
     vi.setSystemTime('2026-09-05T00:00:00.000Z')
     const update = service.update(writeRequest)
     await vi.waitFor(() => expect(resolveUpdate).toBeTypeOf('function'))
@@ -473,7 +475,7 @@ describe('ArtifactCloudService record authorization', () => {
     resolveUpdate?.(createResponse('artifact-a', '2026-10-06T00:00:00.000Z'))
     await update
     await expect(
-      service.unshare({ sourceKey: writeRequest.sourceKey, apiUrl, authToken: 'token-a' })
+      service.unshareLegacy({ sourceKey: writeRequest.sourceKey, apiUrl, authToken: 'token-a' })
     ).resolves.toEqual({ status: 'ok', value: undefined })
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
@@ -485,7 +487,7 @@ describe('ArtifactCloudService publish capability gate', () => {
   })
 
   it.each([
-    ['share', (service: ArtifactCloudService) => service.share(writeRequest)],
+    ['share', (service: ArtifactCloudService) => service.shareLegacy(writeRequest)],
     ['publish', (service: ArtifactCloudService) => service.publish(writeRequest)],
     ['update', (service: ArtifactCloudService) => service.update(writeRequest)]
   ])('rejects %s without reaching the network when the capability is off', async (_name, call) => {
@@ -505,7 +507,7 @@ describe('ArtifactCloudService publish capability gate', () => {
     const fetchMock = vi.fn().mockResolvedValue(createResponse())
     vi.stubGlobal('fetch', fetchMock)
 
-    await expect(service.share({ ...writeRequest, authToken: 'token-a' })).rejects.toThrow(
+    await expect(service.shareLegacy({ ...writeRequest, authToken: 'token-a' })).rejects.toThrow(
       ARTIFACT_SHARING_DISABLED_MESSAGE
     )
     expect(fetchMock).not.toHaveBeenCalled()
@@ -516,7 +518,9 @@ describe('ArtifactCloudService publish capability gate', () => {
     const { service } = await setup(sharing)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(createResponse()))
 
-    await expect(service.share(writeRequest)).rejects.toThrow(ARTIFACT_SHARING_DISABLED_MESSAGE)
+    await expect(service.shareLegacy(writeRequest)).rejects.toThrow(
+      ARTIFACT_SHARING_DISABLED_MESSAGE
+    )
     sharing.value = true
     await expect(service.update(writeRequest)).rejects.toThrow(/has not been shared/)
   })
@@ -535,7 +539,7 @@ describe('ArtifactCloudService publish capability gate', () => {
       )
       .mockResolvedValueOnce(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
 
     sharing.value = false
     await expect(service.list({ apiUrl, authToken: 'token-a' })).resolves.toMatchObject({
@@ -548,7 +552,7 @@ describe('ArtifactCloudService publish capability gate', () => {
       value: { shareUrl: 'https://share.onorca.dev/a/artifact-a' }
     })
     await expect(
-      service.unshare({ sourceKey: writeRequest.sourceKey, apiUrl, authToken: 'token-a' })
+      service.unshareLegacy({ sourceKey: writeRequest.sourceKey, apiUrl, authToken: 'token-a' })
     ).resolves.toEqual({ status: 'ok', value: undefined })
   })
 
@@ -558,11 +562,11 @@ describe('ArtifactCloudService publish capability gate', () => {
     const fetchMock = vi.fn().mockResolvedValue(createResponse())
     vi.stubGlobal('fetch', fetchMock)
 
-    await service.share(writeRequest)
+    await service.shareLegacy(writeRequest)
     sharing.value = false
-    await expect(service.share({ ...writeRequest, sourceKey: '/repo/other.html' })).rejects.toThrow(
-      ARTIFACT_SHARING_DISABLED_MESSAGE
-    )
+    await expect(
+      service.shareLegacy({ ...writeRequest, sourceKey: '/repo/other.html' })
+    ).rejects.toThrow(ARTIFACT_SHARING_DISABLED_MESSAGE)
     expect(fetchMock).toHaveBeenCalledOnce()
   })
 })

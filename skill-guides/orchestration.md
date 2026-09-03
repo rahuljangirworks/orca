@@ -215,6 +215,7 @@ veer orchestration task-create --spec "<worker A task>" --json
 veer orchestration task-create --spec "<worker B task>" --json
 veer orchestration worker-start --task <task_a> --worktree current --agent codex --json
 veer orchestration worker-start --task <task_b> --worktree current --agent claude --json
+# Valid --agent values (installed): claude | claude-agent-teams | openclaude | codex | opencode | pi | gemini | antigravity | kilo | cursor | hermes | omp | grok | droid | aider | goose | amp | ...
 ```
 
 `current` and exact existing worktrees create a fresh agent terminal and do not rerun setup. Reuse an existing agent only with `--terminal <handle>`.
@@ -376,7 +377,7 @@ For every new worktree, pass `--setup run` so any configured repository setup ho
 
 ```bash
 veer worktree create --name <task-name> --agent codex --setup run --json
-# or: --agent claude | omp | pi | grok | ...
+# or: --agent claude | claude-agent-teams | openclaude | codex | opencode | pi | gemini | antigravity | kilo | cursor | hermes | omp | grok | droid | aider | goose | amp | ...
 # Read <handle> from agentTerminalHandle, falling back to startupTerminal.handle.
 veer terminal wait --terminal <handle> --for tui-idle --timeout-ms 60000 --json
 veer orchestration dispatch --task <task_id> --to <handle> --inject --json
